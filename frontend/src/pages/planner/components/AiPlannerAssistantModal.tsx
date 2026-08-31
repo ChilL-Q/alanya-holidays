@@ -6,6 +6,7 @@ import {
 } from "@/api-services/ai-guide.service";
 import { type Plan } from "@/hooks/usePlanner";
 import { logger } from "@/lib/logger";
+import { useTranslation } from "react-i18next";
 
 interface AiPlannerAssistantModalProps {
   isOpen: boolean;
@@ -64,6 +65,7 @@ export default function AiPlannerAssistantModal({
   onAddActivityToPlan,
   initialTab = "generate",
 }: AiPlannerAssistantModalProps) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<"generate" | "chat">(initialTab);
 
   // Generator form state
@@ -519,7 +521,7 @@ export default function AiPlannerAssistantModal({
               {/* Day selector target if plan active */}
               {onAddActivityToPlan && dayLabels.length > 0 && (
                 <div className="mb-3 px-3 py-2 bg-background-50 rounded-xl flex items-center justify-between text-xs text-foreground-600 shrink-0">
-                  <span className="font-medium">Target day when adding activities:</span>
+                  <span className="font-medium">{t("planner.targetDay")}</span>
                   <select
                     value={selectedChatDay}
                     onChange={(e) => setSelectedChatDay(e.target.value)}
@@ -586,7 +588,7 @@ export default function AiPlannerAssistantModal({
                     <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center shrink-0 animate-pulse">
                       <i className="ri-sparkling-fill"></i>
                     </div>
-                    <span>Gemini AI Concierge is thinking...</span>
+                    <span>{t("planner.thinking")}</span>
                   </div>
                 )}
               </div>
@@ -629,7 +631,7 @@ export default function AiPlannerAssistantModal({
                     className="px-5 py-2.5 rounded-xl bg-primary-500 text-white text-xs font-semibold hover:bg-primary-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5 cursor-pointer"
                   >
                     <i className="ri-send-plane-fill"></i>
-                    <span>Send</span>
+                    <span>{t("planner.send")}</span>
                   </button>
                 </form>
               </div>

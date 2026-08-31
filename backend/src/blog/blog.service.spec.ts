@@ -4,6 +4,7 @@ import {
   UnauthorizedException,
   ForbiddenException,
   BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 
 jest.mock('sanitize-html', () => {
@@ -112,6 +113,7 @@ describe('BlogService', () => {
       getBlogSubmissions: jest.fn(),
       getUserBlogSubmissions: jest.fn(),
       getBlogSubmissionById: jest.fn(),
+      updateBlogSubmission: jest.fn(),
       updateBlogSubmissionStatus: jest.fn(),
       getProfileForNotification: jest.fn(),
       getBlogComments: jest.fn(),
@@ -311,6 +313,7 @@ describe('BlogService', () => {
         title: 'New Post',
         content: '<p>Hello</p>',
         status: 'draft',
+        content_type: 'guide',
         tag_ids: ['tag-1', 'tag-2'],
       };
 
@@ -323,6 +326,7 @@ describe('BlogService', () => {
           slug: 'new-post',
           author_id: 'author-1',
           status: 'draft',
+          content_type: 'guide',
         }),
       );
       expect(mockRepository.insertBlogPostTags).toHaveBeenCalledWith([
@@ -699,9 +703,203 @@ describe('BlogService', () => {
         0,
       );
     });
+
+    it('forces posts/me to the authenticated author id', async () => {
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
+      mockRepository.getBlogPosts.mockResolvedValueOnce({ data: [], count: 0 });
+
+      await service.getUserBlogPosts(
+        { authorId: 'forged-user', status: 'draft' },
+        'user-1',
+      );
+
+      expect(mockRepository.getBlogPosts).toHaveBeenCalledWith(
+        expect.objectContaining({ authorId: 'user-1', status: 'draft' }),
+        10,
+        0,
+        'user',
+        'user-1',
+      );
+    });
+
+    it('hides foreign submissions and allows an owner to edit reviewable content', async () => {
+      mockRepository.getBlogSubmissionById
+        .mockResolvedValueOnce({
+          id: 'foreign-sub',
+          user_id: 'other-user',
+          title: 'Foreign',
+          content: 'Foreign content',
+          status: 'rejected',
+          created_at: '2026-08-01',
+        })
+        .mockResolvedValueOnce({
+          id: 'own-sub',
+          user_id: 'user-1',
+          title: 'Own',
+          content: 'Own content long enough',
+          status: 'rejected',
+          created_at: '2026-08-01',
+        });
+      mockUserRolesRepo.getRole.mockResolvedValue('user');
+      mockRepository.updateBlogSubmission.mockResolvedValueOnce({
+        id: 'own-sub',
+        user_id: 'user-1',
+        title: 'Updated',
+        content: 'Updated content long enough',
+        status: 'rejected',
+        created_at: '2026-08-01',
+      });
+
+      await expect(
+        service.updateUserBlogSubmission(
+          'foreign-sub',
+          { title: 'Stolen' },
+          'user-1',
+        ),
+      ).rejects.toThrow(NotFoundException);
+      await expect(
+        service.updateUserBlogSubmission(
+          'own-sub',
+          { title: 'Updated', content: 'Updated content long enough' },
+          'user-1',
+        ),
+      ).resolves.toEqual(expect.objectContaining({ title: 'Updated' }));
+      expect(mockRepository.updateBlogSubmission).toHaveBeenCalledWith(
+        'own-sub',
+        expect.objectContaining({
+          title: 'Updated',
+          content: 'Updated content long enough',
+        }),
+        'user-1',
+      );
+    });
+
+    it('resubmits only an owned rejected submission', async () => {
+      mockRepository.getBlogSubmissionById.mockResolvedValueOnce({
+        id: 'own-sub',
+        user_id: 'user-1',
+        title: 'Own',
+        content: 'Own content long enough',
+        status: 'rejected',
+        rejection_reason: 'Needs detail',
+        created_at: '2026-08-01',
+      });
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
+      mockRepository.updateBlogSubmissionStatus.mockResolvedValueOnce([
+        { id: 'own-sub' },
+      ]);
+
+      await expect(
+        service.resubmitUserBlogSubmission('own-sub', 'user-1'),
+      ).resolves.toEqual(expect.objectContaining({ status: 'pending_review' }));
+      expect(mockRepository.updateBlogSubmissionStatus).toHaveBeenCalledWith(
+        'own-sub',
+        'pending_review',
+        'rejected',
+        { rejection_reason: null },
+      );
+    });
+
+    it('rejects an edit when approval wins after the ownership read', async () => {
+      mockRepository.getBlogSubmissionById.mockResolvedValueOnce({
+        id: 'own-sub',
+        user_id: 'user-1',
+        title: 'Own',
+        content: 'Own content long enough',
+        status: 'pending_review',
+        created_at: '2026-08-01',
+      });
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
+      mockRepository.updateBlogSubmission.mockResolvedValueOnce(null);
+
+      await expect(
+        service.updateUserBlogSubmission(
+          'own-sub',
+          { title: 'Too late' },
+          'user-1',
+        ),
+      ).rejects.toThrow(ConflictException);
+    });
   });
 
   describe('approveBlogSubmission', () => {
+    it('persists a guide submission through approval and guide-filtered listing', async () => {
+      const guideSubmission = {
+        id: 'guide-submission-1',
+        user_id: 'author-1',
+        title: 'Hidden Alanya Guide',
+        content: 'Detailed guide content',
+        content_type: 'guide' as const,
+        status: 'pending_review',
+        tag_ids: [],
+      };
+      mockRepository.checkBlogSubmissionLimit.mockResolvedValueOnce(true);
+      mockRepository.insertBlogSubmission.mockResolvedValueOnce(
+        guideSubmission,
+      );
+
+      await service.createBlogSubmission(
+        {
+          title: guideSubmission.title,
+          content: guideSubmission.content,
+          content_type: 'guide',
+        },
+        guideSubmission.user_id,
+      );
+
+      expect(mockRepository.insertBlogSubmission).toHaveBeenCalledWith(
+        expect.objectContaining({ content_type: 'guide' }),
+      );
+
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
+      mockRepository.getBlogSubmissionById.mockResolvedValueOnce(
+        guideSubmission,
+      );
+      mockRepository.updateBlogSubmissionStatus.mockResolvedValueOnce([
+        { id: guideSubmission.id },
+      ]);
+      mockRepository.getSlugs.mockResolvedValueOnce([]);
+      mockRepository.insertBlogPost.mockResolvedValueOnce({
+        id: 'guide-post-1',
+        title: guideSubmission.title,
+        slug: 'hidden-alanya-guide',
+        content_type: 'guide',
+      });
+      mockRepository.getProfileForNotification.mockResolvedValueOnce(null);
+
+      await service.approveBlogSubmission(guideSubmission.id, 'admin-1');
+
+      expect(mockRepository.insertBlogPost).toHaveBeenCalledWith(
+        expect.objectContaining({ content_type: 'guide' }),
+      );
+
+      mockRepository.getBlogPosts.mockResolvedValueOnce({
+        data: [
+          {
+            id: 'guide-post-1',
+            title: guideSubmission.title,
+            content_type: 'guide',
+            tags: [],
+          },
+        ],
+        count: 1,
+      });
+
+      await expect(
+        service.getBlogPosts({ content_type: 'guide' }),
+      ).resolves.toMatchObject({
+        data: [{ id: 'guide-post-1', content_type: 'guide' }],
+        total: 1,
+      });
+      expect(mockRepository.getBlogPosts).toHaveBeenCalledWith(
+        expect.objectContaining({ content_type: 'guide' }),
+        10,
+        0,
+        'anon',
+        undefined,
+      );
+    });
+
     it('should throw UnauthorizedException if non-admin attempts approval', async () => {
       mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
 

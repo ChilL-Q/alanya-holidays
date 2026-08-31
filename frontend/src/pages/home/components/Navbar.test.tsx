@@ -1,10 +1,11 @@
 import "@testing-library/jest-dom";
 import React from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import Navbar from "./Navbar";
 import type { UserProfile } from "@/context/AuthContext";
+import i18n from "@/i18n";
 
 // Mock AuthContext
 const mockSignOut = vi.fn();
@@ -61,12 +62,24 @@ vi.mock("@/hooks/useCompare", () => ({
 }));
 
 describe("Navbar Component (Milestone 5 — R4)", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    await i18n.changeLanguage("en");
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it("does not advertise unfinished language variants", () => {
+    render(
+      <MemoryRouter>
+        <Navbar />
+      </MemoryRouter>
+    );
+
+    expect(screen.queryByText("Русский")).not.toBeInTheDocument();
+    expect(screen.queryByText("Türkçe")).not.toBeInTheDocument();
   });
 
   it("renders Sign In and Join Community links when unauthenticated", () => {
@@ -182,6 +195,24 @@ describe("Navbar Component (Milestone 5 — R4)", () => {
       "true",
     );
     expect(document.getElementById("mobile-navigation")).toBeInTheDocument();
+  });
+
+  it("localizes the Home link in the mobile menu", async () => {
+    await i18n.changeLanguage("ru");
+
+    render(
+      <MemoryRouter>
+        <Navbar />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Открыть меню/i }));
+
+    const mobileNavigation = document.getElementById("mobile-navigation");
+    expect(mobileNavigation).not.toBeNull();
+    expect(
+      within(mobileNavigation!).getByRole("link", { name: "Главная" }),
+    ).toHaveAttribute("href", "/");
   });
 
   it("renders Shop dropdown with Shop Marketplace link", () => {

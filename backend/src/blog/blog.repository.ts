@@ -14,6 +14,7 @@ import {
   InsertBlogSubmissionPayload,
   RawBlogPostRow,
   UpdateBlogPostPayload,
+  UpdateBlogSubmissionPayload,
 } from './types/blog.types';
 
 @Injectable()
@@ -74,6 +75,11 @@ export class BlogRepository {
     }
 
     if (filters.category) query = query.eq('category', filters.category);
+    if (filters.content_type) {
+      query = query.eq('content_type', filters.content_type);
+    } else if (userRole !== 'admin') {
+      query = query.eq('content_type', 'blog');
+    }
     if (filters.tag) query = query.eq('tags.tag_id', filters.tag);
     if (filters.is_featured === 'true') query = query.eq('is_featured', true);
     if (filters.authorId) query = query.eq('author_id', filters.authorId);
@@ -106,6 +112,7 @@ export class BlogRepository {
       )
       .eq('is_featured', true)
       .eq('status', 'published')
+      .eq('content_type', 'blog')
       .order('published_at', { ascending: false, nullsFirst: false })
       .limit(limit);
     if (error) throw new Error(error.message);
@@ -154,46 +161,57 @@ export class BlogRepository {
 
     if (isUuid) {
       try {
-        const res = await this.client.rpc('get_related_posts', {
+        const result = await this.client.rpc('get_related_posts', {
           p_post_id: postId,
           p_category: cleanCategory,
           p_limit: limit,
         });
-
-        if (!res.error && res.data) return res.data as BlogPostSummary[];
-        if (res.error) {
+        if (!result.error && result.data) {
+          return result.data as BlogPostSummary[];
+        }
+        if (result.error) {
           this.logger.warn(
-            `get_related_posts RPC warning: ${res.error.message}`,
+            `get_related_posts RPC warning: ${result.error.message}`,
           );
         }
-      } catch (err: unknown) {
+      } catch (error: unknown) {
         this.logger.warn(
-          `get_related_posts RPC failed, using fallback query: ${
-            err instanceof Error ? err.message : String(err)
+          `get_related_posts RPC failed, using fallback queries: ${
+            error instanceof Error ? error.message : String(error)
           }`,
         );
       }
     }
 
-    let query = this.client
-      .from('blog_posts')
-      .select(
-        'id, title, slug, excerpt, cover_image_url, category, published_at, author:profiles!blog_posts_author_id_fkey(full_name, avatar_url)',
-      )
-      .eq('status', 'published');
+    const fetchPosts = async (categoryFilter?: string, fetchLimit = limit) => {
+      let query = this.client
+        .from('blog_posts')
+        .select(
+          'id, title, slug, excerpt, cover_image_url, category, published_at, author:profiles!blog_posts_author_id_fkey(full_name, avatar_url)',
+        )
+        .eq('status', 'published')
+        .eq('content_type', 'blog');
+      if (isUuid) query = query.neq('id', postId);
+      if (categoryFilter) query = query.eq('category', categoryFilter);
+      const { data } = await query
+        .order('published_at', { ascending: false, nullsFirst: false })
+        .limit(fetchLimit);
+      return (data as unknown as BlogPostSummary[]) || [];
+    };
 
-    if (isUuid) {
-      query = query.neq('id', postId);
-    }
-    if (cleanCategory) {
-      query = query.eq('category', cleanCategory);
-    }
+    const categoryPosts = cleanCategory
+      ? await fetchPosts(cleanCategory, limit)
+      : [];
+    if (categoryPosts.length >= limit) return categoryPosts.slice(0, limit);
 
-    const { data } = await query
-      .order('published_at', { ascending: false, nullsFirst: false })
-      .limit(limit);
+    const recentPosts = await fetchPosts(
+      undefined,
+      limit + categoryPosts.length,
+    );
+    const seenIds = new Set(categoryPosts.map((post) => post.id));
+    const fill = recentPosts.filter((post) => !seenIds.has(post.id));
 
-    return (data as unknown as BlogPostSummary[]) || [];
+    return [...categoryPosts, ...fill].slice(0, limit);
   }
 
   async insertBlogPost(postData: InsertBlogPostPayload): Promise<BlogPost> {
@@ -364,6 +382,23 @@ export class BlogRepository {
       .eq('id', id)
       .single();
     return (data as unknown as BlogSubmission) || null;
+  }
+
+  async updateBlogSubmission(
+    id: string,
+    updates: UpdateBlogSubmissionPayload,
+    userId: string,
+  ): Promise<BlogSubmission | null> {
+    const { data, error } = await this.client
+      .from('blog_submissions')
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .eq('user_id', userId)
+      .in('status', ['pending_review', 'rejected'])
+      .select('*')
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return data as BlogSubmission | null;
   }
 
   async updateBlogSubmissionStatus(

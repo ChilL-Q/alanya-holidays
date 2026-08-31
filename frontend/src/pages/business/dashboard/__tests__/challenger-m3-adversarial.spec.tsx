@@ -192,6 +192,15 @@ const fullTestProfile: UserProfile = {
 describe("Empirical Challenger M3 Adversarial Stress Tests", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    vi.spyOn(billingService, "getMySubscription").mockResolvedValue({
+      plan: "monthly",
+      status: "active",
+      tier: "voyager",
+      stripe_subscription_id: "sub-test",
+      stripe_customer_id: "cus-test",
+      current_period_end: "2099-09-25T00:00:00Z",
+      cancel_at_period_end: false,
+    });
   });
 
   describe("1. MyListingsTab Exhaustive Status, Filtering & Action Tests", () => {
@@ -305,8 +314,7 @@ describe("Empirical Challenger M3 Adversarial Stress Tests", () => {
       render(
         <PerformanceAnalyticsTab
           analytics={testAnalytics}
-          userListings={testListings}
-          highestTier="signature"
+          hasPremiumAccess={true}
           loading={false}
           days={30}
           onDaysChange={onDaysChange}
@@ -333,8 +341,7 @@ describe("Empirical Challenger M3 Adversarial Stress Tests", () => {
       render(
         <PerformanceAnalyticsTab
           analytics={zeroAnalytics}
-          userListings={testListings}
-          highestTier="signature"
+          hasPremiumAccess={true}
           loading={false}
           days={30}
           onDaysChange={vi.fn()}
@@ -352,8 +359,7 @@ describe("Empirical Challenger M3 Adversarial Stress Tests", () => {
       render(
         <PerformanceAnalyticsTab
           analytics={testAnalytics}
-          userListings={[testListings[2], testListings[3]]}
-          highestTier="explorer"
+          hasPremiumAccess={false}
           loading={false}
           days={30}
           onDaysChange={vi.fn()}
@@ -437,7 +443,7 @@ describe("Empirical Challenger M3 Adversarial Stress Tests", () => {
   });
 
   describe("5. SettingsHero Quick Access Link", () => {
-    it("renders a direct link to /business/dashboard with Merchant Dashboard label", () => {
+    it("renders a direct link to /business/dashboard with Dashboard label", () => {
       render(
         <MemoryRouter>
           <SettingsHero
@@ -449,7 +455,7 @@ describe("Empirical Challenger M3 Adversarial Stress Tests", () => {
         </MemoryRouter>
       );
 
-      const dashboardLink = screen.getByRole("link", { name: /Merchant Dashboard/i });
+      const dashboardLink = screen.getByRole("link", { name: /^Dashboard$/i });
       expect(dashboardLink).toBeInTheDocument();
       expect(dashboardLink).toHaveAttribute("href", "/business/dashboard");
     });
@@ -840,8 +846,7 @@ describe("Empirical Challenger M3 Adversarial Stress Tests", () => {
       render(
         <PerformanceAnalyticsTab
           analytics={testAnalytics}
-          userListings={[{ ...testListings[0], tier: "SIGNATURE" } as unknown as Business]}
-          highestTier="Signature"
+          hasPremiumAccess={true}
           loading={false}
           days={30}
           onDaysChange={vi.fn()}
@@ -981,4 +986,3 @@ describe("Empirical Challenger M3 Adversarial Stress Tests", () => {
     });
   });
 });
-

@@ -305,6 +305,18 @@ describe("Article Shortcode AST Parser (parseArticleContent)", () => {
   });
 
   describe("Tier 4: Mixed Real-World Document Parsing", () => {
+    it("preserves rich HTML while extracting Quill-wrapped platform embeds in document order", () => {
+      const result = parseArticleContent(
+        '<p><strong>Opening</strong> paragraph</p><p>[cta category="restaurants" label="Book dinner"]</p><p>Closing paragraph</p>',
+      );
+
+      expect(result).toEqual<ArticleBlockNode[]>([
+        { type: "html", content: '<p><strong>Opening</strong> paragraph</p>' },
+        { type: "cta", category: "restaurants", label: "Book dinner", subtext: undefined },
+        { type: "html", content: '<p>Closing paragraph</p>' },
+      ]);
+    });
+
     it("should parse an interleaved travel article with paragraphs, headings, venues, and CTAs", () => {
       const articleMarkdown = `
 ## A Gourmet Weekend in Alanya

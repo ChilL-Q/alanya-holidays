@@ -1,5 +1,7 @@
 import { useState } from "react";
 import RichTextEditor from "@/components/base/RichTextEditor";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface ReplyInputProps {
   replyTo: string | null;
@@ -17,6 +19,7 @@ const replyModules = {
 };
 
 export default function ReplyInput({ replyTo, replyToAuthor, onSubmit, onCancel }: ReplyInputProps) {
+  const { t } = useTranslation();
   const [content, setContent] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -32,7 +35,7 @@ export default function ReplyInput({ replyTo, replyToAuthor, onSubmit, onCancel 
         <div className="flex items-center justify-between mb-3">
           <p className="text-xs text-foreground-500 flex items-center gap-1">
             <i className="ri-reply-line"></i>
-            Replying to{" "}
+            {t("public.replyingTo")} {" "}
             <span className="font-medium text-foreground-700">{replyToAuthor}</span>
           </p>
           <button
@@ -45,14 +48,14 @@ export default function ReplyInput({ replyTo, replyToAuthor, onSubmit, onCancel 
         </div>
       ) : (
         <p className="text-sm font-heading text-foreground-700 font-medium mb-3">
-          Join the discussion
+          {t("public.joinDiscussion")}
         </p>
       )}
 
       <RichTextEditor
         value={content}
         onChange={setContent}
-        placeholder={replyTo ? `Write your reply to ${replyToAuthor}...` : "Share your thoughts, experiences, or questions..."}
+        placeholder={replyTo ? t("public.replyTo", { name: replyToAuthor }) : t("public.shareThoughts")}
         modules={replyModules}
       />
 
@@ -64,7 +67,7 @@ export default function ReplyInput({ replyTo, replyToAuthor, onSubmit, onCancel 
               onClick={onCancel}
               className="px-3 py-1.5 rounded-lg text-xs font-medium text-foreground-500 hover:bg-background-100 transition-colors"
             >
-              Cancel
+              {t("common.cancel")}
             </button>
           )}
           <button
@@ -72,7 +75,7 @@ export default function ReplyInput({ replyTo, replyToAuthor, onSubmit, onCancel 
             disabled={!content.trim()}
             className="px-4 py-1.5 rounded-lg text-xs font-medium bg-primary-500 text-background-50 hover:bg-primary-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all whitespace-nowrap"
           >
-            {replyTo ? "Post Reply" : "Post Comment"}
+            {replyTo ? t("public.postReply") : t("public.postComment")}
           </button>
         </div>
       </div>

@@ -2,8 +2,10 @@ import { useMemo, useRef, useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { eventsService, type ForumEvent } from "@/api-services/events.service";
 import { logger } from "@/lib/logger";
+import { useTranslation } from "react-i18next";
 
 export default function PopularNow() {
+  const { t } = useTranslation();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [allEvents, setAllEvents] = useState<ForumEvent[]>([]);
   const [isPaused, setIsPaused] = useState(false);
@@ -125,13 +127,13 @@ export default function PopularNow() {
                   <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
                 </span>
                 <span className="text-xs font-bold text-red-500 tracking-wider uppercase animate-pulse">
-                  Popular Now
+                  {t("home.popularNow", "Popular Now")}
                 </span>
               </div>
               {/* Divider */}
               <span className="w-px h-4 bg-background-300/60 hidden sm:block"></span>
               <span className="text-xs text-foreground-500 hidden sm:block">
-                Most attended events right now
+                {t("home.mostAttended", "Most attended events right now")}
               </span>
             </div>
 
@@ -141,7 +143,7 @@ export default function PopularNow() {
                 onClick={() => scroll("left")}
                 disabled={!canScrollLeft}
                 className="w-7 h-7 flex items-center justify-center rounded-full bg-background-100 text-foreground-600 hover:bg-background-200 disabled:opacity-30 disabled:cursor-default transition-colors cursor-pointer"
-                aria-label="Scroll left"
+                aria-label={t("home.scrollLeft", "Scroll left")}
               >
                 <i className="ri-arrow-left-s-line text-sm"></i>
               </button>
@@ -149,7 +151,7 @@ export default function PopularNow() {
                 onClick={() => scroll("right")}
                 disabled={!canScrollRight}
                 className="w-7 h-7 flex items-center justify-center rounded-full bg-background-100 text-foreground-600 hover:bg-background-200 disabled:opacity-30 disabled:cursor-default transition-colors cursor-pointer"
-                aria-label="Scroll right"
+                aria-label={t("home.scrollRight", "Scroll right")}
               >
                 <i className="ri-arrow-right-s-line text-sm"></i>
               </button>
@@ -222,7 +224,7 @@ export default function PopularNow() {
                           : "text-foreground-500"
                       }`}>
                         <i className="ri-group-line text-[10px]"></i>
-                        {event.attendees} going
+                        {event.attendees} {t("home.going", "going")}
                       </span>
                     </div>
                   </div>
@@ -238,8 +240,8 @@ export default function PopularNow() {
               <div className="w-8 h-8 rounded-full bg-primary-500/10 flex items-center justify-center mb-1.5 group-hover:bg-primary-500/20 transition-colors">
                 <i className="ri-calendar-event-line text-primary-500 text-sm"></i>
               </div>
-              <p className="text-foreground-700 text-xs font-medium">View All Events</p>
-              <p className="text-foreground-400 text-[10px]">{allEvents.length} upcoming</p>
+              <p className="text-foreground-700 text-xs font-medium">{t("home.viewAllEvents", "View All Events")}</p>
+              <p className="text-foreground-400 text-[10px]">{allEvents.length} {t("home.upcoming", "upcoming")}</p>
             </Link>
           </div>
         </div>

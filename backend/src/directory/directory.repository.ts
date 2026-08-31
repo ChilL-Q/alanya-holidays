@@ -101,6 +101,26 @@ export class DirectoryRepository {
     return data || null;
   }
 
+  async getDirectoryListingClaimEligibility(
+    id: string,
+  ): Promise<{ creation_source: string | null; can_claim: boolean } | null> {
+    if (!UUID_RE.test(id)) return null;
+    const { data, error } = await this.client
+      .from('directory_listings')
+      .select('creation_source, can_claim')
+      .eq('id', id)
+      .single<{ creation_source?: string | null; can_claim?: boolean }>();
+    if (error) {
+      if (error.code === 'PGRST116' || error.code === '22P02') return null;
+      throw new Error(error.message);
+    }
+    if (!data) return null;
+    return {
+      creation_source: data.creation_source ?? null,
+      can_claim: data.can_claim === true,
+    };
+  }
+
   async getDirectoryListingsByCategory(
     categoryId: string,
   ): Promise<DirectoryListingRecord[]> {

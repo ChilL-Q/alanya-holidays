@@ -10,9 +10,16 @@ import { ForumEventService } from './application/forum-event.service';
 import { ForumReportService } from './application/forum-report.service';
 import { ForumRepository } from './forum.repository';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
+import { BusinessApplicationsModule } from '../business-applications/business-applications.module';
 
 @Module({
-  imports: [SupabaseModule, AuthModule, UsersModule, AdminModule],
+  imports: [
+    SupabaseModule,
+    AuthModule,
+    UsersModule,
+    AdminModule,
+    BusinessApplicationsModule,
+  ],
   controllers: [ForumController, ForumModerationController],
   providers: [
     ForumRepository,

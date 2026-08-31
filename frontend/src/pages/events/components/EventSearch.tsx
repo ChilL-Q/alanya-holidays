@@ -1,4 +1,6 @@
 import { useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface EventSearchProps {
   query: string;
@@ -6,6 +8,7 @@ interface EventSearchProps {
 }
 
 export default function EventSearch({ query, onQueryChange }: EventSearchProps) {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -34,14 +37,14 @@ export default function EventSearch({ query, onQueryChange }: EventSearchProps) 
           type="text"
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
-          placeholder="Search by title, category, description, location, or host..."
+          placeholder={t("events.searchPlaceholder", "Search by title, category, description, location, or host...")}
           className="w-full pl-10 pr-10 py-2.5 bg-white border border-background-200 rounded-full text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-accent-400 focus:ring-2 focus:ring-accent-100 transition-all"
         />
         {query ? (
           <button
             onClick={() => onQueryChange("")}
             className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-foreground-400 hover:text-foreground-600 transition-colors"
-            aria-label="Clear search"
+            aria-label={t("events.clearSearch", "Clear search")}
           >
             <i className="ri-close-circle-fill text-sm"></i>
           </button>

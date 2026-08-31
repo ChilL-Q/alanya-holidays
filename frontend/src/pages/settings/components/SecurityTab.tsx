@@ -12,12 +12,14 @@ import {
   Info,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslation } from "react-i18next";
 
 export interface SecurityTabProps {
   onPasswordUpdated?: () => void;
 }
 
 export const SecurityTab: React.FC<SecurityTabProps> = ({ onPasswordUpdated }) => {
+  const { t } = useTranslation();
   const { updatePassword } = useAuth();
 
   const newPasswordId = useId();
@@ -42,17 +44,17 @@ export const SecurityTab: React.FC<SecurityTabProps> = ({ onPasswordUpdated }) =
     setSuccess(null);
 
     if (!newPassword) {
-      setError("Please enter a new password.");
+      setError(t("settings.enterPassword", { defaultValue: "Please enter a new password." }));
       return;
     }
 
     if (newPassword.length < 8) {
-      setError("Password must be at least 8 characters long.");
+      setError(t("settings.passwordLength", { defaultValue: "Password must be at least 8 characters long." }));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError("Passwords do not match. Please verify both fields.");
+      setError(t("settings.passwordMismatch", { defaultValue: "Passwords do not match. Please verify both fields." }));
       return;
     }
 
@@ -62,11 +64,11 @@ export const SecurityTab: React.FC<SecurityTabProps> = ({ onPasswordUpdated }) =
       const result = await updatePassword(newPassword);
 
       if (result.error) {
-        setError(result.error.message || "Failed to update password. Please try again.");
+        setError(result.error.message || t("settings.passwordUpdateError", { defaultValue: "Failed to update password. Please try again." }));
         return;
       }
 
-      setSuccess("Your password has been changed successfully. You can now use your new password to sign in.");
+      setSuccess(t("settings.passwordChanged", { defaultValue: "Your password has been changed successfully. You can now use your new password to sign in." }));
       setNewPassword("");
       setConfirmPassword("");
       if (onPasswordUpdated) {
@@ -96,7 +98,7 @@ export const SecurityTab: React.FC<SecurityTabProps> = ({ onPasswordUpdated }) =
                 <Key className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-slate-900">Change Password</h2>
+                <h2 className="text-lg font-semibold text-slate-900">{t("settings.changePassword")}</h2>
                 <p className="text-xs sm:text-sm text-slate-500">
                   Update your credentials to keep your Alanya Holidays account secure
                 </p>
@@ -111,7 +113,7 @@ export const SecurityTab: React.FC<SecurityTabProps> = ({ onPasswordUpdated }) =
               >
                 <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-semibold">Success</p>
+                  <p className="text-sm font-semibold">{t("settings.success")}</p>
                   <p className="text-xs sm:text-sm text-emerald-700 mt-0.5">{success}</p>
                 </div>
               </div>
@@ -125,7 +127,7 @@ export const SecurityTab: React.FC<SecurityTabProps> = ({ onPasswordUpdated }) =
               >
                 <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-semibold">Error Updating Password</p>
+                  <p className="text-sm font-semibold">{t("settings.passwordError")}</p>
                   <p className="text-xs sm:text-sm text-rose-700 mt-0.5">{error}</p>
                 </div>
               </div>
@@ -149,13 +151,13 @@ export const SecurityTab: React.FC<SecurityTabProps> = ({ onPasswordUpdated }) =
                     type={showNewPassword ? "text" : "password"}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Enter at least 8 characters"
+                  placeholder={t("settings.passwordPlaceholder", { defaultValue: "Enter at least 8 characters" })}
                     className="w-full pl-10 pr-11 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
                   />
                   <button
                     type="button"
                     onClick={() => setShowNewPassword(!showNewPassword)}
-                    aria-label="Toggle new password visibility"
+                    aria-label={t("settings.togglePassword", { defaultValue: "Toggle new password visibility" })}
                     className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
                   >
                     {showNewPassword ? (
@@ -184,13 +186,13 @@ export const SecurityTab: React.FC<SecurityTabProps> = ({ onPasswordUpdated }) =
                     type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Re-enter your new password"
+                    placeholder={t("settings.confirmPasswordPlaceholder", { defaultValue: "Re-enter your new password" })}
                     className="w-full pl-10 pr-11 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    aria-label="Toggle confirm password visibility"
+                    aria-label={t("settings.toggleConfirmPassword", { defaultValue: "Toggle confirm password visibility" })}
                     className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
                   >
                     {showConfirmPassword ? (
@@ -204,7 +206,7 @@ export const SecurityTab: React.FC<SecurityTabProps> = ({ onPasswordUpdated }) =
 
               {/* Password Requirements Checklist */}
               <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/70 space-y-2">
-                <p className="text-xs font-semibold text-slate-700">Password Checklist:</p>
+                <p className="text-xs font-semibold text-slate-700">{t("settings.passwordChecklist")}</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                   <div className="flex items-center gap-1.5">
                     <div
@@ -248,12 +250,12 @@ export const SecurityTab: React.FC<SecurityTabProps> = ({ onPasswordUpdated }) =
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin text-white" />
-                      <span>Updating Password...</span>
+                      <span>{t("settings.updatingPassword")}</span>
                     </>
                   ) : (
                     <>
                       <Shield className="w-4 h-4 text-white" />
-                      <span>Update Password</span>
+                      <span>{t("settings.updatePassword")}</span>
                     </>
                   )}
                 </button>
@@ -267,7 +269,7 @@ export const SecurityTab: React.FC<SecurityTabProps> = ({ onPasswordUpdated }) =
           <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white rounded-2xl p-6 shadow-md border border-white/10 space-y-4">
             <div className="flex items-center gap-2 text-amber-300">
               <Shield className="w-5 h-5" />
-              <h3 className="font-semibold text-sm">Security Recommendations</h3>
+              <h3 className="font-semibold text-sm">{t("settings.securityRecommendations")}</h3>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed">
               To safeguard your luxury bookings, saved properties, and payment details:
@@ -275,15 +277,15 @@ export const SecurityTab: React.FC<SecurityTabProps> = ({ onPasswordUpdated }) =
             <ul className="space-y-2.5 text-xs text-slate-300">
               <li className="flex items-start gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                <span>Use a unique password not shared with any other platforms.</span>
+                <span>{t("settings.uniquePassword")}</span>
               </li>
               <li className="flex items-start gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                <span>Include a mix of uppercase letters, numbers, and symbols.</span>
+                <span>{t("settings.passwordMix")}</span>
               </li>
               <li className="flex items-start gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                <span>Never share your login credentials with unverified contacts.</span>
+                <span>{t("settings.neverShare")}</span>
               </li>
             </ul>
           </div>
@@ -291,7 +293,7 @@ export const SecurityTab: React.FC<SecurityTabProps> = ({ onPasswordUpdated }) =
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 flex items-start gap-3">
             <Info className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
             <div className="space-y-1">
-              <h4 className="text-xs font-semibold text-slate-900">Need Help Recovering Your Account?</h4>
+              <h4 className="text-xs font-semibold text-slate-900">{t("settings.recoverAccount")}</h4>
               <p className="text-xs text-slate-500">
                 If you encounter any issues accessing your profile, please contact our 24/7 concierge support.
               </p>

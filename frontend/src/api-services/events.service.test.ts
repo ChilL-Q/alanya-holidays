@@ -4,6 +4,8 @@ import {
   getEvents,
   getEventBySlug,
   createEvent,
+  getMyEvents,
+  updateEvent,
   toggleRsvp,
   getAttendees,
   formatEventDateParts,
@@ -165,7 +167,7 @@ describe("events.service", () => {
 
       const payload = {
         title: "Sunset Kayak Meetup",
-        categoryId: "events-sports",
+        categoryId: "11111111-2222-4333-8444-555555555555",
         eventDate: "2026-07-10",
         eventTime: "17:00",
         location: "Cleopatra Beach",
@@ -177,13 +179,13 @@ describe("events.service", () => {
         title: "Sunset Kayak Meetup",
         location: "Cleopatra Beach",
         description: "Kayaking along Cleopatra Beach at dusk.",
-        category_id: "events-sports",
+        category_id: "11111111-2222-4333-8444-555555555555",
       }));
       expect(result).not.toBeNull();
       expect(result.title).toBe("Sunset Kayak Meetup");
     });
 
-    it("should slugify category label when only display category is provided", async () => {
+    it("should send a null category_id when no category identifier is provided", async () => {
       vi.spyOn(apiClient, "post").mockResolvedValueOnce({
         id: "ev-new-2",
         title: "Beach Coding Session",
@@ -192,7 +194,6 @@ describe("events.service", () => {
 
       await createEvent({
         title: "Beach Coding Session",
-        category: "Digital Nomad Events",
         eventDate: "2026-08-05",
         eventTime: "09:00",
         location: "Cleopatra Beach",
@@ -200,7 +201,7 @@ describe("events.service", () => {
       });
 
       expect(apiClient.post).toHaveBeenCalledWith("/forum/events", expect.objectContaining({
-        category_id: "digital-nomad-events",
+        category_id: null,
       }));
     });
 
@@ -211,7 +212,7 @@ describe("events.service", () => {
 
       const payload = {
         title: "Fallback Event",
-        category: "Expat Socials",
+        categoryId: "11111111-2222-4333-8444-555555555555",
         eventDate: "2026-08-01",
         eventTime: "19:00",
         location: "Alanya Center",
@@ -219,6 +220,66 @@ describe("events.service", () => {
       };
 
       await expect(createEvent(payload)).rejects.toThrow(ApiError);
+    });
+  });
+
+  describe("merchant event ownership endpoints", () => {
+    it("loads only the authenticated user's events from /forum/events/mine", async () => {
+      vi.spyOn(apiClient, "get").mockResolvedValueOnce([
+        {
+          id: "event-owned-draft",
+          title: "Owned draft",
+          event_date: "2026-09-12T18:00:00Z",
+          host_id: "merchant-1",
+          created_by: "merchant-1",
+          is_published: false,
+        },
+        {
+          id: "event-owned-published",
+          title: "Owned published meetup",
+          event_date: "2026-09-13T18:00:00Z",
+          host_id: "merchant-1",
+          created_by: "merchant-1",
+          is_published: true,
+        },
+      ]);
+
+      const result = await getMyEvents();
+
+      expect(apiClient.get).toHaveBeenCalledWith("/forum/events/mine");
+      expect(result).toEqual([
+        expect.objectContaining({
+          id: "event-owned-draft",
+          hostId: "merchant-1",
+          createdBy: "merchant-1",
+          isPublished: false,
+        }),
+        expect.objectContaining({
+          id: "event-owned-published",
+          hostId: "merchant-1",
+          createdBy: "merchant-1",
+          isPublished: true,
+        }),
+      ]);
+    });
+
+    it("updates an event through the owner-checked endpoint without sending host_id", async () => {
+      vi.spyOn(apiClient, "put").mockResolvedValueOnce({
+        id: "event-owned",
+        title: "Updated meetup",
+        event_date: "2026-09-12T18:00:00Z",
+      });
+
+      await updateEvent("event-owned", {
+        title: "Updated meetup",
+        location: "Harbor",
+        host_id: "forged-owner",
+      });
+
+      expect(apiClient.put).toHaveBeenCalledWith("/forum/events/event-owned", {
+        title: "Updated meetup",
+        location: "Harbor",
+      });
     });
   });
 

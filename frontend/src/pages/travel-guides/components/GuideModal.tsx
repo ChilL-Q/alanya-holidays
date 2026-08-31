@@ -4,6 +4,8 @@ import { blogService, type BlogPostItem, type GuideContent, type ChecklistItem }
 import { guideContents } from "@/domain/guide-contents";
 import { ArticleContentRenderer } from "@/components/article";
 import { sanitizeForumHtml } from "@/utils/sanitizeHtml";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface GuideModalProps {
   guide: BlogPostItem;
@@ -86,6 +88,7 @@ export function getGuideCoverImage(guide: {
 }
 
 export default function GuideModal({ guide, onClose }: GuideModalProps) {
+  const { t } = useTranslation();
   const initialContent = guideContents[guide.title] || (guide.slug ? guideContents[guide.slug] : null) || null;
   const [content, setContent] = useState<GuideContent | null>(initialContent);
   const [isLoadingContent, setIsLoadingContent] = useState(!initialContent);
@@ -203,7 +206,7 @@ export default function GuideModal({ guide, onClose }: GuideModalProps) {
           {isLoadingContent ? (
             <div className="p-16 text-center">
               <i className="ri-loader-4-line animate-spin text-4xl text-primary-500 mb-4 block mx-auto"></i>
-              <p className="text-foreground-500 text-sm">Loading guide details...</p>
+              <p className="text-foreground-500 text-sm">{t("public.loadingGuideDetails")}</p>
             </div>
           ) : content ? (
             <>
@@ -313,7 +316,7 @@ export default function GuideModal({ guide, onClose }: GuideModalProps) {
           ) : (
             <div className="p-10 text-center">
               <i className="ri-article-line text-4xl text-foreground-300 mb-4 block"></i>
-              <p className="text-foreground-500">Full guide content coming soon.</p>
+              <p className="text-foreground-500">{t("public.guideContentComingSoon")}</p>
             </div>
           )}
         </div>

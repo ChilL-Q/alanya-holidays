@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 import {
   AreaChart,
   Area,
@@ -25,6 +27,7 @@ const CHANNEL_COLORS: Record<string, string> = {
 };
 
 export default function PlatformAnalyticsTab() {
+  const { t } = useTranslation();
   const [days, setDays] = useState<number>(30);
   const [analytics, setAnalytics] = useState<PlatformAnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -37,11 +40,11 @@ export default function PlatformAnalyticsTab() {
       const data = await adminService.getPlatformAnalytics(days, { throwOnError: true });
       setAnalytics(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load platform analytics");
+    setError(err instanceof Error ? err.message : t("merchant.unableAnalytics"));
     } finally {
       setLoading(false);
     }
-  }, [days]);
+  }, [days, t]);
 
   useEffect(() => {
     void fetchAnalytics();
@@ -57,19 +60,19 @@ export default function PlatformAnalyticsTab() {
       <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-xs border border-secondary-200/80 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors">
         <div>
           <h2 className="text-lg font-bold text-secondary-900 dark:text-white">
-            Platform Analytics & KPI Overview
+            {t("admin.analyticsTitle")}
           </h2>
           <p className="text-xs text-secondary-500 dark:text-slate-400">
-            Real-time traffic, conversion rates, customer inquiry channels, and listing performance.
+            {t("admin.analyticsDescription")}
           </p>
         </div>
 
         {/* Timeframe selector */}
         <div className="flex items-center space-x-1 bg-secondary-100 dark:bg-slate-800 p-1 rounded-xl">
           {[
-            { label: "7 Days", value: 7 },
-            { label: "30 Days", value: 30 },
-            { label: "90 Days", value: 90 },
+            { label: t("merchant.days", { count: 7 }), value: 7 },
+            { label: t("merchant.days", { count: 30 }), value: 30 },
+            { label: t("merchant.days", { count: 90 }), value: 90 },
           ].map((tf) => (
             <button
               key={tf.value}
@@ -98,7 +101,7 @@ export default function PlatformAnalyticsTab() {
             onClick={() => void fetchAnalytics()}
             className="text-xs font-semibold text-rose-700 dark:text-rose-300 underline hover:no-underline cursor-pointer"
           >
-            Retry
+            {t("common.tryAgain")}
           </button>
         </div>
       )}
@@ -108,7 +111,7 @@ export default function PlatformAnalyticsTab() {
         {/* Total Views */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-secondary-200/80 dark:border-slate-800 shadow-xs space-y-2 transition-colors">
           <div className="flex items-center justify-between text-secondary-400 dark:text-slate-500">
-            <span className="text-xs font-bold uppercase tracking-wider">Total Views</span>
+            <span className="text-xs font-bold uppercase tracking-wider">{t("admin.totalViews")}</span>
             <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center text-base">
               <i className="ri-eye-line" />
             </div>
@@ -116,13 +119,13 @@ export default function PlatformAnalyticsTab() {
           <div className="text-2xl font-black text-secondary-900 dark:text-white">
             {loading ? "..." : (kpis?.totalViews ?? 0).toLocaleString()}
           </div>
-          <div className="text-xs text-secondary-500 dark:text-slate-400">Across all platform listings</div>
+          <div className="text-xs text-secondary-500 dark:text-slate-400">{t("admin.allPlatformListings")}</div>
         </div>
 
         {/* Total Inquiries */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-secondary-200/80 dark:border-slate-800 shadow-xs space-y-2 transition-colors">
           <div className="flex items-center justify-between text-secondary-400 dark:text-slate-500">
-            <span className="text-xs font-bold uppercase tracking-wider">Inquiries</span>
+            <span className="text-xs font-bold uppercase tracking-wider">{t("admin.inquiries")}</span>
             <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-base">
               <i className="ri-chat-voice-line" />
             </div>
@@ -130,13 +133,13 @@ export default function PlatformAnalyticsTab() {
           <div className="text-2xl font-black text-secondary-900 dark:text-white">
             {loading ? "..." : (kpis?.totalClicks ?? 0).toLocaleString()}
           </div>
-          <div className="text-xs text-secondary-500 dark:text-slate-400">WhatsApp, Web & Maps</div>
+          <div className="text-xs text-secondary-500 dark:text-slate-400">{t("admin.whatsappWebMaps")}</div>
         </div>
 
         {/* Active Listings */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-secondary-200/80 dark:border-slate-800 shadow-xs space-y-2 transition-colors">
           <div className="flex items-center justify-between text-secondary-400 dark:text-slate-500">
-            <span className="text-xs font-bold uppercase tracking-wider">Active Listings</span>
+            <span className="text-xs font-bold uppercase tracking-wider">{t("admin.activeListings")}</span>
             <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-base">
               <i className="ri-store-2-line" />
             </div>
@@ -144,13 +147,13 @@ export default function PlatformAnalyticsTab() {
           <div className="text-2xl font-black text-secondary-900 dark:text-white">
             {loading ? "..." : (kpis?.activeListingsCount ?? 0).toLocaleString()}
           </div>
-          <div className="text-xs text-secondary-500 dark:text-slate-400">Live approved directory items</div>
+          <div className="text-xs text-secondary-500 dark:text-slate-400">{t("admin.liveApproved")}</div>
         </div>
 
         {/* Moderation Queue */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-secondary-200/80 dark:border-slate-800 shadow-xs space-y-2 transition-colors">
           <div className="flex items-center justify-between text-secondary-400 dark:text-slate-500">
-            <span className="text-xs font-bold uppercase tracking-wider">Queue</span>
+            <span className="text-xs font-bold uppercase tracking-wider">{t("admin.queue")}</span>
             <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-base">
               <i className="ri-hourglass-2-line" />
             </div>
@@ -168,7 +171,7 @@ export default function PlatformAnalyticsTab() {
         {/* Paid Tiers */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-secondary-200/80 dark:border-slate-800 shadow-xs space-y-2 transition-colors">
           <div className="flex items-center justify-between text-secondary-400 dark:text-slate-500">
-            <span className="text-xs font-bold uppercase tracking-wider">Paid Tiers</span>
+            <span className="text-xs font-bold uppercase tracking-wider">{t("admin.paidTiers")}</span>
             <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center text-base">
               <i className="ri-vip-crown-line" />
             </div>
@@ -182,13 +185,13 @@ export default function PlatformAnalyticsTab() {
                   (analytics?.tierDistribution.partner ?? 0)
                 ).toLocaleString()}
           </div>
-          <div className="text-xs text-secondary-500 dark:text-slate-400">Voyager, Signature, Partner</div>
+          <div className="text-xs text-secondary-500 dark:text-slate-400">{t("admin.paidTierNames")}</div>
         </div>
 
         {/* Claim Conversion Rate */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-secondary-200/80 dark:border-slate-800 shadow-xs space-y-2 transition-colors">
           <div className="flex items-center justify-between text-secondary-400 dark:text-slate-500">
-            <span className="text-xs font-bold uppercase tracking-wider">Claim Rate</span>
+            <span className="text-xs font-bold uppercase tracking-wider">{t("admin.claimRate")}</span>
             <div className="w-8 h-8 rounded-lg bg-accent-50 dark:bg-accent-950/60 text-accent-600 dark:text-accent-400 flex items-center justify-center text-base">
               <i className="ri-percent-line" />
             </div>
@@ -209,10 +212,10 @@ export default function PlatformAnalyticsTab() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-base font-bold text-secondary-900 dark:text-white">
-                Views & Inquiries Trend
+                {t("admin.viewsInquiriesTrend")}
               </h3>
               <p className="text-xs text-secondary-500 dark:text-slate-400">
-                Daily traffic volume and total customer actions over the last {days} days.
+                {t("admin.dailyTrafficDescription", { count: days })}
               </p>
             </div>
           </div>
@@ -286,7 +289,7 @@ export default function PlatformAnalyticsTab() {
               </ResponsiveContainer>
             ) : (
               <div className="h-full flex items-center justify-center text-xs text-secondary-400 dark:text-slate-500 bg-secondary-50 dark:bg-slate-950 rounded-xl">
-                No time-series analytics recorded yet in this timeframe.
+                {t("admin.noTimeseries")}
               </div>
             )}
           </div>
@@ -295,8 +298,8 @@ export default function PlatformAnalyticsTab() {
         {/* Channel Breakdown (4 cols) */}
         <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-2xl p-6 border border-secondary-200/80 dark:border-slate-800 shadow-xs space-y-4 transition-colors">
           <div>
-            <h3 className="text-base font-bold text-secondary-900 dark:text-white">Inquiry Channels</h3>
-            <p className="text-xs text-secondary-500 dark:text-slate-400">Distribution by action type</p>
+            <h3 className="text-base font-bold text-secondary-900 dark:text-white">{t("merchant.inquiryChannels")}</h3>
+            <p className="text-xs text-secondary-500 dark:text-slate-400">{t("admin.distribution")}</p>
           </div>
 
           <div className="h-52 w-full">
@@ -339,7 +342,7 @@ export default function PlatformAnalyticsTab() {
               </ResponsiveContainer>
             ) : (
               <div className="h-full flex items-center justify-center text-xs text-secondary-400 dark:text-slate-500 bg-secondary-50 dark:bg-slate-950 rounded-xl">
-                No channel clicks recorded yet.
+                {t("admin.noChannelClicks")}
               </div>
             )}
           </div>
@@ -365,10 +368,10 @@ export default function PlatformAnalyticsTab() {
         <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-2xl p-6 border border-secondary-200/80 dark:border-slate-800 shadow-xs space-y-4 transition-colors">
           <div>
             <h3 className="text-base font-bold text-secondary-900 dark:text-white">
-              Subscription Tiers
+              {t("admin.subscriptionTiers")}
             </h3>
             <p className="text-xs text-secondary-500 dark:text-slate-400">
-              Active listings breakdown by subscription plan
+              {t("admin.activeListingsBreakdown")}
             </p>
           </div>
 
@@ -430,10 +433,10 @@ export default function PlatformAnalyticsTab() {
         <div className="lg:col-span-8 bg-white dark:bg-slate-900 rounded-2xl p-6 border border-secondary-200/80 dark:border-slate-800 shadow-xs space-y-4 transition-colors">
           <div>
             <h3 className="text-base font-bold text-secondary-900 dark:text-white">
-              Top Performing Listings
+              {t("admin.topPerforming")}
             </h3>
             <p className="text-xs text-secondary-500 dark:text-slate-400">
-              Highest traffic businesses ranked by total views and direct customer inquiries
+              {t("admin.topPerformingDescription")}
             </p>
           </div>
 
@@ -442,11 +445,11 @@ export default function PlatformAnalyticsTab() {
               <table className="min-w-full divide-y divide-secondary-100 dark:divide-slate-800 text-sm">
                 <thead>
                   <tr className="text-xs text-secondary-400 dark:text-slate-500 uppercase">
-                    <th className="pb-2 text-left font-bold">Business</th>
-                    <th className="pb-2 text-left font-bold">Category</th>
-                    <th className="pb-2 text-left font-bold">Tier</th>
-                    <th className="pb-2 text-right font-bold">Views</th>
-                    <th className="pb-2 text-right font-bold">Clicks</th>
+                    <th className="pb-2 text-left font-bold">{t("admin.business")}</th>
+                    <th className="pb-2 text-left font-bold">{t("admin.category")}</th>
+                    <th className="pb-2 text-left font-bold">{t("admin.tier")}</th>
+                    <th className="pb-2 text-right font-bold">{t("admin.views")}</th>
+                    <th className="pb-2 text-right font-bold">{t("admin.clicks")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-secondary-100 dark:divide-slate-800/80">

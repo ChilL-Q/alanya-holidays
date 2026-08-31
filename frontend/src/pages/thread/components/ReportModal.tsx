@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export interface ReportModalProps {
   isOpen: boolean;
@@ -8,6 +10,7 @@ export interface ReportModalProps {
 }
 
 export default function ReportModal({ isOpen, onClose, onSubmit }: ReportModalProps) {
+  const { t } = useTranslation();
   const [reason, setReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -72,7 +75,7 @@ export default function ReportModal({ isOpen, onClose, onSubmit }: ReportModalPr
               <i className="ri-flag-line text-lg"></i>
             </div>
             <h3 id="report-modal-title" className="font-heading font-semibold text-base text-foreground-900">
-              Report Content
+              {t("public.reportContent")}
             </h3>
           </div>
           <button
@@ -80,7 +83,7 @@ export default function ReportModal({ isOpen, onClose, onSubmit }: ReportModalPr
             onClick={onClose}
             disabled={isSubmitting}
             className="text-foreground-400 hover:text-foreground-600 p-1.5 rounded-lg hover:bg-background-100 transition-colors disabled:opacity-50 cursor-pointer"
-            aria-label="Close report modal"
+            aria-label={t("common.close")}
           >
             <i className="ri-close-line text-lg"></i>
           </button>
@@ -90,14 +93,14 @@ export default function ReportModal({ isOpen, onClose, onSubmit }: ReportModalPr
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <div>
             <label htmlFor="report-reason" className="block text-xs font-medium text-foreground-700 mb-1.5">
-              Reason for reporting <span className="text-rose-500">*</span>
+              {t("public.reportReason")} <span className="text-rose-500">*</span>
             </label>
             <textarea
               id="report-reason"
               rows={4}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="Please describe why this content violates community guidelines (e.g., spam, harassment, inappropriate language, copyright violation)..."
+              placeholder={t("public.reportPlaceholder")}
               disabled={isSubmitting}
               className="w-full px-3.5 py-2.5 rounded-lg border border-background-200 bg-background-50/30 text-foreground-900 text-sm placeholder:text-foreground-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 resize-none transition-all disabled:opacity-60"
               required
@@ -113,7 +116,7 @@ export default function ReportModal({ isOpen, onClose, onSubmit }: ReportModalPr
               disabled={isSubmitting}
               className="px-4 py-2 rounded-lg border border-background-200 text-xs font-medium text-foreground-600 hover:bg-background-100 disabled:opacity-50 transition-colors cursor-pointer"
             >
-              Cancel
+              {t("common.cancel")}
             </button>
             <button
               type="submit"
@@ -123,12 +126,12 @@ export default function ReportModal({ isOpen, onClose, onSubmit }: ReportModalPr
               {isSubmitting ? (
                 <>
                   <i className="ri-loader-4-line animate-spin text-sm"></i>
-                  <span>Submitting...</span>
+                  <span>{t("public.sending")}</span>
                 </>
               ) : (
                 <>
                   <i className="ri-flag-fill text-sm"></i>
-                  <span>Submit Report</span>
+                  <span>{t("public.submitReport")}</span>
                 </>
               )}
             </button>

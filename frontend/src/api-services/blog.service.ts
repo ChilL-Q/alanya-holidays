@@ -46,6 +46,7 @@ export interface BlogPostItem {
   readTime?: string;
   description?: string;
   tag?: string;
+  content_type?: 'blog' | 'guide';
 }
 
 export interface BlogPostDetail extends BlogPostItem {
@@ -168,6 +169,7 @@ export interface GetBlogPostsOptions {
   tag?: string;
   search?: string;
   status?: string;
+  contentType?: 'blog' | 'guide';
 }
 
 export interface SubmitGuidePayload {
@@ -180,6 +182,20 @@ export interface SubmitGuidePayload {
   video_url?: string;
   media_urls?: string[];
   payment_details?: Record<string, string | number | boolean>;
+  content_type?: 'blog' | 'guide';
+}
+
+export interface BlogSubmissionItem {
+  id: string;
+  user_id: string;
+  title: string;
+  content: string;
+  category?: string | null;
+  status: "pending_review" | "approved" | "rejected" | string;
+  rejection_reason?: string | null;
+  created_at: string;
+  updated_at?: string;
+  content_type?: 'blog' | 'guide';
 }
 
 export interface BackendBlogResponse {
@@ -201,6 +217,7 @@ export interface BackendBlogPostItem {
   status?: string;
   view_count?: number;
   is_featured?: boolean;
+  content_type?: 'blog' | 'guide';
   published_at?: string | null;
   created_at?: string;
   updated_at?: string;
@@ -252,6 +269,7 @@ function mapBackendPostToItem(post: BackendBlogPostItem): BlogPostItem {
     status: post.status || "published",
     view_count: post.view_count || 0,
     is_featured: !!post.is_featured,
+    content_type: post.content_type || 'blog',
     published_at: post.published_at || post.created_at,
     created_at: post.created_at,
     updated_at: post.updated_at,
@@ -280,7 +298,7 @@ export class BlogService {
   async getPosts(
     options: GetBlogPostsOptions = {}
   ): Promise<{ posts: BlogPostItem[]; total: number }> {
-    const { page, limit = 20, offset, category, tag, search, status } = options;
+    const { page, limit = 20, offset, category, tag, search, status, contentType } = options;
 
     const params: Record<string, string | number | boolean | undefined> = {};
     if (page !== undefined) params.page = page;
@@ -290,6 +308,7 @@ export class BlogService {
     if (tag && tag !== "All") params.tag = tag;
     if (search) params.search = search;
     if (status) params.status = status;
+    if (contentType) params.content_type = contentType;
 
     const response = await apiClient.get<BackendBlogResponse | BackendBlogPostItem[]>(
       "/blog/posts",
@@ -376,6 +395,52 @@ export class BlogService {
       success: true,
       id: response?.submissionId || response?.id || "submitted",
     };
+  }
+
+  async getMyPosts(): Promise<BlogPostItem[]> {
+    const response = await apiClient.get<BackendBlogResponse | BackendBlogPostItem[]>(
+      "/blog/posts/me",
+      { params: { limit: 50 } }
+    );
+    const rawPosts = Array.isArray(response)
+      ? response
+      : response?.data || response?.posts || [];
+    return rawPosts.map(mapBackendPostToItem);
+  }
+
+  async getMySubmissions(): Promise<BlogSubmissionItem[]> {
+    const response = await apiClient.get<BlogSubmissionItem[]>(
+      "/blog/submissions/me",
+      { params: { limit: 50 } }
+    );
+    return Array.isArray(response) ? response : [];
+  }
+
+  async updateMyPost(
+    postId: string,
+    updates: Pick<BlogPostItem, "title" | "content" | "category">
+  ): Promise<BlogPostItem> {
+    const response = await apiClient.put<BackendBlogPostItem>(
+      `/blog/${postId}`,
+      updates
+    );
+    return mapBackendPostToItem(response);
+  }
+
+  async updateMySubmission(
+    submissionId: string,
+    updates: Pick<BlogSubmissionItem, "title" | "content" | "category">
+  ): Promise<BlogSubmissionItem> {
+    return apiClient.patch<BlogSubmissionItem>(
+      `/blog/submissions/${submissionId}`,
+      updates
+    );
+  }
+
+  async resubmitMySubmission(submissionId: string): Promise<BlogSubmissionItem> {
+    return apiClient.post<BlogSubmissionItem>(
+      `/blog/submissions/${submissionId}/resubmit`
+    );
   }
 
   /**

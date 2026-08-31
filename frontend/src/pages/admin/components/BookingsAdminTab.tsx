@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useState } from "react";
 import { adminService, type AdminBookingItem } from "@/api-services/admin.service";
 import { logger } from "@/lib/logger";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 const STATUS_FILTERS = ["all", "pending", "confirmed", "completed", "cancelled", "rejected"] as const;
 
@@ -18,6 +20,7 @@ const PAYOUT_STATUSES = ["pending", "processing", "paid", "failed", "hold"] as c
 const BookingsAdminTab: React.FC<{ onCountUpdate?: (c: { total: number; pending: number }) => void }> = ({
   onCountUpdate,
 }) => {
+  const { t } = useTranslation();
   const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>("all");
   const [bookings, setBookings] = useState<AdminBookingItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,12 +45,12 @@ const BookingsAdminTab: React.FC<{ onCountUpdate?: (c: { total: number; pending:
         onCountUpdate({ total: source.length, pending: source.filter((b) => b.status === "pending").length });
       } catch (err) {
         logger.error("Failed to load admin bookings:", err);
-        setError("Failed to load bookings. Please try again.");
+        setError(t("adminQueue.bookingsError"));
       } finally {
         setLoading(false);
       }
     },
-    [onCountUpdate]
+    [onCountUpdate, t]
   );
 
   useEffect(() => {
@@ -79,7 +82,7 @@ const BookingsAdminTab: React.FC<{ onCountUpdate?: (c: { total: number; pending:
   };
 
   const itemTitle = (b: AdminBookingItem) =>
-    b.itemTitle || b.property?.title || b.service?.title || `${b.item_type || "Item"} · ${b.item_id || "?"}`;
+    b.itemTitle || b.property?.title || b.service?.title || `${b.item_type || t("adminQueue.item")} · ${b.item_id || "?"}`;
 
   return (
     <div className="space-y-5">
@@ -96,7 +99,7 @@ const BookingsAdminTab: React.FC<{ onCountUpdate?: (c: { total: number; pending:
                 : "bg-white dark:bg-slate-900 text-secondary-600 dark:text-slate-400 border-secondary-200 dark:border-slate-700 hover:border-accent-300"
             }`}
           >
-            {s}
+            {s === "all" ? t("adminQueue.all") : t(`adminQueue.status.${s}`)}
           </button>
         ))}
       </div>
@@ -117,7 +120,7 @@ const BookingsAdminTab: React.FC<{ onCountUpdate?: (c: { total: number; pending:
         </div>
       ) : bookings.length === 0 ? (
         <div className="p-10 text-center rounded-2xl bg-white dark:bg-slate-900 border border-secondary-200/80 dark:border-slate-800 text-sm text-secondary-500 dark:text-slate-400">
-          No bookings found for this filter.
+          {t("adminQueue.noBookings")}
         </div>
       ) : (
         <div className="space-y-3">
@@ -125,9 +128,6 @@ const BookingsAdminTab: React.FC<{ onCountUpdate?: (c: { total: number; pending:
             const st = booking.status?.toLowerCase() || "pending";
             const payout = booking.payout_status?.toLowerCase();
             const isActing = actingId === booking.id;
-            const canRefund =
-              (st === "confirmed" || st === "completed") &&
-              booking.payment_status?.toLowerCase() === "paid";
 
             return (
               <div
@@ -142,14 +142,14 @@ const BookingsAdminTab: React.FC<{ onCountUpdate?: (c: { total: number; pending:
                     <p className="text-xs text-secondary-500 dark:text-slate-400 mt-0.5">
                       {new Date(booking.check_in).toLocaleDateString()} →{" "}
                       {new Date(booking.check_out).toLocaleDateString()}
-                      {booking.guests ? ` · ${booking.guests} guests` : ""}
+                      {booking.guests ? ` · ${booking.guests} ${t("adminQueue.guests")}` : ""}
                       {booking.user?.full_name ? ` · ${booking.user.full_name}` : ""}
                       {booking.user?.email ? ` (${booking.user.email})` : ""}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border ${STATUS_BADGES[st] || STATUS_BADGES.pending}`}>
-                      {st}
+                      {t(`adminQueue.status.${st}`)}
                     </span>
                     <span className="font-bold text-sm text-secondary-900 dark:text-white">
                       €{Number(booking.total_price ?? 0).toFixed(2)}
@@ -166,7 +166,7 @@ const BookingsAdminTab: React.FC<{ onCountUpdate?: (c: { total: number; pending:
                         onClick={() => act(booking.id, () => adminService.updateBookingStatus(booking.id, "confirmed"))}
                         className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500 hover:bg-emerald-400 text-white transition-colors disabled:opacity-50 cursor-pointer"
                       >
-                        Confirm
+                        {t("adminQueue.confirm")}
                       </button>
                       <button
                         type="button"
@@ -174,7 +174,7 @@ const BookingsAdminTab: React.FC<{ onCountUpdate?: (c: { total: number; pending:
                         onClick={() => act(booking.id, () => adminService.updateBookingStatus(booking.id, "rejected", "Rejected by admin"))}
                         className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-500 hover:bg-rose-400 text-white transition-colors disabled:opacity-50 cursor-pointer"
                       >
-                        Reject
+                        {t("adminQueue.reject")}
                       </button>
                     </>
                   )}
@@ -186,7 +186,7 @@ const BookingsAdminTab: React.FC<{ onCountUpdate?: (c: { total: number; pending:
                         onClick={() => act(booking.id, () => adminService.updateBookingStatus(booking.id, "completed"))}
                         className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-sky-500 hover:bg-sky-400 text-white transition-colors disabled:opacity-50 cursor-pointer"
                       >
-                        Mark Completed
+                        {t("adminQueue.markCompleted")}
                       </button>
                       <button
                         type="button"
@@ -194,23 +194,12 @@ const BookingsAdminTab: React.FC<{ onCountUpdate?: (c: { total: number; pending:
                         onClick={() => act(booking.id, () => adminService.updateBookingStatus(booking.id, "cancelled", "Cancelled by admin"))}
                         className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-secondary-100 dark:bg-slate-800 hover:bg-secondary-200 dark:hover:bg-slate-700 text-secondary-800 dark:text-slate-200 transition-colors disabled:opacity-50 cursor-pointer"
                       >
-                        Cancel
+                        {t("adminQueue.cancel")}
                       </button>
                     </>
                   )}
-                  {canRefund && (
-                    <button
-                      type="button"
-                      disabled={isActing}
-                      onClick={() => act(booking.id, () => adminService.refundBooking(booking.id))}
-                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-100 dark:bg-rose-950/60 hover:bg-rose-200 dark:hover:bg-rose-900 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800 transition-colors disabled:opacity-50 cursor-pointer"
-                    >
-                      Refund &amp; Cancel
-                    </button>
-                  )}
-
                   <label className="ml-auto flex items-center gap-1.5 text-xs text-secondary-500 dark:text-slate-400">
-                    Payout:
+                    {t("adminQueue.payout")}
                     <select
                       value={payout || ""}
                       disabled={isActing}
@@ -220,7 +209,7 @@ const BookingsAdminTab: React.FC<{ onCountUpdate?: (c: { total: number; pending:
                       {!payout && <option value="">—</option>}
                       {PAYOUT_STATUSES.map((ps) => (
                         <option key={ps} value={ps}>
-                          {ps}
+                          {t(`adminQueue.status.${ps}`)}
                         </option>
                       ))}
                     </select>

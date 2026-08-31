@@ -7,8 +7,11 @@ import ArticleContentRenderer from "@/components/article/ArticleContentRenderer"
 import BlogComments from "./components/BlogComments";
 import { blogService, type BlogPostDetail } from "@/api-services/blog.service";
 import { logger } from "@/lib/logger";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export default function BlogPostPage() {
+  const { t } = useTranslation();
   const { slug } = useParams<{ slug: string }>();
   const [post, setPost] = useState<BlogPostDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -79,7 +82,7 @@ export default function BlogPostPage() {
           <div className="min-h-[60vh] flex items-center justify-center">
             <div className="text-center">
               <i className="ri-loader-4-line animate-spin text-4xl text-primary-500 mb-4 block mx-auto"></i>
-              <p className="text-foreground-500 text-sm">Loading post...</p>
+              <p className="text-foreground-500 text-sm">{t("public.loadingPosts")}</p>
             </div>
           </div>
         ) : loadError ? (
@@ -114,7 +117,7 @@ export default function BlogPostPage() {
           <div className="min-h-[60vh] flex items-center justify-center px-4">
             <div className="text-center">
               <i className="ri-article-line text-6xl text-foreground-300 mb-4 block"></i>
-              <h1 className="font-heading text-2xl text-foreground-900 mb-2">Post Not Found</h1>
+              <h1 className="font-heading text-2xl text-foreground-900 mb-2">{t("public.postNotFound")}</h1>
               <p className="text-sm text-foreground-500 mb-6">
                 The blog post you are looking for does not exist or has been removed.
               </p>

@@ -56,10 +56,17 @@ function createShortcodeNode(
       };
     }
     case "video": {
+      const src = attrs.src || attrs.url || "";
+      const inferredProvider = src.includes("vimeo.com")
+        ? "vimeo"
+        : src.match(/\.(mp4|webm|ogg|mov)(\?.*)?$/i)
+          ? "html5"
+          : "youtube";
       return {
         type: "video",
-        src: attrs.src || attrs.url || "",
-        provider: (attrs.provider as "youtube" | "vimeo" | "html5") || "youtube",
+        src,
+        provider:
+          (attrs.provider as "youtube" | "vimeo" | "html5") || inferredProvider,
         caption: attrs.caption || undefined,
         trackSrc: attrs.trackSrc || attrs.tracks || undefined,
         poster: attrs.poster || undefined,
@@ -116,18 +123,35 @@ export function parseArticleContent(rawContent: string): ArticleBlockNode[] {
     return [];
   }
 
+  const htmlAttribute = (tag: string, name: string): string => {
+    const match = tag.match(new RegExp(`${name}\\s*=\\s*["']([^"']+)["']`, 'i'));
+    return match?.[1] || '';
+  };
+  const normalizedContent = rawContent
+    .replace(/<p[^>]*>\s*(\[(?:venue|cta|video|figure|callout|pullquote|lead)\b[^\]]*\])\s*<\/p>/gi, '\n$1\n')
+    .replace(/<img\b[^>]*>/gi, (tag) => {
+      const src = htmlAttribute(tag, 'src');
+      const alt = htmlAttribute(tag, 'alt');
+      return `\n[figure src="${src}" alt="${alt}"]\n`;
+    })
+    .replace(/<iframe\b[^>]*>[\s\S]*?<\/iframe>|<iframe\b[^>]*\/>/gi, (tag) => {
+      const src = htmlAttribute(tag, 'src');
+      return `\n[video src="${src}"]\n`;
+    });
+
   const nodes: ArticleBlockNode[] = [];
-  const lines = rawContent.split(/\r?\n/);
+  const lines = normalizedContent.split(/\r?\n/);
   let currentParagraphLines: string[] = [];
 
   const flushParagraph = () => {
     if (currentParagraphLines.length > 0) {
       const content = currentParagraphLines.join("\n").trim();
       if (content) {
-        nodes.push({
-          type: "paragraph",
-          content,
-        });
+        nodes.push(
+          /<\/?[a-z][\s\S]*>/i.test(content)
+            ? { type: "html", content }
+            : { type: "paragraph", content },
+        );
       }
       currentParagraphLines = [];
     }

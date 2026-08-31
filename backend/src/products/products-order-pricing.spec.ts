@@ -3,6 +3,7 @@ import { BadRequestException } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { ProductsRepository } from './products.repository';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
+import { BillingService } from '../billing/billing.service';
 import { CreateProductOrderDto } from './dto/create-product-order.dto';
 
 /**
@@ -43,6 +44,12 @@ describe('ProductsService - server-side order pricing', () => {
         {
           provide: UserRolesRepository,
           useValue: { getRole: jest.fn().mockResolvedValue('user') },
+        },
+        {
+          provide: BillingService,
+          useValue: {
+            hasActivePremiumAccess: jest.fn().mockResolvedValue(true),
+          },
         },
       ],
     }).compile();

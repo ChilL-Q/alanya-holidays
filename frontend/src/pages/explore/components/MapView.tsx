@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import type { Business } from "@/api-services/directory.service";
 import { businessCategories } from "@/api-services/directory.service";
 import TrustBadge from "@/components/common/TrustBadge";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface MapViewProps {
   businesses: Business[];
@@ -33,6 +35,7 @@ export default function MapView({
   onSearchChange,
   onCategoryChange,
 }: MapViewProps) {
+  const { t } = useTranslation();
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
 
   const mapUrl = useMemo(() => buildMapUrl(selectedBusiness), [selectedBusiness]);
@@ -47,7 +50,7 @@ export default function MapView({
               <i className="ri-search-line text-foreground-400 text-lg"></i>
               <input
                 type="text"
-                placeholder="Search businesses..."
+                placeholder={t("public.searchBusinessesPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
                 className="flex-1 text-sm text-foreground-900 placeholder:text-foreground-400 py-2.5 bg-transparent border-none outline-none"
@@ -205,7 +208,7 @@ export default function MapView({
                   <div className="w-14 h-14 mx-auto mb-4 flex items-center justify-center rounded-full bg-accent-100">
                     <i className="ri-search-line text-accent-500 text-xl"></i>
                   </div>
-                  <h3 className="font-heading text-base text-foreground-900 mb-1">No places found</h3>
+                  <h3 className="font-heading text-base text-foreground-900 mb-1">{t("public.noPlacesFound")}</h3>
                   <p className="text-xs text-foreground-500">
                     Try a different search or category filter.
                   </p>

@@ -2,6 +2,7 @@ import React from "react";
 import { User, Shield, Activity, Calendar, Mail, CheckCircle2, Sparkles, Store, CreditCard } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { UserProfile } from "@/context/AuthContext";
+import { useTranslation } from "react-i18next";
 
 export type SettingsTabId = "profile" | "security" | "activity" | "billing";
 
@@ -42,6 +43,7 @@ export const SettingsHero: React.FC<SettingsHeroProps> = ({
   activeTab,
   onTabChange,
 }) => {
+  const { t } = useTranslation();
   const fullName = profile?.full_name || user?.email?.split("@")[0] || "Alanya Holidays Member";
   const email = profile?.email || user?.email || "No email connected";
   const role = profile?.role || "user";
@@ -51,27 +53,27 @@ export const SettingsHero: React.FC<SettingsHeroProps> = ({
   const tabs: { id: SettingsTabId; label: string; icon: React.ReactNode; description: string }[] = [
     {
       id: "profile",
-      label: "Profile & Preferences",
+      label: t("settings.profilePreferences", "Profile & Preferences"),
       icon: <User className="w-4 h-4" />,
-      description: "Manage personal details, bio & socials",
+      description: t("settings.profilePreferencesDescription", "Manage personal details, bio & socials"),
     },
     {
       id: "security",
-      label: "Account Security",
+      label: t("settings.accountSecurity", "Account Security"),
       icon: <Shield className="w-4 h-4" />,
-      description: "Password & access settings",
+      description: t("settings.accountSecurityDescription", "Password & access settings"),
     },
     {
       id: "billing",
-      label: "Billing",
+      label: t("settings.billingTab", "Billing"),
       icon: <CreditCard className="w-4 h-4" />,
-      description: "Manage your subscription & payments",
+      description: t("settings.billingDescription", "Manage your subscription & payments"),
     },
     {
       id: "activity",
-      label: "My Activity Hub",
+      label: t("settings.activityHub", "My Activity Hub"),
       icon: <Activity className="w-4 h-4" />,
-      description: "Orders, bookings & favorites",
+      description: t("settings.activityDescription", "Orders, bookings & favorites"),
     },
   ];
 
@@ -112,7 +114,7 @@ export const SettingsHero: React.FC<SettingsHeroProps> = ({
               </h1>
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium tracking-wide uppercase bg-amber-500/20 text-amber-300 border border-amber-400/30">
                 <Sparkles className="w-3 h-3 text-amber-300" />
-                {role === "admin" ? "Admin" : role === "host" ? "Host / Partner" : "Verified Member"}
+                {role === "admin" ? t("settings.adminRole", "Admin") : role === "host" ? t("settings.hostRole", "Host / Partner") : t("settings.verifiedMember", "Verified Member")}
               </span>
             </div>
 
@@ -136,7 +138,7 @@ export const SettingsHero: React.FC<SettingsHeroProps> = ({
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-semibold text-sm shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 transition-all duration-200 active:scale-95 cursor-pointer border border-amber-400/30"
           >
             <Store className="w-4 h-4 text-slate-950" />
-            <span>Merchant Dashboard</span>
+            <span>{t("nav.merchantDashboard", "Dashboard")}</span>
           </Link>
         </div>
       </div>
@@ -145,7 +147,7 @@ export const SettingsHero: React.FC<SettingsHeroProps> = ({
       <div className="relative z-10 mt-8 pt-6 border-t border-white/10">
         <div
           role="tablist"
-          aria-label="Settings Sections"
+          aria-label={t("settings.sections", "Settings Sections")}
           className="flex flex-wrap gap-2 sm:gap-3"
         >
           {tabs.map((tab) => {

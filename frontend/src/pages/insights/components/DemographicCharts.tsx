@@ -18,6 +18,8 @@ import {
   type NationalityShare,
   type DistrictForeignPop,
 } from "../data/regionalData";
+import { useTranslation } from "react-i18next";
+import i18n from "@/i18n";
 
 interface CustomTooltipProps {
   active?: boolean;
@@ -39,13 +41,13 @@ function NationalityTooltip({ active, payload }: CustomTooltipProps) {
           <span>{data.nationality}</span>
         </div>
         <div className="flex items-center justify-between gap-4 text-foreground-700 dark:text-foreground-200 mb-1.5">
-          <span>Registered Residents:</span>
+          <span>{i18n.t("insights.registeredResidents")}:</span>
           <span className="font-semibold text-primary-600 dark:text-primary-400">
             {data.count.toLocaleString()}
           </span>
         </div>
         <div className="flex items-center justify-between gap-4 text-foreground-600 dark:text-foreground-400 mb-2">
-          <span>Share of Province:</span>
+          <span>{i18n.t("insights.shareProvince")}:</span>
           <span className="font-semibold">{data.percentage}%</span>
         </div>
         <p className="text-[11px] text-foreground-500 dark:text-foreground-400 border-t border-background-100 dark:border-background-700 pt-1.5 leading-tight">
@@ -72,17 +74,17 @@ function DistrictTooltip({ active, payload }: CustomTooltipProps) {
           )}
         </div>
         <div className="flex items-center justify-between gap-4 text-foreground-700 dark:text-foreground-200 mb-1">
-          <span>Foreign Residents:</span>
+          <span>{i18n.t("insights.foreignResidents")}:</span>
           <span className="font-semibold text-primary-600 dark:text-primary-400">
             {data.count.toLocaleString()}
           </span>
         </div>
         <div className="flex items-center justify-between gap-4 text-foreground-600 dark:text-foreground-400 mb-1">
-          <span>Share of All Foreigners:</span>
+          <span>{i18n.t("insights.shareForeigners")}:</span>
           <span className="font-semibold">{data.percentage}%</span>
         </div>
         <div className="flex items-center justify-between gap-4 text-foreground-600 dark:text-foreground-400 mb-2">
-          <span>District Expat Share:</span>
+          <span>{i18n.t("insights.districtExpatShare")}:</span>
           <span className="font-semibold">{data.foreignShareInDistrict}%</span>
         </div>
         <p className="text-[11px] text-foreground-500 dark:text-foreground-400 border-t border-background-100 dark:border-background-700 pt-1.5 leading-tight">
@@ -95,6 +97,7 @@ function DistrictTooltip({ active, payload }: CustomTooltipProps) {
 }
 
 export default function DemographicCharts() {
+  const { t } = useTranslation();
   const [selectedNationality, setSelectedNationality] = useState<string | null>(null);
 
   return (
@@ -104,7 +107,7 @@ export default function DemographicCharts() {
         <div className="max-w-3xl mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-100 dark:bg-accent-950/80 border border-accent-200 dark:border-accent-800/60 text-accent-800 dark:text-accent-300 text-xs font-semibold uppercase tracking-wider mb-3">
             <i className="ri-user-heart-line" />
-            <span>Expatriate & Resident Demographics</span>
+            <span>{t("insights.demographics")}</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground-900 dark:text-foreground-50 tracking-tight">
             International Communities in Antalya & Alanya

@@ -4,8 +4,11 @@ import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
 import { forumService, type ForumMember, type CategoryThread } from "@/api-services/forum.service";
 import ErrorState from "@/components/base/ErrorState";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export default function MemberProfilePage() {
+  const { t } = useTranslation();
   const { memberId } = useParams<{ memberId: string }>();
   const [member, setMember] = useState<ForumMember | null>(null);
   const [memberThreads, setMemberThreads] = useState<CategoryThread[]>([]);
@@ -56,7 +59,7 @@ export default function MemberProfilePage() {
         <Navbar />
         <main className="min-h-screen flex items-center justify-center p-8">
           <ErrorState
-            title="Failed to load profile"
+            title={t("public.failedProfile", "Failed to load profile")}
             message={fetchError}
             onRetry={loadMemberData}
           />
@@ -75,16 +78,16 @@ export default function MemberProfilePage() {
             <div className="w-20 h-20 mx-auto flex items-center justify-center rounded-full bg-background-100 mb-5">
               <i className="ri-user-unfollow-line text-foreground-400 text-3xl"></i>
             </div>
-            <h1 className="font-heading text-2xl text-foreground-900 mb-3">Member not found</h1>
+            <h1 className="font-heading text-2xl text-foreground-900 mb-3">{t("public.memberNotFound", "Member not found")}</h1>
             <p className="text-foreground-500 text-sm mb-6">
-              This profile doesn&apos;t exist or may have been removed.
+              {t("public.memberMissing", "This profile doesn't exist or may have been removed.")}
             </p>
             <Link
               to="/members"
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-500 text-background-50 rounded-full text-sm font-medium hover:bg-primary-600 transition-colors"
             >
               <i className="ri-arrow-left-line"></i>
-              Back to Members
+              {t("public.backMembers", "Back to Members")}
             </Link>
           </div>
         </main>
@@ -106,11 +109,11 @@ export default function MemberProfilePage() {
             {/* Breadcrumb */}
             <div className="flex items-center gap-2 mb-8">
               <Link to="/" className="text-foreground-500 hover:text-foreground-700 text-sm transition-colors">
-                Home
+                {t("nav.home", "Home")}
               </Link>
               <i className="ri-arrow-right-s-line text-foreground-400 text-sm"></i>
               <Link to="/members" className="text-foreground-500 hover:text-foreground-700 text-sm transition-colors">
-                Members
+                {t("public.members", "Members")}
               </Link>
               <i className="ri-arrow-right-s-line text-foreground-400 text-sm"></i>
               <span className="text-foreground-900 text-sm font-medium">@{member.username}</span>
@@ -176,13 +179,13 @@ export default function MemberProfilePage() {
                 <p className="text-2xl md:text-3xl font-semibold text-foreground-900">
                   {member.posts.toLocaleString()}
                 </p>
-                <p className="text-xs text-foreground-500 mt-1">Posts</p>
+                <p className="text-xs text-foreground-500 mt-1">{t("public.posts", "Posts")}</p>
               </div>
               <div className="bg-background-100 rounded-xl p-4 text-center">
                 <p className="text-2xl md:text-3xl font-semibold text-foreground-900">
                   {memberThreads.length}
                 </p>
-                <p className="text-xs text-foreground-500 mt-1">Discussions</p>
+                <p className="text-xs text-foreground-500 mt-1">{t("public.discussions", "Discussions")}</p>
               </div>
             </div>
           </div>
@@ -195,7 +198,7 @@ export default function MemberProfilePage() {
               <i className="ri-chat-3-line text-primary-600 text-lg"></i>
             </div>
             <div>
-              <h2 className="font-heading text-xl md:text-2xl text-foreground-900">Recent Discussions</h2>
+              <h2 className="font-heading text-xl md:text-2xl text-foreground-900">{t("public.recentDiscussions", "Recent Discussions")}</h2>
               <p className="text-xs text-foreground-500">
                 {memberThreads.length > 0
                   ? `${memberThreads.length} discussion${memberThreads.length !== 1 ? "s" : ""} started`
@@ -263,8 +266,8 @@ export default function MemberProfilePage() {
               <div className="w-14 h-14 mx-auto flex items-center justify-center rounded-full bg-background-100 mb-4">
                 <i className="ri-chat-off-line text-foreground-400 text-xl"></i>
               </div>
-              <p className="text-foreground-500 text-sm">No discussions yet</p>
-              <p className="text-foreground-400 text-xs mt-1">This member hasn&apos;t started any threads.</p>
+              <p className="text-foreground-500 text-sm">{t("public.noDiscussions", "No discussions yet")}</p>
+              <p className="text-foreground-400 text-xs mt-1">{t("public.noMemberThreads", "This member hasn't started any threads.")}</p>
             </div>
           )}
 

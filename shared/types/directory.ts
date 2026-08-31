@@ -50,6 +50,8 @@ export interface DirectoryListingRecord {
   languages_spoken?: string[];
   newsletter_featured?: boolean;
   claimed_at?: string | null;
+  creation_source?: 'admin' | 'merchant' | 'import';
+  can_claim?: boolean;
   subscription_id?: string | null;
   listing_locations?: unknown;
   reviews_average?: number | null;

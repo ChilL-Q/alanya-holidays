@@ -11,6 +11,9 @@ import { UpgradeModal } from "../components/UpgradeModal";
 import { directoryService } from "@/api-services/directory.service";
 import { billingService } from "@/api-services/billing.service";
 import { businessApplicationsService } from "@/api-services/business-applications.service";
+import { blogService } from "@/api-services/blog.service";
+import { eventsService } from "@/api-services/events.service";
+import { productsService } from "@/api-services/products.service";
 import type { Business } from "@/mocks/businesses";
 import type { DirectoryClaim, OwnerAnalyticsSummary } from "@/api-services/directory.service";
 
@@ -110,6 +113,15 @@ const sampleAnalytics: OwnerAnalyticsSummary = {
 describe("Merchant Dashboard Unit & Component Tests", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    vi.spyOn(billingService, "getMySubscription").mockResolvedValue({
+      plan: "monthly",
+      status: "active",
+      tier: "voyager",
+      stripe_subscription_id: "sub-test",
+      stripe_customer_id: "cus-test",
+      current_period_end: "2099-09-25T00:00:00Z",
+      cancel_at_period_end: false,
+    });
   });
 
   describe("MerchantHero", () => {
@@ -313,8 +325,7 @@ describe("Merchant Dashboard Unit & Component Tests", () => {
       render(
         <PerformanceAnalyticsTab
           analytics={sampleAnalytics}
-          userListings={sampleListings}
-          highestTier="signature"
+          hasPremiumAccess={true}
           loading={false}
           days={30}
           onDaysChange={vi.fn()}
@@ -332,8 +343,7 @@ describe("Merchant Dashboard Unit & Component Tests", () => {
       render(
         <PerformanceAnalyticsTab
           analytics={sampleAnalytics}
-          userListings={[{ ...sampleListings[1], tier: "explorer" }]}
-          highestTier="explorer"
+          hasPremiumAccess={false}
           loading={false}
           days={30}
           onDaysChange={vi.fn()}
@@ -352,8 +362,7 @@ describe("Merchant Dashboard Unit & Component Tests", () => {
       render(
         <PerformanceAnalyticsTab
           analytics={sampleAnalytics}
-          userListings={sampleListings}
-          highestTier="signature"
+          hasPremiumAccess={true}
           loading={true}
           error={null}
           days={30}
@@ -430,6 +439,49 @@ describe("Merchant Dashboard Unit & Component Tests", () => {
       vi.spyOn(directoryService, "getMyListings").mockResolvedValue(sampleListings);
       vi.spyOn(directoryService, "getMyClaims").mockResolvedValue(sampleClaims);
       vi.spyOn(directoryService, "getOwnerAnalytics").mockResolvedValue(sampleAnalytics);
+      vi.spyOn(blogService, "getMyPosts").mockResolvedValue([
+        {
+          id: "post-own-1",
+          title: "My direct guide",
+          slug: "my-direct-guide",
+          content: "A direct guide owned by this merchant.",
+          category: "Guides",
+          status: "draft",
+        },
+      ]);
+      vi.spyOn(blogService, "getMySubmissions").mockResolvedValue([
+        {
+          id: "submission-own-1",
+          user_id: mockUser.id,
+          title: "Pending local story",
+          content: "A pending blog submission owned by this merchant.",
+          category: "Local Life",
+          status: "pending_review",
+          created_at: "2026-08-20T10:00:00Z",
+        },
+      ]);
+      vi.spyOn(eventsService, "getMyEvents").mockResolvedValue([
+        {
+          id: "event-own-1",
+          title: "Merchant sunset meetup",
+          date: "2026-09-15",
+          day: "15",
+          month: "SEP",
+          time: "6:00 PM",
+          location: "Alanya Harbor",
+          category: "Business Networking",
+          attendees: 0,
+          maxAttendees: 20,
+          host: "Ali Merchant",
+          hostAvatar: "/images/placeholder-business.svg",
+          description: "Meet local merchants.",
+          image: "/images/placeholder-business.svg",
+          isFeatured: false,
+          eventDate: "2026-09-15T18:00:00Z",
+          isPublished: true,
+        },
+      ]);
+      vi.spyOn(productsService, "getMyProducts").mockResolvedValue([]);
       vi.spyOn(businessApplicationsService, "getMine").mockResolvedValue({
         id: "application-1",
         userId: mockUser.id,
@@ -462,7 +514,8 @@ describe("Merchant Dashboard Unit & Component Tests", () => {
 
       // R1. Breadcrumbs
       expect(screen.getByText("Merchant Portal")).toBeInTheDocument();
-      expect(screen.getByText("Dashboard")).toBeInTheDocument();
+      expect(screen.getAllByText("Dashboard").length).toBeGreaterThanOrEqual(2);
+      expect(screen.getByRole("tablist", { name: "Dashboard tabs" })).toBeInTheDocument();
 
       // R1. Browse Live Directory
       const browseLiveLink = screen.getByRole("link", { name: /Browse Live Directory/i });
@@ -498,7 +551,38 @@ describe("Merchant Dashboard Unit & Component Tests", () => {
       await waitFor(() => {
         expect(screen.getByText("Cleopatra Diving School")).toBeInTheDocument();
       });
+
+      fireEvent.click(screen.getByRole("tab", { name: /My Content/i }));
+      expect(await screen.findByText("My direct guide")).toBeInTheDocument();
+      expect(screen.getByText("Pending local story")).toBeInTheDocument();
+      expect(screen.getAllByText("Guide").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("Blog").length).toBeGreaterThan(0);
+
+      fireEvent.click(screen.getByRole("tab", { name: /My Events & Activities/i }));
+      expect(await screen.findByText("Merchant sunset meetup")).toBeInTheDocument();
+      expect(screen.getByText("Published")).toBeInTheDocument();
+    });
+
+    it("locks products and analytics from the same subscription predicate without loading products", async () => {
+      vi.mocked(billingService.getMySubscription).mockResolvedValueOnce(null);
+      vi.spyOn(directoryService, "getMyListings").mockResolvedValue(sampleListings);
+      vi.spyOn(directoryService, "getMyClaims").mockResolvedValue(sampleClaims);
+      vi.spyOn(businessApplicationsService, "getMine").mockResolvedValue(null);
+      const productLoad = vi.spyOn(productsService, "getMyProducts");
+
+      render(
+        <MemoryRouter>
+          <MerchantDashboardPage />
+        </MemoryRouter>
+      );
+
+      const productsTab = await screen.findByRole("tab", { name: /My Products.*Locked/i });
+      fireEvent.click(productsTab);
+      expect(await screen.findByText("Unlock Merchant Products")).toBeInTheDocument();
+      expect(productLoad).not.toHaveBeenCalled();
+
+      fireEvent.click(screen.getByRole("tab", { name: /Performance Analytics.*Locked/i }));
+      expect(await screen.findByText("Unlock Premium Performance Analytics")).toBeInTheDocument();
     });
   });
 });
-

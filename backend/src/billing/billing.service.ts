@@ -38,6 +38,14 @@ export class BillingService {
     return { subscription: rest };
   }
 
+  /**
+   * Server-authoritative premium predicate shared by every paid merchant
+   * capability. The underlying `is_premium` RPC owns status and expiry rules.
+   */
+  async hasActivePremiumAccess(userId: string): Promise<boolean> {
+    return this.billingRepository.hasActivePremiumAccess(userId);
+  }
+
   async createCheckout(
     userId: string,
     email: string | undefined,

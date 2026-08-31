@@ -59,7 +59,7 @@ describe("ContentSubmissionPreviewModal", () => {
     expect(screen.getByText("Adventure")).toBeInTheDocument();
     expect(screen.getByText(/An off-the-beaten-path route/i)).toBeInTheDocument();
     expect(screen.getByText(/USDT_TRC20_WALLET_ADDRESS/i)).toBeInTheDocument();
-    expect(screen.getByText("pending_review")).toBeInTheDocument();
+    expect(screen.getByText("Pending Review")).toBeInTheDocument();
   });
 
   it("should call onApprove when Approve button is clicked", async () => {

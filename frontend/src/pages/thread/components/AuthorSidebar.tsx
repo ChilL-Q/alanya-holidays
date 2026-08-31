@@ -1,11 +1,14 @@
 import { Link } from "react-router-dom";
 import type { ThreadDetail } from "@/api-services/forum.service";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface AuthorSidebarProps {
   thread: ThreadDetail;
 }
 
 export default function AuthorSidebar({ thread }: AuthorSidebarProps) {
+  const { t } = useTranslation();
   return (
     <aside className="w-full lg:w-72 shrink-0">
       <div className="bg-background-50 rounded-xl border border-background-200/70 overflow-hidden sticky top-24">
@@ -59,19 +62,19 @@ export default function AuthorSidebar({ thread }: AuthorSidebarProps) {
             <p className="text-sm font-bold text-foreground-900">
               {thread.authorPosts.toLocaleString()}
             </p>
-            <p className="text-[10px] text-foreground-400">Posts</p>
+            <p className="text-[10px] text-foreground-400">{t("public.posts")}</p>
           </div>
           <div className="py-3 text-center border-x border-background-200/70">
             <p className="text-sm font-bold text-foreground-900">
               {thread.authorReputation.toLocaleString()}
             </p>
-            <p className="text-[10px] text-foreground-400">Rep</p>
+            <p className="text-[10px] text-foreground-400">{t("public.rep")}</p>
           </div>
           <div className="py-3 text-center">
             <p className="text-xs font-bold text-foreground-900">
               {thread.authorJoinDate}
             </p>
-            <p className="text-[10px] text-foreground-400">Joined</p>
+            <p className="text-[10px] text-foreground-400">{t("public.joined")}</p>
           </div>
         </div>
 
@@ -83,14 +86,14 @@ export default function AuthorSidebar({ thread }: AuthorSidebarProps) {
           </div>
           <div className="flex items-center gap-2 text-xs text-foreground-500">
             <i className="ri-calendar-line text-foreground-400"></i>
-            Joined {thread.authorJoinDate}
+            {t("public.joinedDate", { date: thread.authorJoinDate })}
           </div>
         </div>
 
         {/* Badges */}
         <div className="px-5 py-3 border-t border-background-200/70">
           <p className="text-[10px] uppercase tracking-wider text-foreground-300 font-semibold mb-2">
-            Badges
+            {t("public.badges")}
           </p>
           <div className="flex flex-wrap gap-1.5">
             {thread.authorBadges.map((badge) => (

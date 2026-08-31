@@ -417,9 +417,14 @@ export class ForumController {
     return this.eventService.getForumEvent(slug, user?.id);
   }
 
+  @Get('events/mine')
+  @UseGuards(AuthGuard)
+  async getMyForumEvents(@CurrentUser() user: AuthUser): Promise<ForumEvent[]> {
+    return this.eventService.getMyForumEvents(user.id);
+  }
+
   @Post('events')
-  @UseGuards(AuthGuard, RolesGuard)
-  @RequireRole('admin')
+  @UseGuards(AuthGuard)
   async createForumEvent(
     @Body() body: CreateForumEventDto,
     @CurrentUser() user: AuthUser,
@@ -428,8 +433,7 @@ export class ForumController {
   }
 
   @Put('events/:id')
-  @UseGuards(AuthGuard, RolesGuard)
-  @RequireRole('admin')
+  @UseGuards(AuthGuard)
   async updateForumEvent(
     @Param('id') id: string,
     @Body() body: UpdateForumEventDto,
@@ -439,8 +443,7 @@ export class ForumController {
   }
 
   @Delete('events/:id')
-  @UseGuards(AuthGuard, RolesGuard)
-  @RequireRole('admin')
+  @UseGuards(AuthGuard)
   async deleteForumEvent(
     @Param('id') id: string,
     @CurrentUser() user: AuthUser,

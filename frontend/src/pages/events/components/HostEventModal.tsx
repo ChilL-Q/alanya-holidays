@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { eventsService, type ForumEvent } from "@/api-services/events.service";
 import { forumService, type Category } from "@/api-services/forum.service";
 import { logger } from "@/lib/logger";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface HostEventModalProps {
   isOpen: boolean;
@@ -10,6 +12,7 @@ interface HostEventModalProps {
 }
 
 export default function HostEventModal({ isOpen, onClose, onEventCreated }: HostEventModalProps) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
   const [eventDate, setEventDate] = useState("");
@@ -41,7 +44,7 @@ export default function HostEventModal({ isOpen, onClose, onEventCreated }: Host
             ...category,
             slug: category.slug || category.id,
           }))
-          .filter((category) => category.slug)
+          .filter((category) => category.id)
           .sort((a, b) => a.name.localeCompare(b.name));
 
         setAvailableCategories(normalized);
@@ -66,7 +69,7 @@ export default function HostEventModal({ isOpen, onClose, onEventCreated }: Host
   }, [isOpen]);
 
   const selectedCategoryLabel = useMemo(() => {
-    return availableCategories.find((item) => (item.slug || item.id) === category)?.name || category;
+    return availableCategories.find((item) => item.id === category)?.name || category;
   }, [availableCategories, category]);
 
   if (!isOpen) return null;
@@ -230,7 +233,7 @@ export default function HostEventModal({ isOpen, onClose, onEventCreated }: Host
                     setTitle(e.target.value);
                     if (errors.title) setErrors((prev) => { const n = { ...prev }; delete n.title; return n; });
                   }}
-                  placeholder="e.g. Sunset Yoga at Cleopatra Beach"
+                  placeholder={t("events.hostTitlePlaceholder")}
                   maxLength={100}
                   className={`w-full bg-background-50 border ${
                     errors.title ? "border-primary-500" : "border-background-200"
@@ -267,7 +270,7 @@ export default function HostEventModal({ isOpen, onClose, onEventCreated }: Host
                       {isLoadingCategories ? "Loading categories..." : availableCategories.length > 0 ? "Select a category..." : "No categories available"}
                     </option>
                     {availableCategories.map((cat) => (
-                      <option key={cat.slug || cat.id} value={cat.slug || cat.id}>
+                      <option key={cat.id} value={cat.id}>
                         {cat.name}
                       </option>
                     ))}
@@ -279,7 +282,7 @@ export default function HostEventModal({ isOpen, onClose, onEventCreated }: Host
                 ) : categoriesError ? (
                   <p className="text-xs text-primary-500 mt-1">{categoriesError}</p>
                 ) : (
-                  <p className="text-xs text-foreground-400 mt-1">Categories are loaded from the forum backend and submitted using their real identifiers.</p>
+                  <p className="text-xs text-foreground-400 mt-1">{t("events.categoriesBackendNote")}</p>
                 )}
               </div>
 
@@ -338,7 +341,7 @@ export default function HostEventModal({ isOpen, onClose, onEventCreated }: Host
                     setLocation(e.target.value);
                     if (errors.location) setErrors((prev) => { const n = { ...prev }; delete n.location; return n; });
                   }}
-                  placeholder="e.g. Cleopatra Beach, Alanya"
+                  placeholder={t("events.locationPlaceholder")}
                   maxLength={150}
                   className={`w-full bg-background-50 border ${
                     errors.location ? "border-primary-500" : "border-background-200"
@@ -360,7 +363,7 @@ export default function HostEventModal({ isOpen, onClose, onEventCreated }: Host
                     setDescription(e.target.value);
                     if (errors.description) setErrors((prev) => { const n = { ...prev }; delete n.description; return n; });
                   }}
-                  placeholder="Describe the event — what to bring, what to expect, who is it for..."
+                  placeholder={t("events.descriptionPlaceholder")}
                   rows={4}
                   maxLength={500}
                   className={`w-full bg-background-50 border ${
@@ -380,7 +383,7 @@ export default function HostEventModal({ isOpen, onClose, onEventCreated }: Host
               <div className="flex items-center gap-2 text-xs text-foreground-500 bg-background-100/70 rounded-lg px-4 py-2.5">
                 <i className="ri-information-line"></i>
                 <span>
-                  This admin flow publishes the event immediately using supported backend fields and real forum category slugs.
+                  This admin flow publishes the event immediately using supported backend fields and real forum category identifiers.
                 </span>
               </div>
 

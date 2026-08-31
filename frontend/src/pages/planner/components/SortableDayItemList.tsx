@@ -15,6 +15,8 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { type PlanItem } from "@/hooks/usePlanner";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 const TIME_SLOT_ICONS: Record<string, string> = {
   "Morning (8AM - 12PM)": "ri-sun-line",
@@ -68,6 +70,7 @@ function SortableCard({
   onSetEditingItemId,
   onBlurNotes,
 }: SortableCardProps) {
+  const { t } = useTranslation();
   const {
     attributes,
     listeners,
@@ -195,7 +198,7 @@ function SortableCard({
                   value={item.notes}
                   onChange={(e) => onUpdateNotes(item.id, e.target.value)}
                   onBlur={onBlurNotes}
-                  placeholder="Add a note..."
+                  placeholder={t("public.addNote")}
                   rows={2}
                   className="w-full px-3 py-2 text-xs rounded-lg border border-background-200 bg-background-50 focus:outline-none focus:border-primary-300 text-foreground-700 placeholder:text-foreground-300 resize-y"
                   autoFocus

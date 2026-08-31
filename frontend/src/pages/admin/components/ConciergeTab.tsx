@@ -4,6 +4,8 @@ import {
   type ConciergeEnquiry,
 } from "@/api-services/admin.service";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 type StatusFilter = "all" | "new" | "responded" | "archived";
 type EnquiryTypeFilter = string;
@@ -14,19 +16,19 @@ interface ConciergeTabProps {
 
 const statusConfig: Record<string, { label: string; bg: string; text: string; dot: string }> = {
   new: {
-    label: "New",
+    label: "adminQueue.status.new",
     bg: "bg-accent-100 dark:bg-accent-950/80 border-accent-200 dark:border-accent-800",
     text: "text-accent-800 dark:text-accent-300",
     dot: "bg-accent-500",
   },
   responded: {
-    label: "Responded",
+    label: "adminQueue.status.responded",
     bg: "bg-primary-100 dark:bg-primary-950/80 border-primary-200 dark:border-primary-800",
     text: "text-primary-800 dark:text-primary-300",
     dot: "bg-primary-500",
   },
   archived: {
-    label: "Archived",
+    label: "adminQueue.status.archived",
     bg: "bg-secondary-100 dark:bg-slate-800 border-secondary-200 dark:border-slate-700",
     text: "text-secondary-800 dark:text-slate-300",
     dot: "bg-secondary-500",
@@ -34,15 +36,15 @@ const statusConfig: Record<string, { label: string; bg: string; text: string; do
 };
 
 const enquiryTypeConfig: Record<string, { label: string; icon: string; bg: string; text: string }> = {
-  private_jet: { label: "Private Jet", icon: "ri-plane-line", bg: "bg-sky-100 dark:bg-sky-950/80", text: "text-sky-700 dark:text-sky-300" },
-  personal_chef: { label: "Personal Chef", icon: "ri-restaurant-2-line", bg: "bg-orange-100 dark:bg-orange-950/80", text: "text-orange-700 dark:text-orange-300" },
-  personal_driver: { label: "Personal Driver", icon: "ri-steering-2-line", bg: "bg-emerald-100 dark:bg-emerald-950/80", text: "text-emerald-700 dark:text-emerald-300" },
-  personal_shopper: { label: "Personal Shopper", icon: "ri-shopping-bag-3-line", bg: "bg-pink-100 dark:bg-pink-950/80", text: "text-pink-700 dark:text-pink-300" },
-  golf_vacation: { label: "Golf Vacation", icon: "ri-golf-ball-line", bg: "bg-lime-100 dark:bg-lime-950/80", text: "text-lime-700 dark:text-lime-300" },
-  yacht_charter: { label: "Yacht Charter", icon: "ri-sailboat-line", bg: "bg-cyan-100 dark:bg-cyan-950/80", text: "text-cyan-700 dark:text-cyan-300" },
-  wine_tasting: { label: "Wine Tasting", icon: "ri-goblet-line", bg: "bg-rose-100 dark:bg-rose-950/80", text: "text-rose-700 dark:text-rose-300" },
-  hammam_spa: { label: "Hammam & Spa", icon: "ri-drop-line", bg: "bg-teal-100 dark:bg-teal-950/80", text: "text-teal-700 dark:text-teal-300" },
-  general: { label: "General", icon: "ri-question-line", bg: "bg-secondary-100 dark:bg-slate-800", text: "text-secondary-700 dark:text-slate-300" },
+  private_jet: { label: "adminQueue.privateJet", icon: "ri-plane-line", bg: "bg-sky-100 dark:bg-sky-950/80", text: "text-sky-700 dark:text-sky-300" },
+  personal_chef: { label: "adminQueue.personalChef", icon: "ri-restaurant-2-line", bg: "bg-orange-100 dark:bg-orange-950/80", text: "text-orange-700 dark:text-orange-300" },
+  personal_driver: { label: "adminQueue.personalDriver", icon: "ri-steering-2-line", bg: "bg-emerald-100 dark:bg-emerald-950/80", text: "text-emerald-700 dark:text-emerald-300" },
+  personal_shopper: { label: "adminQueue.personalShopper", icon: "ri-shopping-bag-3-line", bg: "bg-pink-100 dark:bg-pink-950/80", text: "text-pink-700 dark:text-pink-300" },
+  golf_vacation: { label: "adminQueue.golfVacation", icon: "ri-golf-ball-line", bg: "bg-lime-100 dark:bg-lime-950/80", text: "text-lime-700 dark:text-lime-300" },
+  yacht_charter: { label: "adminQueue.yachtCharter", icon: "ri-sailboat-line", bg: "bg-cyan-100 dark:bg-cyan-950/80", text: "text-cyan-700 dark:text-cyan-300" },
+  wine_tasting: { label: "adminQueue.wineTasting", icon: "ri-goblet-line", bg: "bg-rose-100 dark:bg-rose-950/80", text: "text-rose-700 dark:text-rose-300" },
+  hammam_spa: { label: "adminQueue.hammamSpa", icon: "ri-drop-line", bg: "bg-teal-100 dark:bg-teal-950/80", text: "text-teal-700 dark:text-teal-300" },
+  general: { label: "adminQueue.general", icon: "ri-question-line", bg: "bg-secondary-100 dark:bg-slate-800", text: "text-secondary-700 dark:text-slate-300" },
 };
 
 const subjectIcons: Record<string, string> = {
@@ -60,7 +62,7 @@ const subjectIcons: Record<string, string> = {
   "Expat & Relocation": "ri-suitcase-line",
 };
 
-function getRelativeTime(dateStr: string): string {
+function getRelativeTime(dateStr: string, t: (key: string, options?: Record<string, unknown>) => string): string {
   const now = new Date();
   const date = new Date(dateStr);
   const diffMs = now.getTime() - date.getTime();
@@ -68,11 +70,11 @@ function getRelativeTime(dateStr: string): string {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return "Just now";
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays === 1) return "Yesterday";
-  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffMins < 1) return t("adminQueue.justNow");
+  if (diffMins < 60) return t("adminQueue.minutesAgo", { count: diffMins });
+  if (diffHours < 24) return t("adminQueue.hoursAgo", { count: diffHours });
+  if (diffDays === 1) return t("adminQueue.yesterday");
+  if (diffDays < 7) return t("adminQueue.daysAgo", { count: diffDays });
   return date.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
@@ -90,6 +92,7 @@ function getFullDate(dateStr: string): string {
 export default function ConciergeTab({
   onEnquiriesCountUpdate,
 }: ConciergeTabProps) {
+  const { t } = useTranslation();
   const [enquiries, setEnquiries] = useState<ConciergeEnquiry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -114,11 +117,11 @@ export default function ConciergeTab({
         onEnquiriesCountUpdateRef.current({ total: data?.length || 0, newCount });
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load enquiries");
+      setError(err instanceof Error ? err.message : t("adminQueue.enquiriesError"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void fetchEnquiries();
@@ -211,7 +214,7 @@ export default function ConciergeTab({
                 : "text-secondary-500 dark:text-slate-400"
             }`}
           >
-            Total Enquiries
+            {t("adminQueue.totalEnquiries")}
           </div>
         </button>
 
@@ -233,7 +236,7 @@ export default function ConciergeTab({
               statusFilter === "new" ? "text-accent-100" : "text-secondary-500 dark:text-slate-400"
             }`}
           >
-            New / Unresolved
+            {t("adminQueue.newUnresolved")}
           </div>
         </button>
 
@@ -255,7 +258,7 @@ export default function ConciergeTab({
               statusFilter === "responded" ? "text-primary-100" : "text-secondary-500 dark:text-slate-400"
             }`}
           >
-            Responded
+            {t("adminQueue.responded")}
           </div>
         </button>
 
@@ -274,7 +277,7 @@ export default function ConciergeTab({
               statusFilter === "archived" ? "text-secondary-300" : "text-secondary-500 dark:text-slate-400"
             }`}
           >
-            Archived
+            {t("adminQueue.archived")}
           </div>
         </button>
       </div>
@@ -287,13 +290,13 @@ export default function ConciergeTab({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by client name, email, subject, or message content..."
+            placeholder={t("adminQueue.searchEnquiries")}
             className="w-full pl-10 pr-10 py-2.5 text-sm rounded-xl border border-secondary-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-secondary-900 dark:text-white placeholder:text-secondary-400 dark:placeholder:text-slate-500 focus:border-accent-500 focus:ring-2 focus:ring-accent-100 dark:focus:ring-accent-950 outline-none transition-all"
           />
           {searchQuery && (
             <button
               type="button"
-              aria-label="Clear search"
+              aria-label={t("adminQueue.clearSearch")}
               onClick={() => setSearchQuery("")}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary-400 hover:text-secondary-600 dark:text-slate-500 dark:hover:text-slate-300 text-base p-1 cursor-pointer"
             >
@@ -313,7 +316,7 @@ export default function ConciergeTab({
                 : "bg-secondary-100 dark:bg-slate-800 text-secondary-600 dark:text-slate-300 hover:bg-secondary-200 dark:hover:bg-slate-700"
             }`}
           >
-            All Services ({stats.total})
+            {t("adminQueue.allServices")} ({stats.total})
           </button>
           {Object.entries(enquiryTypeConfig).map(([key, cfg]) => {
             const count = typeStats[key] || 0;
@@ -330,7 +333,7 @@ export default function ConciergeTab({
                 }`}
               >
                 <i className={cfg.icon} />
-                <span>{cfg.label}</span>
+                <span>{t(cfg.label)}</span>
                 <span className="opacity-75">({count})</span>
               </button>
             );
@@ -352,7 +355,7 @@ export default function ConciergeTab({
             }}
             className="text-xs font-semibold text-rose-700 dark:text-rose-300 underline hover:no-underline cursor-pointer"
           >
-            Retry
+            {t("adminQueue.retry")}
           </button>
         </div>
       )}
@@ -373,10 +376,10 @@ export default function ConciergeTab({
             <i className="ri-inbox-line" />
           </div>
           <h3 className="text-base font-bold text-secondary-800 dark:text-white">
-            No enquiries found
+            {t("adminQueue.noEnquiries")}
           </h3>
           <p className="text-sm text-secondary-500 dark:text-slate-400 max-w-sm mx-auto mt-1">
-            No concierge requests match your selected filters.
+            {t("adminQueue.noEnquiryMatch")}
           </p>
         </div>
       ) : (
@@ -421,16 +424,16 @@ export default function ConciergeTab({
                           <span
                             className={`w-1.5 h-1.5 rounded-full mr-1.5 ${status.dot}`}
                           />
-                          {status.label}
+                          {t(status.label)}
                         </span>
                         <span
                           className={`hidden sm:inline-block px-2 py-0.5 rounded-md text-xs font-medium ${typeConfig.bg} ${typeConfig.text}`}
                         >
-                          {typeConfig.label}
+                          {t(typeConfig.label)}
                         </span>
                       </div>
                       <div className="text-sm font-semibold text-secondary-700 dark:text-slate-200 truncate mt-0.5">
-                        {enquiry.subject || "Concierge Request"}
+                        {enquiry.subject || t("adminQueue.conciergeRequest")}
                       </div>
                       <div className="text-xs text-secondary-500 dark:text-slate-400 line-clamp-1 mt-0.5">
                         {enquiry.message}
@@ -439,7 +442,7 @@ export default function ConciergeTab({
                   </div>
 
                   <div className="flex items-center space-x-3 text-xs text-secondary-400 dark:text-slate-500 pl-13 sm:pl-0">
-                    <span>{getRelativeTime(enquiry.created_at)}</span>
+                    <span>{getRelativeTime(enquiry.created_at, t)}</span>
                     <i
                       className={`ri-arrow-${
                         isExpanded ? "up" : "down"
@@ -453,7 +456,7 @@ export default function ConciergeTab({
                   <div className="px-5 pb-5 pt-2 border-t border-secondary-100/80 dark:border-slate-800 bg-secondary-50/50 dark:bg-slate-950/40 space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                       <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-secondary-200 dark:border-slate-800">
-                        <span className="text-secondary-400 dark:text-slate-500 block font-medium">Email</span>
+                        <span className="text-secondary-400 dark:text-slate-500 block font-medium">{t("adminQueue.email")}</span>
                         <a
                           href={`mailto:${enquiry.email}`}
                           className="text-accent-600 dark:text-accent-400 font-semibold hover:underline truncate block"
@@ -464,7 +467,7 @@ export default function ConciergeTab({
 
                       {enquiry.phone && (
                         <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-secondary-200 dark:border-slate-800">
-                          <span className="text-secondary-400 dark:text-slate-500 block font-medium">Phone</span>
+                          <span className="text-secondary-400 dark:text-slate-500 block font-medium">{t("adminQueue.phone")}</span>
                           <a
                             href={`tel:${enquiry.phone}`}
                             className="text-secondary-900 dark:text-white font-semibold hover:underline"
@@ -476,7 +479,7 @@ export default function ConciergeTab({
 
                       {enquiry.dates && (
                         <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-secondary-200 dark:border-slate-800">
-                          <span className="text-secondary-400 dark:text-slate-500 block font-medium">Dates / Schedule</span>
+                          <span className="text-secondary-400 dark:text-slate-500 block font-medium">{t("adminQueue.datesSchedule")}</span>
                           <span className="text-secondary-900 dark:text-white font-semibold">
                             {enquiry.dates}
                           </span>
@@ -485,9 +488,9 @@ export default function ConciergeTab({
 
                       {enquiry.party_size && (
                         <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-secondary-200 dark:border-slate-800">
-                          <span className="text-secondary-400 dark:text-slate-500 block font-medium">Party Size</span>
+                          <span className="text-secondary-400 dark:text-slate-500 block font-medium">{t("adminQueue.partySize")}</span>
                           <span className="text-secondary-900 dark:text-white font-semibold">
-                            {enquiry.party_size} Guests
+                            {enquiry.party_size} {t("adminQueue.guestLabel")}
                           </span>
                         </div>
                       )}
@@ -496,7 +499,7 @@ export default function ConciergeTab({
                     {/* Full Message */}
                     <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-secondary-200 dark:border-slate-800 space-y-1.5">
                       <span className="text-xs font-bold uppercase tracking-wider text-secondary-400 dark:text-slate-500 block">
-                        Message Content
+                        {t("adminQueue.messageContent")}
                       </span>
                       <p className="text-sm text-secondary-800 dark:text-slate-200 whitespace-pre-line leading-relaxed">
                         {enquiry.message}
@@ -506,16 +509,16 @@ export default function ConciergeTab({
                     {/* Actions Bar */}
                     <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
                       <div className="flex items-center space-x-2 text-xs">
-                        <span className="font-semibold text-secondary-600 dark:text-slate-300">Assign To:</span>
+                        <span className="font-semibold text-secondary-600 dark:text-slate-300">{t("adminQueue.assignTo")}</span>
                         <select
                           value={enquiry.assigned_to || "unassigned"}
                           onChange={(e) => handleAssign(enquiry.id, e.target.value)}
                           className="px-2.5 py-1 rounded-lg border border-secondary-300 dark:border-slate-700 text-xs bg-white dark:bg-slate-900 text-secondary-800 dark:text-slate-200 outline-none"
                         >
-                          <option value="unassigned">Unassigned</option>
-                          <option value="VIP Concierge Team">VIP Concierge Team</option>
-                          <option value="Lead Travel Specialist">Lead Travel Specialist</option>
-                          <option value="Operations Desk">Operations Desk</option>
+                          <option value="unassigned">{t("adminQueue.unassigned")}</option>
+                          <option value="VIP Concierge Team">{t("adminQueue.vipTeam")}</option>
+                          <option value="Lead Travel Specialist">{t("adminQueue.leadSpecialist")}</option>
+                          <option value="Operations Desk">{t("adminQueue.operationsDesk")}</option>
                         </select>
                       </div>
 
@@ -526,7 +529,7 @@ export default function ConciergeTab({
                             onClick={() => handleStatusChange(enquiry.id, "new")}
                             className="px-3 py-1 text-xs font-medium text-secondary-600 dark:text-slate-300 hover:bg-secondary-200 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
                           >
-                            Mark New
+                            {t("adminQueue.markNew")}
                           </button>
                         )}
                         {enquiry.status !== "responded" && (
@@ -535,7 +538,7 @@ export default function ConciergeTab({
                             onClick={() => handleStatusChange(enquiry.id, "responded")}
                             className="px-3 py-1 text-xs font-semibold text-primary-700 dark:text-primary-300 bg-primary-100 dark:bg-primary-950/60 hover:bg-primary-200 dark:hover:bg-primary-900/60 rounded-lg transition-colors cursor-pointer"
                           >
-                            Mark Responded
+                            {t("adminQueue.markResponded")}
                           </button>
                         )}
                         {enquiry.status !== "archived" && (
@@ -544,14 +547,14 @@ export default function ConciergeTab({
                             onClick={() => handleStatusChange(enquiry.id, "archived")}
                             className="px-3 py-1 text-xs font-medium text-secondary-500 dark:text-slate-400 hover:bg-secondary-200 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
                           >
-                            Archive
+                            {t("adminQueue.archive")}
                           </button>
                         )}
                       </div>
                     </div>
 
                     <div className="text-2xs text-secondary-400 dark:text-slate-500 text-right">
-                      Submitted on {getFullDate(enquiry.created_at)}
+                      {t("adminQueue.submittedOn", { date: getFullDate(enquiry.created_at) })}
                     </div>
                   </div>
                 )}

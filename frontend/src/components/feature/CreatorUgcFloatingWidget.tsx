@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import SubmitContentModal from "./SubmitContentModal";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export default function CreatorUgcFloatingWidget() {
+  const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { pathname } = useLocation();
@@ -15,24 +18,24 @@ export default function CreatorUgcFloatingWidget() {
           /* Collapsed Trigger Pill */
           <button
             onClick={() => setIsExpanded(true)}
-            className={`group border border-background-200 dark:border-background-700 shadow-xl hover:shadow-2xl hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-out backdrop-blur-md cursor-pointer ${useCompactTrigger ? "flex items-center justify-center w-12 h-12 rounded-full bg-white/95 dark:bg-background-900/95 text-foreground-900 dark:text-background-50" : "flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-white/95 dark:bg-background-900/95 text-foreground-900 dark:text-background-50"}`}
-            aria-label="Open community post widget"
-            title="Share with the Community"
+            className={`group border border-background-200 dark:border-background-700 shadow-xl hover:shadow-2xl hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] transition-all duration-300 ease-out backdrop-blur-md cursor-pointer max-sm:w-12 max-sm:h-12 max-sm:p-0 max-sm:justify-center max-sm:rounded-full ${useCompactTrigger ? "flex items-center justify-center w-12 h-12 rounded-full bg-white/95 dark:bg-background-900/95 text-foreground-900 dark:text-background-50" : "flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-white/95 dark:bg-background-900/95 text-foreground-900 dark:text-background-50"}`}
+            aria-label={t("public.openCommunityWidget")}
+            title={t("public.shareCommunity")}
           >
             <span className="flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-tr from-amber-500 to-rose-500 text-white shadow-sm transition-transform duration-300 ease-out group-hover:scale-105 group-hover:rotate-6">
               <i className="ri-chat-new-line text-sm"></i>
             </span>
             {!useCompactTrigger && (
               <>
-                <div className="flex flex-col text-left leading-tight">
+                <div className="hidden sm:flex flex-col text-left leading-tight">
                   <span className="text-xs font-bold font-heading text-foreground-900 dark:text-background-50">
-                    Share with the Community
+                    {t("public.shareCommunity")}
                   </span>
                   <span className="text-[10px] font-medium text-primary-600 dark:text-primary-400">
-                    Post a tip, story, or question
+                    {t("public.postTipStoryQuestion")}
                   </span>
                 </div>
-                <i className="ri-arrow-up-s-line text-foreground-400 group-hover:-translate-y-0.5 transition-transform duration-300 ease-out text-sm"></i>
+                <i className="hidden sm:block ri-arrow-up-s-line text-foreground-400 group-hover:-translate-y-0.5 transition-transform duration-300 ease-out text-sm"></i>
               </>
             )}
           </button>
@@ -47,17 +50,17 @@ export default function CreatorUgcFloatingWidget() {
                 </span>
                 <div>
                   <h3 className="text-sm font-bold font-heading text-foreground-900 dark:text-background-50">
-                    Share with the Community
+                    {t("public.shareCommunity")}
                   </h3>
                   <span className="text-[11px] font-semibold text-rose-600 dark:text-rose-400">
-                    Post to the Alanya forum
+                    {t("public.postToForum")}
                   </span>
                 </div>
               </div>
               <button
                 onClick={() => setIsExpanded(false)}
                 className="w-7 h-7 flex items-center justify-center rounded-full text-foreground-400 hover:text-foreground-700 dark:hover:text-background-100 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-                aria-label="Collapse banner"
+                aria-label={t("public.collapseBanner")}
               >
                 <i className="ri-close-line text-base"></i>
               </button>
@@ -66,26 +69,25 @@ export default function CreatorUgcFloatingWidget() {
             {/* Body */}
             <div className="p-4 space-y-3">
               <p className="text-xs text-foreground-600 dark:text-background-300 leading-relaxed">
-                Got a tip, a hidden spot, or a question for fellow travelers and
-                locals? Drop it in the forum and the community can jump in.
+                {t("public.communityPrompt")}
               </p>
 
               <div className="grid grid-cols-2 gap-2 text-[11px] text-foreground-700 dark:text-background-200 pt-1">
                 <div className="flex items-center gap-1.5">
                   <i className="ri-check-line text-emerald-500 font-bold"></i>
-                  <span>Any forum category</span>
+                  <span>{t("public.anyForumCategory")}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <i className="ri-check-line text-emerald-500 font-bold"></i>
-                  <span>Optional media link</span>
+                  <span>{t("public.optionalMedia")}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <i className="ri-check-line text-emerald-500 font-bold"></i>
-                  <span>Sign in to publish</span>
+                  <span>{t("public.signInToPublish")}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <i className="ri-check-line text-emerald-500 font-bold"></i>
-                  <span>Live for everyone</span>
+                  <span>{t("public.liveForEveryone")}</span>
                 </div>
               </div>
 
@@ -96,10 +98,10 @@ export default function CreatorUgcFloatingWidget() {
                     setIsModalOpen(true);
                   }}
                   className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-rose-500 to-primary-600 text-white font-semibold text-xs shadow-md hover:shadow-lg hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer"
-                  aria-label="Open share post modal"
+                  aria-label={t("public.openShareModal")}
                 >
                   <i className="ri-edit-2-line text-sm"></i>
-                  Write a Post
+                  {t("public.writePost")}
                 </button>
               </div>
             </div>

@@ -73,4 +73,8 @@ export class UpdateBlogPostDto {
   @IsBoolean()
   @IsOptional()
   is_featured?: boolean;
+
+  @IsIn(['blog', 'guide'])
+  @IsOptional()
+  content_type?: 'blog' | 'guide';
 }

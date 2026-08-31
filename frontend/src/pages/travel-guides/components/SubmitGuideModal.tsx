@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { blogService, type BlogTag } from "@/api-services/blog.service";
 import { useAuth } from "@/context/AuthContext";
 import RichTextEditor from "@/components/base/RichTextEditor";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface SubmitGuideModalProps {
   isOpen: boolean;
@@ -10,6 +12,9 @@ interface SubmitGuideModalProps {
   onSubmitted?: () => void;
 }
 
+const UUID_V4_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 export default function SubmitGuideModal({
   isOpen,
   onClose,
@@ -17,6 +22,7 @@ export default function SubmitGuideModal({
   onSubmitted,
 }: SubmitGuideModalProps) {
   const { user, profile, isAuthenticated } = useAuth();
+  const { t } = useTranslation();
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("Essential");
   const [authorName, setAuthorName] = useState("");
@@ -28,6 +34,9 @@ export default function SubmitGuideModal({
 
   useEffect(() => {
     if (isOpen) {
+      if (tags.length > 0 && !tags.some((tag) => tag.name === category)) {
+        setCategory(tags[0].name);
+      }
       if (isAuthenticated) {
         setAuthorName((prev) => prev || profile?.full_name || profile?.username || "");
         setAuthorEmail((prev) => prev || user?.email || "");
@@ -43,7 +52,7 @@ export default function SubmitGuideModal({
       setSubmittedSuccess(false);
       setErrorMsg("");
     }
-  }, [isOpen, tags, isAuthenticated, profile, user]);
+  }, [isOpen, tags, category, isAuthenticated, profile, user]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -59,7 +68,7 @@ export default function SubmitGuideModal({
     e.preventDefault();
     const strippedContent = content.replace(/<[^>]*>?/gm, "").trim();
     if (!title.trim() || !strippedContent) {
-      setErrorMsg("Please provide both a title and guide content.");
+      setErrorMsg(t("public.guides.submitValidation"));
       return;
     }
 
@@ -67,13 +76,19 @@ export default function SubmitGuideModal({
     setErrorMsg("");
 
     try {
+      const selectedTagId = tags.find((tag) => tag.name === category)?.id;
+      const selectedTagIds =
+        selectedTagId && UUID_V4_PATTERN.test(selectedTagId)
+          ? [selectedTagId]
+          : [];
       await blogService.submitGuide({
         title: title.trim(),
         category,
         author_name: authorName.trim() || "Community Member",
         author_email: authorEmail.trim() || undefined,
         content: content.trim(),
-        tags: [category],
+        tags: selectedTagIds,
+        content_type: "guide",
       });
 
       setSubmittedSuccess(true);
@@ -81,7 +96,7 @@ export default function SubmitGuideModal({
         onSubmitted();
       }
     } catch {
-      setErrorMsg("Failed to submit guide. Please try again later.");
+      setErrorMsg(t("public.guides.submitError"));
     } finally {
       setIsSubmitting(false);
     }
@@ -111,17 +126,17 @@ export default function SubmitGuideModal({
                 id="submit-guide-modal-title"
                 className="font-heading text-lg md:text-xl text-foreground-900"
               >
-                Submit Community Guide
+                {t("public.guides.submit")}
               </h2>
               <p className="text-xs text-foreground-500">
-                Share your local insider tips with Alanya travelers and expats.
+                {t("public.guides.submitDescription")}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
             className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-background-200/60 text-foreground-400 hover:text-foreground-700 transition-colors cursor-pointer"
-            aria-label="Close modal"
+            aria-label={t("common.close")}
           >
             <i className="ri-close-line text-xl"></i>
           </button>
@@ -135,17 +150,17 @@ export default function SubmitGuideModal({
                 <i className="ri-checkbox-circle-line"></i>
               </div>
               <h3 className="font-heading text-2xl text-foreground-900">
-                Guide Submitted for Review!
+                {t("public.guides.submittedTitle")}
               </h3>
               <p className="text-sm text-foreground-600 max-w-md mx-auto leading-relaxed">
-                Thank you for contributing! Our editorial team will review your guide shortly and publish it to the community page.
+                {t("public.guides.submittedDescription")}
               </p>
               <div className="pt-4">
                 <button
                   onClick={onClose}
                   className="px-6 py-2.5 rounded-full bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium transition-colors cursor-pointer"
                 >
-                  Back to Guides
+                  {t("public.guides.backToGuides")}
                 </button>
               </div>
             </div>
@@ -160,14 +175,14 @@ export default function SubmitGuideModal({
 
               <div>
                 <label className="block text-xs font-semibold text-foreground-700 uppercase tracking-wider mb-1.5">
-                  Guide Title <span className="text-rose-500">*</span>
+                  {t("public.guides.guideTitle")} <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
                   required
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g., Hidden Waterfalls Near Alanya"
+                  placeholder={t("public.guides.titlePlaceholder")}
                   className="w-full px-4 py-2.5 rounded-xl border border-background-300 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-sm text-foreground-900 bg-white placeholder:text-foreground-400 transition-all"
                 />
               </div>
@@ -175,7 +190,7 @@ export default function SubmitGuideModal({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-foreground-700 uppercase tracking-wider mb-1.5">
-                    Category
+                    {t("public.guides.category")}
                   </label>
                   <select
                     value={category}
@@ -190,12 +205,12 @@ export default function SubmitGuideModal({
                       ))
                     ) : (
                       <>
-                        <option value="Essential">Essential</option>
-                        <option value="Food & Drink">Food & Drink</option>
-                        <option value="Adventure">Adventure</option>
-                        <option value="Expats">Expats</option>
-                        <option value="Beaches">Beaches</option>
-                        <option value="Nightlife">Nightlife</option>
+                        <option value="Essential">{t("public.guides.categoryEssential")}</option>
+                        <option value="Food & Drink">{t("public.guides.categoryFood")}</option>
+                        <option value="Adventure">{t("public.guides.categoryAdventure")}</option>
+                        <option value="Expats">{t("public.guides.categoryExpats")}</option>
+                        <option value="Beaches">{t("public.guides.categoryBeaches")}</option>
+                        <option value="Nightlife">{t("public.guides.categoryNightlife")}</option>
                       </>
                     )}
                   </select>
@@ -203,13 +218,13 @@ export default function SubmitGuideModal({
 
                 <div>
                   <label className="block text-xs font-semibold text-foreground-700 uppercase tracking-wider mb-1.5">
-                    Author Name
+                    {t("public.guides.authorName")}
                   </label>
                   <input
                     type="text"
                     value={authorName}
                     onChange={(e) => setAuthorName(e.target.value)}
-                    placeholder="Your name or alias"
+                    placeholder={t("public.guides.authorPlaceholder")}
                     className="w-full px-4 py-2.5 rounded-xl border border-background-300 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-sm text-foreground-900 bg-white placeholder:text-foreground-400 transition-all"
                   />
                 </div>
@@ -217,14 +232,14 @@ export default function SubmitGuideModal({
 
               <div>
                 <label className="block text-xs font-semibold text-foreground-700 uppercase tracking-wider mb-1.5">
-                  Contact Email (Optional)
+                  {t("public.guides.contactEmail")}
                 </label>
                 <input
                   type="email"
                   readOnly={isAuthenticated}
                   value={authorEmail}
                   onChange={(e) => setAuthorEmail(e.target.value)}
-                  placeholder="For notifications when published"
+                  placeholder={t("public.guides.emailPlaceholder")}
                   className={`w-full px-4 py-2.5 rounded-xl border border-background-300 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-sm text-foreground-900 placeholder:text-foreground-400 transition-all ${
                     isAuthenticated
                       ? "bg-slate-50 text-slate-500 cursor-not-allowed"
@@ -235,12 +250,12 @@ export default function SubmitGuideModal({
 
               <div>
                 <label className="block text-xs font-semibold text-foreground-700 uppercase tracking-wider mb-1.5">
-                  Guide Content & Recommendations <span className="text-rose-500">*</span>
+                  {t("public.guides.contentLabel")} <span className="text-rose-500">*</span>
                 </label>
                 <RichTextEditor
                   value={content}
                   onChange={setContent}
-                  placeholder="Share directions, tips, what to pack, pricing, and why travelers should visit..."
+                  placeholder={t("public.guides.contentPlaceholder")}
                   userId={user?.id}
                 />
               </div>
@@ -252,7 +267,7 @@ export default function SubmitGuideModal({
                   disabled={isSubmitting}
                   className="px-5 py-2.5 rounded-full border border-background-300 hover:bg-background-100 text-foreground-700 text-sm font-medium transition-colors cursor-pointer"
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button
                   type="submit"
@@ -262,12 +277,12 @@ export default function SubmitGuideModal({
                   {isSubmitting ? (
                     <>
                       <i className="ri-loader-4-line animate-spin text-base"></i>
-                      <span>Submitting...</span>
+                      <span>{t("public.guides.submitting")}</span>
                     </>
                   ) : (
                     <>
                       <i className="ri-send-plane-fill text-base"></i>
-                      <span>Submit Guide</span>
+                      <span>{t("public.guides.submitButton")}</span>
                     </>
                   )}
                 </button>

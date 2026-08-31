@@ -1,4 +1,6 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 import { Link } from "react-router-dom";
 import {
   Clock,
@@ -20,6 +22,7 @@ export interface ClaimTrackerTabProps {
 }
 
 export const ClaimTrackerTab: React.FC<ClaimTrackerTabProps> = ({ claims, loading }) => {
+  const { t } = useTranslation();
   if (loading) {
     return (
       <div className="space-y-4">
@@ -44,10 +47,10 @@ export const ClaimTrackerTab: React.FC<ClaimTrackerTabProps> = ({ claims, loadin
         </div>
         <div className="max-w-md mx-auto space-y-1.5">
           <h3 className="text-lg font-bold text-secondary-900 dark:text-white">
-            No submitted ownership claims yet
+            {t("merchant.noClaims")}
           </h3>
           <p className="text-xs sm:text-sm text-secondary-500 dark:text-slate-400">
-            Are you the owner of an existing listing on Alanya Holidays? Find your business and submit a verification claim to take full control.
+            {t("merchant.noClaimsDescription")}
           </p>
         </div>
         <div className="pt-2">
@@ -56,7 +59,7 @@ export const ClaimTrackerTab: React.FC<ClaimTrackerTabProps> = ({ claims, loadin
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all shadow-md shadow-amber-500/20"
           >
             <Search className="w-4 h-4" />
-            Find Your Business in Directory
+            {t("merchant.findBusiness")}
           </Link>
         </div>
       </div>
@@ -73,10 +76,10 @@ export const ClaimTrackerTab: React.FC<ClaimTrackerTabProps> = ({ claims, loadin
           </div>
           <div>
             <h4 className="text-sm font-bold text-sky-900 dark:text-sky-200">
-              Claim Verification Process
+              {t("merchant.claimProcess")}
             </h4>
             <p className="text-xs text-sky-700 dark:text-sky-300">
-              Our moderation team reviews claim verification documents within 24–48 hours. Once approved, ownership is instantly assigned to your merchant dashboard.
+              {t("merchant.claimProcessDescription")}
             </p>
           </div>
         </div>
@@ -114,7 +117,7 @@ export const ClaimTrackerTab: React.FC<ClaimTrackerTabProps> = ({ claims, loadin
                       )}
                     </h3>
                     <p className="text-xs text-secondary-500 dark:text-slate-400">
-                      Submitted on: {new Date(claim.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      {t("merchant.submittedOn", { date: new Date(claim.created_at).toLocaleDateString() })}
                     </p>
                   </div>
                 </div>
@@ -124,25 +127,25 @@ export const ClaimTrackerTab: React.FC<ClaimTrackerTabProps> = ({ claims, loadin
                   {isApproved && (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
                       <CheckCircle2 className="w-3.5 h-3.5" />
-                      Approved & Ownership Transferred
+                      {t("merchant.approvedOwnership")}
                     </span>
                   )}
                   {isVerified && (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-sky-100 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 border border-sky-300 dark:border-sky-800">
                       <ShieldCheck className="w-3.5 h-3.5" />
-                      Email Verified & In Review
+                      {t("merchant.verifiedReview")}
                     </span>
                   )}
                   {isPending && (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
                       <Clock className="w-3.5 h-3.5" />
-                      Pending Moderation
+                      {t("merchant.pendingModeration")}
                     </span>
                   )}
                   {isRejected && (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800">
                       <XCircle className="w-3.5 h-3.5" />
-                      Claim Rejected
+                      {t("merchant.claimRejected")}
                     </span>
                   )}
                 </div>
@@ -162,7 +165,7 @@ export const ClaimTrackerTab: React.FC<ClaimTrackerTabProps> = ({ claims, loadin
                 )}
                 {claim.role && (
                   <div className="flex items-center gap-1.5">
-                    <span className="font-semibold text-secondary-700 dark:text-slate-300">Role:</span>
+                    <span className="font-semibold text-secondary-700 dark:text-slate-300">{t("merchant.role")}</span>
                     <span>{claim.role}</span>
                   </div>
                 )}
@@ -172,7 +175,7 @@ export const ClaimTrackerTab: React.FC<ClaimTrackerTabProps> = ({ claims, loadin
                 <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-xs text-rose-800 dark:text-rose-300 flex items-start gap-2">
                   <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
                   <div>
-                    <strong className="font-semibold">Rejection Note: </strong>
+                    <strong className="font-semibold">{t("merchant.rejectionNote")} </strong>
                     <span>{claim.rejection_reason}</span>
                   </div>
                 </div>

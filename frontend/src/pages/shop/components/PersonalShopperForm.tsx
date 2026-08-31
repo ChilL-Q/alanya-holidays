@@ -1,4 +1,6 @@
 import { useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 import { adminService } from "@/api-services/admin.service";
 import PageHeroImage from "@/components/base/PageHeroImage";
 
@@ -92,6 +94,7 @@ const TIMELINES = [
 ];
 
 export default function PersonalShopperForm() {
+  const { t } = useTranslation();
   const formRef = useRef<HTMLFormElement>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -135,7 +138,7 @@ export default function PersonalShopperForm() {
     // Honeypot check
     const honeypotVal = (formData.get("phone_alt") as string || "").trim();
     if (honeypotVal) {
-      setStatus({ type: "success", message: "Your enquiry has been submitted! We'll get back to you shortly." });
+      setStatus({ type: "success", message: t("shop.replyPromise") });
       resetForm();
       return;
     }
@@ -169,7 +172,7 @@ export default function PersonalShopperForm() {
       setStatus({ type: "success", message: "Your enquiry has been submitted! We'll get back to you shortly." });
       resetForm();
     } catch (_err: unknown) {
-      setStatus({ type: "error", message: "Network error. Please check your connection and try again." });
+      setStatus({ type: "error", message: t("common.tryAgain") });
     } finally {
       setSubmitting(false);
     }
@@ -181,13 +184,13 @@ export default function PersonalShopperForm() {
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-accent-200 bg-white mb-6">
             <i className="ri-search-eye-line text-accent-500 text-sm"></i>
-            <span className="text-sm font-medium text-accent-700">Personal Shopper</span>
+            <span className="text-sm font-medium text-accent-700">{t("shop.personalShopper")}</span>
           </div>
           <h2 className="font-heading text-3xl md:text-4xl text-foreground-900 mb-4">
-            Didn't find what you're looking for?
+            {t("shop.notFound")}
           </h2>
           <p className="text-foreground-500 text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
-            Let us source it. Tell us what you need and our local experts will hunt down the perfect items — from handmade Turkish ceramics to custom-tailored clothing. No request is too big or too small.
+            {t("shop.sourceIt")}
           </p>
         </div>
 
@@ -196,7 +199,7 @@ export default function PersonalShopperForm() {
           <div className="lg:w-5/12 relative overflow-hidden min-h-[220px] lg:min-h-[560px]">
             <PageHeroImage
               page="personalShopper"
-              alt="Personal Shopper Service"
+              alt={t("shop.personalShopperService")}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-foreground-950/70 via-foreground-950/20 to-foreground-950/10"></div>
             <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
@@ -205,22 +208,22 @@ export default function PersonalShopperForm() {
                   <i className="ri-shield-check-line text-white text-lg"></i>
                 </div>
                 <div>
-                  <p className="text-white/90 text-sm font-medium">Trusted Local Experts</p>
-                  <p className="text-white/60 text-xs">100+ happy shoppers served</p>
+                  <p className="text-white/90 text-sm font-medium">{t("shop.trustedExperts")}</p>
+                  <p className="text-white/60 text-xs">{t("shop.shoppersServed")}</p>
                 </div>
               </div>
               <div className="flex flex-wrap gap-3">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/15 text-white text-xs backdrop-blur-sm whitespace-nowrap">
                   <i className="ri-time-line text-white/70"></i>
-                  Replies within 24h
+                  {t("shop.repliesWithin")}
                 </span>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/15 text-white text-xs backdrop-blur-sm whitespace-nowrap">
                   <i className="ri-price-tag-3-line text-white/70"></i>
-                  Best local prices
+                  {t("shop.bestPrices")}
                 </span>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/15 text-white text-xs backdrop-blur-sm whitespace-nowrap">
                   <i className="ri-global-line text-white/70"></i>
-                  Worldwide delivery
+                  {t("shop.worldwideDelivery")}
                 </span>
               </div>
             </div>
@@ -239,7 +242,7 @@ export default function PersonalShopperForm() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="ps-name" className="block text-sm font-medium text-foreground-700 mb-1.5">
-                    Full Name <span className="text-primary-500">*</span>
+                    {t("shop.fullName")} <span className="text-primary-500">*</span>
                   </label>
                   <input
                     id="ps-name"
@@ -248,13 +251,13 @@ export default function PersonalShopperForm() {
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Your full name"
+                    placeholder={t("auth.fullNamePlaceholder")}
                     className="w-full px-4 py-2.5 rounded-xl border border-background-200 bg-background-50 text-sm text-foreground-900 placeholder:text-foreground-300 focus:outline-none focus:ring-2 focus:ring-accent-300 focus:border-accent-400 transition-colors"
                   />
                 </div>
                 <div>
                   <label htmlFor="ps-email" className="block text-sm font-medium text-foreground-700 mb-1.5">
-                    Email Address <span className="text-primary-500">*</span>
+                    {t("shop.emailAddress")} <span className="text-primary-500">*</span>
                   </label>
                   <input
                     id="ps-email"
@@ -263,7 +266,7 @@ export default function PersonalShopperForm() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
+                    placeholder={t("auth.emailPlaceholder")}
                     className="w-full px-4 py-2.5 rounded-xl border border-background-200 bg-background-50 text-sm text-foreground-900 placeholder:text-foreground-300 focus:outline-none focus:ring-2 focus:ring-accent-300 focus:border-accent-400 transition-colors"
                   />
                 </div>
@@ -272,7 +275,7 @@ export default function PersonalShopperForm() {
               {/* Phone row */}
               <div>
                 <label className="block text-sm font-medium text-foreground-700 mb-1.5">
-                  Phone Number <span className="text-foreground-400 font-normal">(optional)</span>
+                  {t("shop.phoneNumber")} <span className="text-foreground-400 font-normal">({t("auth.optional")})</span>
                 </label>
                 <div className="flex gap-2">
                   <div className="relative">
@@ -296,7 +299,7 @@ export default function PersonalShopperForm() {
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="5XX XXX XX XX"
+                    placeholder={t("shop.phonePlaceholder")}
                     className="flex-1 px-4 py-2.5 rounded-xl border border-background-200 bg-background-50 text-sm text-foreground-900 placeholder:text-foreground-300 focus:outline-none focus:ring-2 focus:ring-accent-300 focus:border-accent-400 transition-colors"
                   />
                 </div>
@@ -306,7 +309,7 @@ export default function PersonalShopperForm() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="ps-category" className="block text-sm font-medium text-foreground-700 mb-1.5">
-                    What Are You Looking For? <span className="text-primary-500">*</span>
+                    {t("shop.whatLooking")} <span className="text-primary-500">*</span>
                   </label>
                   <div className="relative">
                     <select
@@ -317,7 +320,7 @@ export default function PersonalShopperForm() {
                       onChange={handleCategoryChange}
                       className="appearance-none w-full px-4 py-2.5 pr-10 rounded-xl border border-background-200 bg-background-50 text-sm text-foreground-900 focus:outline-none focus:ring-2 focus:ring-accent-300 focus:border-accent-400 transition-colors cursor-pointer"
                     >
-                      <option value="" disabled>Select a category...</option>
+                      <option value="" disabled>{t("shop.selectCategory")}</option>
                       {PRODUCT_CATEGORIES.map((cat) => (
                         <option key={cat} value={cat}>{cat}</option>
                       ))}
@@ -327,7 +330,7 @@ export default function PersonalShopperForm() {
                 </div>
                 <div>
                   <label htmlFor="ps-budget" className="block text-sm font-medium text-foreground-700 mb-1.5">
-                    Budget Range
+                    {t("shop.budgetRange")}
                     {category && CATEGORY_BUDGET_CONFIG[category] && (
                       <span className="text-foreground-400 font-normal text-xs ml-1">
                         — tailored for {CATEGORY_BUDGET_CONFIG[category].label.toLowerCase()}
@@ -342,7 +345,7 @@ export default function PersonalShopperForm() {
                       onChange={(e) => setBudget(e.target.value)}
                       className="appearance-none w-full px-4 py-2.5 pr-10 rounded-xl border border-background-200 bg-background-50 text-sm text-foreground-900 focus:outline-none focus:ring-2 focus:ring-accent-300 focus:border-accent-400 transition-colors cursor-pointer"
                     >
-                      <option value="" disabled>Select budget...</option>
+                      <option value="" disabled>{t("shop.selectBudget")}</option>
                       {budgetOptions.map((b) => (
                         <option key={b} value={b}>{b}</option>
                       ))}
@@ -355,7 +358,7 @@ export default function PersonalShopperForm() {
               {/* Contact method */}
               <div>
                 <label className="block text-sm font-medium text-foreground-700 mb-2">
-                  Preferred Contact Method
+                  {t("shop.contactMethod")}
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {CONTACT_METHODS.map((method) => (
@@ -385,7 +388,7 @@ export default function PersonalShopperForm() {
               {/* Timeline */}
               <div>
                 <label htmlFor="ps-timeline" className="block text-sm font-medium text-foreground-700 mb-1.5">
-                  How Soon Do You Need This?
+                  {t("shop.timeline")}
                 </label>
                 <div className="relative">
                   <select
@@ -395,7 +398,7 @@ export default function PersonalShopperForm() {
                     onChange={(e) => setTimeline(e.target.value)}
                     className="appearance-none w-full px-4 py-2.5 pr-10 rounded-xl border border-background-200 bg-background-50 text-sm text-foreground-900 focus:outline-none focus:ring-2 focus:ring-accent-300 focus:border-accent-400 transition-colors cursor-pointer"
                   >
-                    <option value="" disabled>Select timeline...</option>
+                    <option value="" disabled>{t("shop.selectTimeline")}</option>
                     {TIMELINES.map((t) => (
                       <option key={t} value={t}>{t}</option>
                     ))}
@@ -407,7 +410,7 @@ export default function PersonalShopperForm() {
               {/* Details textarea */}
               <div>
                 <label htmlFor="ps-details" className="block text-sm font-medium text-foreground-700 mb-1.5">
-                  Special Requests &amp; Details
+                  {t("shop.specialDetails")}
                 </label>
                 <textarea
                   id="ps-details"
@@ -416,7 +419,7 @@ export default function PersonalShopperForm() {
                   maxLength={500}
                   value={details}
                   onChange={(e) => setDetails(e.target.value)}
-                  placeholder="Tell us exactly what you're looking for — sizes, colors, quantities, specific brands, delivery preferences, or anything else that helps us serve you better..."
+                  placeholder={t("shop.detailsPlaceholder")}
                   className="w-full px-4 py-3 rounded-xl border border-background-200 bg-background-50 text-sm text-foreground-900 placeholder:text-foreground-300 focus:outline-none focus:ring-2 focus:ring-accent-300 focus:border-accent-400 transition-colors resize-none"
                 ></textarea>
                 <p className="text-xs text-foreground-400 mt-1 text-right">{details.length}/500</p>
@@ -424,7 +427,7 @@ export default function PersonalShopperForm() {
 
               {/* Honeypot */}
               <div className="personal-shopper-honeypot">
-                <label htmlFor="ps-phone-alt">Phone</label>
+                <label htmlFor="ps-phone-alt">{t("shop.phoneNumber")}</label>
                 <input
                   id="ps-phone-alt"
                   name="phone_alt"
@@ -446,17 +449,17 @@ export default function PersonalShopperForm() {
                   {submitting ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      Submitting...
+                      {t("shop.submitting")}
                     </>
                   ) : (
                     <>
-                      Submit Enquiry
+                      {t("shop.submitEnquiry")}
                       <i className="ri-send-plane-line text-sm"></i>
                     </>
                   )}
                 </button>
                 <p className="text-xs text-foreground-400 text-center sm:text-left">
-                  We'll get back to you within 24 hours. No obligation — just friendly help!
+                  {t("shop.replyPromise")}
                 </p>
               </div>
 

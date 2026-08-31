@@ -7,6 +7,48 @@ import { directoryService } from "@/api-services/directory.service";
 import { businesses } from "@/domain/directory-businesses";
 
 describe("ArticleContentRenderer Component", () => {
+  it("links only strict allowed protocols and relative paths in Markdown", () => {
+    render(
+      <MemoryRouter>
+        <ArticleContentRenderer
+          content={[
+            "[HTTPS](https://example.com/guide)",
+            "[Mail](mailto:hello@example.com)",
+            "[Phone](tel:+905551234567)",
+            "[Root](/travel-guides)",
+            "[Relative](../blog)",
+            "[Script](javascript:alert(1))",
+            "[Data](data:text/html,boom)",
+            "[VB](vbscript:msgbox(1))",
+          ].join(" ")}
+        />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole("link", { name: "HTTPS" })).toHaveAttribute(
+      "href",
+      "https://example.com/guide",
+    );
+    expect(screen.getByRole("link", { name: "Mail" })).toHaveAttribute(
+      "href",
+      "mailto:hello@example.com",
+    );
+    expect(screen.getByRole("link", { name: "Phone" })).toHaveAttribute(
+      "href",
+      "tel:+905551234567",
+    );
+    expect(screen.getByRole("link", { name: "Root" })).toHaveAttribute(
+      "href",
+      "/travel-guides",
+    );
+    expect(screen.getByRole("link", { name: "Relative" })).toHaveAttribute(
+      "href",
+      "../blog",
+    );
+    expect(screen.queryByRole("link", { name: "Script" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Data" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "VB" })).not.toBeInTheDocument();
+  });
   beforeEach(() => {
     vi.spyOn(directoryService, "getListingById").mockImplementation(async (id) =>
       businesses.find((business) => business.id === id) ?? null
@@ -128,6 +170,16 @@ Recommended quick stop:
   });
 
   describe("Tier 4: Boundary, Malformed, and Robustness Cases", () => {
+    it("sanitizes rich HTML and renders an embedded CTA in saved document order", () => {
+      const content = '<p>Before<script>alert(1)</script></p><p>[cta category="restaurants" label="Reserve now"]</p><p>After</p>';
+      render(<MemoryRouter><ArticleContentRenderer content={content} /></MemoryRouter>);
+
+      expect(screen.getByText('Before')).toBeInTheDocument();
+      expect(screen.getByText('Reserve now')).toBeInTheDocument();
+      expect(screen.getByText('After')).toBeInTheDocument();
+      expect(document.querySelector('script')).not.toBeInTheDocument();
+    });
+
     it("renders empty container without crashing when content is empty", () => {
       const { container } = render(
         <MemoryRouter>

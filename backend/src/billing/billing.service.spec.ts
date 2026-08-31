@@ -19,6 +19,7 @@ describe('BillingService', () => {
   let service: BillingService;
   let billingRepository: {
     findByUserId: jest.Mock;
+    hasActivePremiumAccess: jest.Mock;
     setCancelAtPeriodEnd: jest.Mock;
   };
   let paymentGateway: {
@@ -30,6 +31,7 @@ describe('BillingService', () => {
   beforeEach(async () => {
     billingRepository = {
       findByUserId: jest.fn(),
+      hasActivePremiumAccess: jest.fn(),
       setCancelAtPeriodEnd: jest.fn().mockResolvedValue(undefined),
     };
     paymentGateway = {
@@ -72,6 +74,15 @@ describe('BillingService', () => {
 
       expect(res).toEqual({ subscription: null });
     });
+  });
+
+  it('delegates the premium access decision to the authoritative repository predicate', async () => {
+    billingRepository.hasActivePremiumAccess.mockResolvedValueOnce(true);
+
+    await expect(service.hasActivePremiumAccess('user-1')).resolves.toBe(true);
+    expect(billingRepository.hasActivePremiumAccess).toHaveBeenCalledWith(
+      'user-1',
+    );
   });
 
   describe('createCheckout', () => {

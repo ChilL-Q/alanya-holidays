@@ -13,8 +13,10 @@ import {
 } from "lucide-react";
 import { forumService, type CategoryThread } from "@/api-services/forum.service";
 import { logger } from "@/lib/logger";
+import { useTranslation } from "react-i18next";
 
 export function SavedPostsList() {
+  const { t } = useTranslation();
   const [threads, setThreads] = useState<CategoryThread[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -86,7 +88,7 @@ export function SavedPostsList() {
         <div className="w-16 h-16 rounded-2xl bg-teal-500/10 text-teal-600 flex items-center justify-center mx-auto mb-4">
           <Bookmark className="w-8 h-8" />
         </div>
-        <h3 className="text-lg font-bold text-slate-900 mb-1">No saved discussions yet</h3>
+        <h3 className="text-lg font-bold text-slate-900 mb-1">{t("settings.noSaved")}</h3>
         <p className="text-sm text-slate-500 max-w-md mx-auto mb-6">
           Bookmark discussions in the community forum to save them for easy access later.
         </p>
@@ -126,11 +128,11 @@ export function SavedPostsList() {
                 type="button"
                 onClick={() => handleRemoveBookmark(thread.id)}
                 className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 transition-colors cursor-pointer"
-                title="Remove from saved posts"
-                aria-label="Remove from saved posts"
+                title={t("settings.removeSaved", { defaultValue: "Remove from saved posts" })}
+                aria-label={t("settings.removeSaved", { defaultValue: "Remove from saved posts" })}
               >
                 <BookmarkCheck className="w-3.5 h-3.5 text-teal-600" />
-                <span>Saved</span>
+                <span>{t("settings.saved")}</span>
               </button>
             </div>
           </div>

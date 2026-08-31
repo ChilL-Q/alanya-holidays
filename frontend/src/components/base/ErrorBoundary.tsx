@@ -1,6 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import * as Sentry from '@sentry/react';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
+import i18n from '@/i18n';
 import { logger } from "@/lib/logger";
 
 export interface ErrorBoundaryFallbackProps {
@@ -8,11 +9,15 @@ export interface ErrorBoundaryFallbackProps {
   resetErrorBoundary: () => void;
 }
 
+interface ErrorBoundaryFallbackRenderer {
+  (props: ErrorBoundaryFallbackProps): ReactNode;
+}
+
+type ErrorBoundaryFallback = ReactNode | ErrorBoundaryFallbackRenderer;
+
 export interface ErrorBoundaryProps {
   children: ReactNode;
-  fallback?:
-    | ReactNode
-    | ((props: ErrorBoundaryFallbackProps) => ReactNode);
+  fallback?: ErrorBoundaryFallback;
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
   onReset?: () => void;
 }
@@ -109,7 +114,7 @@ export class ErrorBoundary extends Component<
                 className="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-xl transition flex items-center justify-center gap-2 shadow-sm cursor-pointer"
               >
                 <RefreshCw className="w-4 h-4" />
-                <span>Try Again</span>
+                <span>{i18n.t('common.tryAgain')}</span>
               </button>
 
               <button
@@ -118,7 +123,7 @@ export class ErrorBoundary extends Component<
                 className="w-full sm:w-auto px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-medium rounded-xl transition flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Home className="w-4 h-4" />
-                <span>Go Home</span>
+                <span>{i18n.t('common.goHome')}</span>
               </button>
             </div>
 

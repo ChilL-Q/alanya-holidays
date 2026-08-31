@@ -1,26 +1,28 @@
 import React from "react";
 import { PROVINCE_HEADLINE_METRICS, type ProvinceMetric } from "../data/regionalData";
+import { useTranslation } from "react-i18next";
 
 interface HeadlineStatsGridProps {
   metrics?: ProvinceMetric[];
 }
 
 export default function HeadlineStatsGrid({ metrics = PROVINCE_HEADLINE_METRICS }: HeadlineStatsGridProps) {
+  const { t } = useTranslation();
   return (
     <section className="py-8 md:py-12" aria-labelledby="headline-stats-title">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
           <div>
             <h2 id="headline-stats-title" className="text-xl sm:text-2xl font-bold text-foreground-900 dark:text-foreground-50">
-              Antalya Province at a Glance
+              {t("insights.provinceGlance")}
             </h2>
             <p className="text-sm text-foreground-600 dark:text-foreground-400 mt-1">
-              Key demographic and geographic indicators across 19 municipal districts
+              {t("insights.provinceIndicators")}
             </p>
           </div>
           <span className="inline-flex items-center gap-1.5 text-xs text-foreground-500 dark:text-foreground-400 bg-background-100 dark:bg-background-800/80 px-3 py-1.5 rounded-full self-start sm:self-auto border border-background-200 dark:border-background-700">
             <i className="ri-database-2-line text-primary-500" />
-            <span>Updated ADNKS 2024/2025</span>
+            <span>{t("insights.updatedAdnks")}</span>
           </span>
         </div>
 

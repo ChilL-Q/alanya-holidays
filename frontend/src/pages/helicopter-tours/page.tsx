@@ -7,8 +7,11 @@ import RelatedExperiences from "@/components/feature/RelatedExperiences";
 import { conciergeService, tourDurations, type HelicopterTour } from "@/api-services/concierge.service";
 import ErrorState from "@/components/base/ErrorState";
 import EmptyState from "@/components/base/EmptyState";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export default function HelicopterToursPage() {
+  const { t } = useTranslation();
   const [helicopterTours, setHelicopterTours] = useState<HelicopterTour[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -28,11 +31,11 @@ export default function HelicopterToursPage() {
       const data = await conciergeService.getHelicopterTours();
       setHelicopterTours(data);
     } catch {
-      setFetchError("Failed to load helicopter tours. Please check your connection and try again.");
+      setFetchError(t("services.failedLoad", { item: t("services.tours") }));
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     loadTours();
@@ -53,7 +56,7 @@ export default function HelicopterToursPage() {
   }, [activeDuration, sortBy, helicopterTours]);
 
   const sortLabelMap: Record<string, string> = {
-    "rating": "Top Rated", "price-low": "Price: Low to High", "price-high": "Price: High to Low", "duration": "Shortest First",
+    "rating": t("services.topRated"), "price-low": t("services.priceLow"), "price-high": t("services.priceHigh"), "duration": t("services.shortestFirst"),
   };
 
   const handleBookingSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -92,10 +95,10 @@ export default function HelicopterToursPage() {
         setFormSuccess(true);
         form.reset();
       } else {
-        setFormError("Something went wrong. Please try again.");
+        setFormError(t("services.form.somethingWrong"));
       }
     } catch {
-      setFormError("Network error. Please check your connection and try again.");
+      setFormError(t("services.form.networkError"));
     } finally {
       setFormSubmitting(false);
     }
@@ -113,15 +116,15 @@ export default function HelicopterToursPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-foreground-950/40 via-foreground-950/15 to-foreground-950/65"></div>
           <div className="absolute bottom-0 left-0 right-0 w-full px-4 md:px-8 lg:px-12 pb-10 md:pb-14">
             <div className="flex items-center gap-2 mb-4">
-              <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Home</Link>
+              <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">{t("services.home")}</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <Link to="/explore" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Explore</Link>
+              <Link to="/explore" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">{t("services.explore")}</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <span className="text-white/90 text-sm">Helicopter Tours</span>
+              <span className="text-white/90 text-sm">{t("services.helicopter.breadcrumb")}</span>
             </div>
-            <h1 className="font-heading text-3xl md:text-5xl text-white mb-2">Helicopter Tours</h1>
+            <h1 className="font-heading text-3xl md:text-5xl text-white mb-2">{t("services.helicopter.title")}</h1>
             <p className="text-white/70 text-sm md:text-base max-w-xl">
-              See Alanya Castle, the Taurus Mountains, and the coastline from above. A once-in-a-lifetime perspective with champagne toast on landing.
+              {t("services.helicopter.hero")}
             </p>
           </div>
         </section>
@@ -157,7 +160,7 @@ export default function HelicopterToursPage() {
         <section className="w-full px-4 md:px-8 lg:px-12 py-4 bg-background-50">
           <div className="max-w-7xl mx-auto">
             {!isLoading && !fetchError && (
-              <p className="text-sm text-foreground-500">{filteredTours.length} {filteredTours.length === 1 ? "tour" : "tours"} available</p>
+              <p className="text-sm text-foreground-500">{t(filteredTours.length === 1 ? "services.availableOne" : "services.availableMany", { count: filteredTours.length, item: t(filteredTours.length === 1 ? "services.tour" : "services.tours") })}</p>
             )}
           </div>
         </section>
@@ -166,7 +169,7 @@ export default function HelicopterToursPage() {
           <div className="max-w-7xl mx-auto">
             {fetchError ? (
               <ErrorState
-                title="Unable to load helicopter tours"
+                title={t("services.helicopter.unable")}
                 message={fetchError}
                 onRetry={loadTours}
               />
@@ -186,11 +189,11 @@ export default function HelicopterToursPage() {
               </div>
             ) : filteredTours.length === 0 ? (
               <EmptyState
-                title="No helicopter tours found"
-                description="Try selecting a different tour duration or clear your filters."
+                title={t("services.helicopter.none")}
+                description={t("services.helicopter.noneDesc")}
                 icon="ri-flight-takeoff-line"
                 action={{
-                  label: "Reset Filters",
+                  label: t("services.resetFilters"),
                   onClick: () => {
                     setActiveDuration("all");
                     setSortBy("rating");
@@ -205,7 +208,7 @@ export default function HelicopterToursPage() {
                       <img src={tour.image} alt={tour.name} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
                       {tour.featured && (
                         <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
-                          <i className="ri-star-fill text-[10px]"></i>Featured
+                          <i className="ri-star-fill text-[10px]"></i>{t("services.featured")}
                         </div>
                       )}
                       <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
@@ -213,7 +216,7 @@ export default function HelicopterToursPage() {
                       </div>
                       <div className="absolute bottom-3 left-3">
                         <span className="px-2.5 py-1 rounded-full bg-foreground-900/70 backdrop-blur-sm text-white text-xs font-medium whitespace-nowrap flex items-center gap-1">
-                          <i className="ri-user-line text-[10px]"></i>Up to {tour.maxPassengers}
+                          <i className="ri-user-line text-[10px]"></i>{t("services.upTo", { count: tour.maxPassengers })}
                         </span>
                       </div>
                     </div>
@@ -239,7 +242,7 @@ export default function HelicopterToursPage() {
                           <span className="text-sm text-foreground-500"> / person</span>
                         </div>
                         <button onClick={(e) => { e.stopPropagation(); setSelectedTour(tour); }} className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer">
-                          <i className="ri-flight-takeoff-line text-sm"></i>View Details
+                        <i className="ri-flight-takeoff-line text-sm"></i>{t("services.viewDetails")}
                         </button>
                       </div>
                     </div>
@@ -261,7 +264,7 @@ export default function HelicopterToursPage() {
                 <img src={selectedTour.image} alt={selectedTour.name} className="w-full h-full object-cover object-top" />
                 {selectedTour.featured && (
                   <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
-                    <i className="ri-star-fill text-[10px]"></i>Featured
+                    <i className="ri-star-fill text-[10px]"></i>{t("services.featured")}
                   </div>
                 )}
               </div>
@@ -276,46 +279,46 @@ export default function HelicopterToursPage() {
                   <div className="flex items-center gap-1 shrink-0 mt-1">
                     <i className="ri-star-fill text-yellow-400 text-base"></i>
                     <span className="text-base font-semibold text-foreground-900">{selectedTour.rating}</span>
-                    <span className="text-sm text-foreground-500">({selectedTour.reviewCount} reviews)</span>
+                    <span className="text-sm text-foreground-500">({selectedTour.reviewCount} {t("services.service.reviews")})</span>
                   </div>
                 </div>
                 <p className="text-sm text-foreground-600 leading-relaxed mb-6">{selectedTour.description}</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-time-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Duration</p>
+                    <p className="text-xs text-foreground-500">{t("services.duration")}</p>
                     <p className="font-semibold text-foreground-900 text-sm">{selectedTour.duration}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-user-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Capacity</p>
-                    <p className="font-semibold text-foreground-900 text-sm">Up to {selectedTour.maxPassengers}</p>
+                    <p className="text-xs text-foreground-500">{t("services.capacity")}</p>
+                    <p className="font-semibold text-foreground-900 text-sm">{t("services.upTo", { count: selectedTour.maxPassengers })}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-plane-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Aircraft</p>
+                    <p className="text-xs text-foreground-500">{t("services.aircraft")}</p>
                     <p className="font-semibold text-foreground-900 text-sm">{selectedTour.aircraft}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-map-pin-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Departure</p>
+                    <p className="text-xs text-foreground-500">{t("services.departure")}</p>
                     <p className="font-semibold text-foreground-900 text-xs">{selectedTour.departurePoint}</p>
                   </div>
                 </div>
                 <div className="bg-primary-50 rounded-xl p-5 mb-6">
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <p className="text-xs text-foreground-500 mb-0.5">Per Person</p>
+                      <p className="text-xs text-foreground-500 mb-0.5">{t("services.perPerson")}</p>
                       <p className="text-2xl font-bold text-foreground-900">€{selectedTour.pricePerPerson.toLocaleString()}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-foreground-500 mb-0.5">Private Charter</p>
+                      <p className="text-xs text-foreground-500 mb-0.5">{t("services.privateCharter")}</p>
                       <p className="text-lg font-semibold text-foreground-700">€{selectedTour.privatePrice.toLocaleString()}</p>
                     </div>
                   </div>
                 </div>
                 <div className="mb-4">
-                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">Highlights</h4>
+                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">{t("services.highlights")}</h4>
                   <div className="flex flex-wrap gap-2">
                     {selectedTour.highlights.map((h) => (
                       <span key={h} className="px-3 py-1.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap">{h}</span>
@@ -323,11 +326,11 @@ export default function HelicopterToursPage() {
                   </div>
                 </div>
                 <div className="mb-4">
-                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-2">Route</h4>
+                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-2">{t("services.route")}</h4>
                   <p className="text-xs text-foreground-500 leading-relaxed bg-background-100 rounded-xl p-3">{selectedTour.route}</p>
                 </div>
                 <div className="mb-6">
-                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">Includes</h4>
+                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">{t("services.includes")}</h4>
                   <div className="flex flex-wrap gap-2">
                     {selectedTour.includes.map((inc) => (
                       <span key={inc} className="px-3 py-1.5 rounded-full bg-background-100 border border-background-200 text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
@@ -342,23 +345,23 @@ export default function HelicopterToursPage() {
                       <i className="ri-check-line text-green-600 text-lg shrink-0"></i>
                       <span className="text-sm font-medium text-green-700">
                         {contactMethod === 'whatsapp' ? (
-                          <>Enquiry sent! We'll WhatsApp you soon.</>
+                          <>{t("services.enquiryWhatsapp")}</>
                         ) : contactMethod === 'phone_call' ? (
-                          <>Enquiry sent! We'll call you soon.</>
+                          <>{t("services.enquiryPhone")}</>
                         ) : (
-                          <>Enquiry sent! We'll email you soon.</>
+                          <>{t("services.enquiryEmail")}</>
                         )}
                       </span>
                     </div>
-                    <button onClick={() => setSelectedTour(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">Close</button>
+                    <button onClick={() => setSelectedTour(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">{t("services.close")}</button>
                   </div>
                 ) : (
                   <form onSubmit={handleBookingSubmit}>
                     <input type="hidden" name="experience_type" value="Helicopter Tour" />
                     <input type="hidden" name="tour_name" value={selectedTour.name} />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                      <input name="name" type="text" placeholder="Your full name" required className="w-full px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
-                      <input name="email" type="email" placeholder="Your email address" required className="w-full px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
+                      <input name="name" type="text" placeholder={t("services.fullName")} required className="w-full px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
+                      <input name="email" type="email" placeholder={t("services.emailAddress")} required className="w-full px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
                     </div>
                     <div className="flex gap-2 mb-3">
                       <select name="country_code" defaultValue="+90" className="px-2.5 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 outline-none focus:border-primary-400 transition-colors cursor-pointer appearance-none" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center", paddingRight: "28px" }}>
@@ -383,29 +386,29 @@ export default function HelicopterToursPage() {
                         <option value="+48">🇵🇱 +48</option>
                         <option value="+40">🇷🇴 +40</option>
                       </select>
-                      <input name="phone" type="tel" placeholder="Your phone number (optional)" className="flex-1 px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
+                      <input name="phone" type="tel" placeholder={t("services.phoneOptional")} className="flex-1 px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
                     </div>
                     <div className="mb-3">
-                      <p className="text-xs font-medium text-foreground-700 mb-2">Preferred contact method</p>
+                      <p className="text-xs font-medium text-foreground-700 mb-2">{t("services.preferredContact")}</p>
                       <div className="flex flex-wrap gap-3">
                         <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-background-200 bg-white cursor-pointer hover:border-primary-200 transition-colors">
                           <input type="radio" name="preferred_contact" value="phone_call" className="accent-primary-500" />
                           <i className="ri-phone-line text-foreground-500 text-sm"></i>
-                          <span className="text-sm text-foreground-700">Phone Call</span>
+                          <span className="text-sm text-foreground-700">{t("services.phone")}</span>
                         </label>
                         <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-background-200 bg-white cursor-pointer hover:border-primary-200 transition-colors">
                           <input type="radio" name="preferred_contact" value="whatsapp" className="accent-primary-500" />
                           <i className="ri-whatsapp-line text-foreground-500 text-sm"></i>
-                          <span className="text-sm text-foreground-700">WhatsApp</span>
+                          <span className="text-sm text-foreground-700">{t("services.whatsapp")}</span>
                         </label>
                         <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-background-200 bg-white cursor-pointer hover:border-primary-200 transition-colors">
                           <input type="radio" name="preferred_contact" value="email" defaultChecked className="accent-primary-500" />
                           <i className="ri-mail-line text-foreground-500 text-sm"></i>
-                          <span className="text-sm text-foreground-700">Email</span>
+                          <span className="text-sm text-foreground-700">{t("services.email")}</span>
                         </label>
                       </div>
                     </div>
-                    <textarea name="notes" placeholder="Any special requests or questions? (optional)" maxLength={500} rows={2} className="w-full px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors resize-none mb-3"></textarea>
+                    <textarea name="notes" placeholder={t("services.helicopter.notes")} maxLength={500} rows={2} className="w-full px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors resize-none mb-3"></textarea>
                     <input name="website_alt" type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" readOnly className="booking-offscreen" />
                     {formError && (
                       <p className="text-xs text-red-500 mb-3 flex items-center gap-1">
@@ -418,16 +421,16 @@ export default function HelicopterToursPage() {
                         {formSubmitting ? (
                           <>
                             <i className="ri-loader-4-line animate-spin text-sm"></i>
-                            Sending...
+                            {t("services.sending")}
                           </>
                         ) : (
                           <>
                             <i className="ri-calendar-check-line text-sm"></i>
-                            Book Now
+                            {t("services.bookNow")}
                           </>
                         )}
                       </button>
-                      <button type="button" onClick={() => setSelectedTour(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">Close</button>
+                      <button type="button" onClick={() => setSelectedTour(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">{t("services.close")}</button>
                     </div>
                   </form>
                 )}

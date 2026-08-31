@@ -5,6 +5,8 @@ import { forumService, type Category } from "@/api-services/forum.service";
 import { useAuth } from "@/context/AuthContext";
 import { logger } from "@/lib/logger";
 import RichTextEditor from "@/components/base/RichTextEditor";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export interface CommunityPostPayload {
   categoryId: string;
@@ -35,6 +37,7 @@ export default function SubmitContentModal({
   fallbackPath = "/categories",
   lockCategory = false,
 }: SubmitContentModalProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { isAuthenticated, loading: authLoading } = useAuth();
 
@@ -294,10 +297,10 @@ export default function SubmitContentModal({
                 {!initialCategoryId && (
                   <option value="" disabled>
                     {isLoadingCategories
-                      ? "Loading categories…"
+                      ? t("public.loadingCategories")
                       : sortedCategories.length === 0
-                      ? "No categories available right now"
-                      : "Choose a category…"}
+                      ? t("public.noCategoriesAvailable")
+                      : t("public.chooseCategory")}
                   </option>
                 )}
                 {initialCategoryId &&
@@ -313,7 +316,7 @@ export default function SubmitContentModal({
               </select>
               {sortedCategories.length === 0 && !isLoadingCategories && (
                 <p className="mt-2 text-xs text-foreground-500">
-                  We couldn't load any forum categories. Please try again later.
+                  {t("public.categoriesLoadError")}
                 </p>
               )}
             </div>
@@ -333,7 +336,7 @@ export default function SubmitContentModal({
                   disabled={isLoadingCategories}
                   className="w-full px-4 py-2.5 rounded-xl border border-background-200 bg-white text-foreground-900 focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  <option value="">All topics in this category</option>
+                  <option value="">{t("public.allTopics")}</option>
                   {availableSubcategories.map((subcategory) => (
                     <option key={subcategory} value={subcategory}>
                       {subcategory}
@@ -357,7 +360,7 @@ export default function SubmitContentModal({
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Hidden Cleopatra Beach Sunset Cove"
+                placeholder={t("public.postTitlePlaceholder")}
                 className="w-full px-4 py-2.5 rounded-xl border border-background-200 bg-white text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 maxLength={140}
               />
@@ -372,10 +375,10 @@ export default function SubmitContentModal({
               </label>
               <RichTextEditor
                 inputId="content-description"
-                ariaLabel="Story"
+                ariaLabel={t("public.story")}
                 value={body}
                 onChange={setBody}
-                placeholder="Tell the community what makes this spot special, share tips, or ask a question…"
+                placeholder={t("public.storyPlaceholder")}
               />
             </div>
 
@@ -391,7 +394,7 @@ export default function SubmitContentModal({
                 type="url"
                 value={mediaUrl}
                 onChange={(e) => setMediaUrl(e.target.value)}
-                placeholder="https://…"
+                placeholder={t("public.mediaUrlPlaceholder")}
                 className="w-full px-4 py-2.5 rounded-xl border border-background-200 bg-white text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
@@ -403,7 +406,7 @@ export default function SubmitContentModal({
               onClick={onClose}
               className="px-5 py-2.5 text-sm font-medium text-foreground-600 hover:text-foreground-900 rounded-xl hover:bg-background-100 transition-colors cursor-pointer"
             >
-              Cancel
+              {t("common.cancel")}
             </button>
             <button
               type="submit"
@@ -413,11 +416,11 @@ export default function SubmitContentModal({
               {isSubmitting ? (
                 <>
                   <i className="ri-loader-4-line animate-spin"></i>
-                  Publishing…
+                  {t("public.publishing")}
                 </>
               ) : (
                 <>
-                  Publish Post
+                  {t("public.publishPost")}
                   <i className="ri-send-plane-fill"></i>
                 </>
               )}

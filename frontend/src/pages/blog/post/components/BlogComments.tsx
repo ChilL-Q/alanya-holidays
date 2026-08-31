@@ -4,6 +4,8 @@ import { blogService, type BlogComment } from "@/api-services/blog.service";
 import { useAuth } from "@/context/AuthContext";
 import { logger } from "@/lib/logger";
 import { sanitizeForumHtml } from "@/utils/sanitizeHtml";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface BlogCommentsProps {
   postId: string;
@@ -24,6 +26,7 @@ function CommentItem({
   onCommentCreated: (comment: BlogComment) => void;
   depth?: number;
 }) {
+  const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
   const [liked, setLiked] = useState(comment.isLiked ?? false);
   const [likeCount, setLikeCount] = useState(comment.like_count ?? 0);
@@ -60,7 +63,7 @@ function CommentItem({
   if (comment.is_removed) {
     return (
       <div className={`py-3 ${depth > 0 ? "ml-6 md:ml-10" : ""}`}>
-        <p className="text-sm text-foreground-400 italic">This comment has been removed.</p>
+        <p className="text-sm text-foreground-400 italic">{t("public.commentRemoved")}</p>
       </div>
     );
   }

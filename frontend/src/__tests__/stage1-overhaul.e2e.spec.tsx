@@ -32,6 +32,7 @@ const mockFullBusiness: Business = {
   lng: 31.995,
   is_claimed: true,
   is_verified: true,
+  can_claim: true,
 };
 
 function renderWithProviders(ui: React.ReactElement) {

@@ -5,6 +5,8 @@ import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
 import { directoryService, businessCategories, type Business } from "@/api-services/directory.service";
 import { logger } from "@/lib/logger";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 const priceRangeLabel: Record<string, string> = {
   "$": "Budget",
@@ -56,6 +58,7 @@ function allSame(values: string[]): boolean {
 }
 
 export default function ComparePage() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const [highlightDiffs, setHighlightDiffs] = useState(false);
   const [showReport, setShowReport] = useState(false);
@@ -167,8 +170,8 @@ export default function ComparePage() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Comparing ${selectedBusinesses.map(b => b.name).join(", ")}`,
-          text: `Side-by-side comparison of ${selectedBusinesses.length} businesses in Alanya`,
+          title: t("compare.shareTitle", { names: selectedBusinesses.map(b => b.name).join(", ") }),
+          text: t("compare.shareText", { count: selectedBusinesses.length }),
           url,
         });
       } catch {
@@ -177,7 +180,7 @@ export default function ComparePage() {
     } else {
       await navigator.clipboard.writeText(url);
       // use a simple alert for now since we don't have a toast system imported here
-      alert("Link copied! Share it with anyone to show them this comparison.");
+      alert(t("compare.linkCopied"));
     }
   }
 
@@ -189,15 +192,15 @@ export default function ComparePage() {
         <section className="w-full px-4 md:px-8 lg:px-12 pt-28 md:pt-32 pb-6 bg-background-50">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center gap-2 mb-4">
-              <Link to="/" className="text-foreground-400 hover:text-foreground-600 text-xs transition-colors underline underline-offset-2">Home</Link>
+              <Link to="/" className="text-foreground-400 hover:text-foreground-600 text-xs transition-colors underline underline-offset-2">{t("nav.home")}</Link>
               <i className="ri-arrow-right-s-line text-foreground-300 text-xs"></i>
-              <Link to="/explore" className="text-foreground-400 hover:text-foreground-600 text-xs transition-colors underline underline-offset-2">Business Directory</Link>
+              <Link to="/explore" className="text-foreground-400 hover:text-foreground-600 text-xs transition-colors underline underline-offset-2">{t("public.businessDirectory")}</Link>
               <i className="ri-arrow-right-s-line text-foreground-300 text-xs"></i>
-              <span className="text-foreground-600 text-xs">Compare</span>
+              <span className="text-foreground-600 text-xs">{t("public.compare")}</span>
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
-                <h1 className="font-heading text-2xl md:text-3xl text-foreground-900 mb-1">Compare Businesses</h1>
+                <h1 className="font-heading text-2xl md:text-3xl text-foreground-900 mb-1">{t("compare.title")}</h1>
                 <p className="text-sm text-foreground-500">
                   {hasData
                     ? `Comparing ${selectedBusinesses.length} businesses side by side`
@@ -215,7 +218,7 @@ export default function ComparePage() {
                     }`}
                   >
                     <i className={`${highlightDiffs ? "ri-contrast-drop-2-fill" : "ri-contrast-drop-2-line"} text-sm`}></i>
-                    Highlight Differences
+                    {t("compare.highlightDifferences")}
                   </button>
                 )}
                 {hasData && (
@@ -224,7 +227,7 @@ export default function ComparePage() {
                     className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer"
                   >
                     <i className="ri-file-list-3-line text-sm"></i>
-                    Print Report
+                  {t("compare.printReport")}
                   </button>
                 )}
                 {hasNotes && (
@@ -233,7 +236,7 @@ export default function ComparePage() {
                     className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 transition-colors whitespace-nowrap cursor-pointer"
                   >
                     <i className="ri-delete-bin-6-line text-sm"></i>
-                    Clear Notes
+                  {t("compare.clearNotes")}
                   </button>
                 )}
                 <Link
@@ -241,7 +244,7 @@ export default function ComparePage() {
                   className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-foreground-200 text-sm text-foreground-700 font-medium hover:bg-background-100 transition-colors whitespace-nowrap self-start cursor-pointer"
                 >
                   <i className="ri-arrow-left-line text-sm"></i>
-                  Back to Directory
+                  {t("compare.backToDirectory")}
                 </Link>
               </div>
             </div>
@@ -297,7 +300,7 @@ export default function ComparePage() {
                         <td className="bg-background-100/60 px-4 py-3 border-b border-background-200/40">
                           <div className="flex items-center gap-2">
                             <i className="ri-price-tag-3-line text-foreground-400 text-sm"></i>
-                            <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">Category</span>
+                            <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">{t("public.category")}</span>
                             {highlightDiffs && diffState.subcategory && (
                               <span className="w-1.5 h-1.5 rounded-full bg-accent-500 shrink-0" title="Businesses differ in this field"></span>
                             )}
@@ -315,7 +318,7 @@ export default function ComparePage() {
                         <td className="bg-background-100/60 px-4 py-3 border-b border-background-200/40">
                           <div className="flex items-center gap-2">
                             <i className="ri-money-dollar-circle-line text-foreground-400 text-sm"></i>
-                            <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">Price</span>
+                            <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">{t("public.price")}</span>
                             {highlightDiffs && diffState.priceRange && (
                               <span className="w-1.5 h-1.5 rounded-full bg-accent-500 shrink-0" title="Businesses differ in this field"></span>
                             )}
@@ -335,7 +338,7 @@ export default function ComparePage() {
                         <td className="bg-background-100/60 px-4 py-3 border-b border-background-200/40">
                           <div className="flex items-center gap-2">
                             <i className="ri-star-line text-foreground-400 text-sm"></i>
-                            <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">Rating</span>
+                            <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">{t("public.rating")}</span>
                             {highlightDiffs && diffState.rating && (
                               <span className="w-1.5 h-1.5 rounded-full bg-accent-500 shrink-0" title="Businesses differ in this field"></span>
                             )}
@@ -357,7 +360,7 @@ export default function ComparePage() {
                         <td className="bg-background-100/60 px-4 py-3 border-b border-background-200/40">
                           <div className="flex items-center gap-2">
                             <i className="ri-file-text-line text-foreground-400 text-sm"></i>
-                            <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">About</span>
+                            <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">{t("public.about")}</span>
                             {highlightDiffs && (
                               <span className="w-1.5 h-1.5 rounded-full bg-accent-500 shrink-0" title="Businesses differ in this field"></span>
                             )}
@@ -375,7 +378,7 @@ export default function ComparePage() {
                         <td className="bg-background-100/60 px-4 py-3 border-b border-background-200/40">
                           <div className="flex items-center gap-2">
                             <i className="ri-map-pin-line text-foreground-400 text-sm"></i>
-                            <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">Address</span>
+                            <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">{t("public.address")}</span>
                             {highlightDiffs && (
                               <span className="w-1.5 h-1.5 rounded-full bg-accent-500 shrink-0" title="Businesses differ in this field"></span>
                             )}
@@ -393,7 +396,7 @@ export default function ComparePage() {
                         <td className="bg-background-100/60 px-4 py-3 border-b border-background-200/40">
                           <div className="flex items-center gap-2">
                             <i className="ri-time-line text-foreground-400 text-sm"></i>
-                            <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">Hours</span>
+                            <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">{t("public.hours")}</span>
                             {highlightDiffs && diffState.openingHours && (
                               <span className="w-1.5 h-1.5 rounded-full bg-accent-500 shrink-0" title="Businesses differ in this field"></span>
                             )}
@@ -411,7 +414,7 @@ export default function ComparePage() {
                         <td className="bg-background-100/60 px-4 py-3 border-b border-background-200/40">
                           <div className="flex items-center gap-2">
                             <i className="ri-phone-line text-foreground-400 text-sm"></i>
-                            <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">Phone</span>
+                            <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">{t("public.phone")}</span>
                             {highlightDiffs && (
                               <span className="w-1.5 h-1.5 rounded-full bg-accent-500 shrink-0" title="Businesses differ in this field"></span>
                             )}
@@ -431,7 +434,7 @@ export default function ComparePage() {
                         <td className="bg-background-100/60 px-4 py-3 border-b border-background-200/40">
                           <div className="flex items-center gap-2">
                             <i className="ri-mail-line text-foreground-400 text-sm"></i>
-                            <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">Email</span>
+                            <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">{t("public.email")}</span>
                             {highlightDiffs && (
                               <span className="w-1.5 h-1.5 rounded-full bg-accent-500 shrink-0" title="Businesses differ in this field"></span>
                             )}
@@ -451,7 +454,7 @@ export default function ComparePage() {
                         <td className="bg-background-100/60 px-4 py-3 border-b border-background-200/40">
                           <div className="flex items-center gap-2">
                             <i className="ri-global-line text-foreground-400 text-sm"></i>
-                            <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">Website</span>
+                            <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">{t("public.website")}</span>
                             {highlightDiffs && (
                               <span className="w-1.5 h-1.5 rounded-full bg-accent-500 shrink-0" title="Businesses differ in this field"></span>
                             )}
@@ -476,7 +479,7 @@ export default function ComparePage() {
                         <td className="bg-background-100/60 px-4 py-3 border-b border-background-200/40">
                           <div className="flex items-center gap-2">
                             <i className="ri-hashtag text-foreground-400 text-sm"></i>
-                            <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">Tags</span>
+                            <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">{t("public.tags")}</span>
                             {highlightDiffs && diffState.tags && (
                               <span className="w-1.5 h-1.5 rounded-full bg-accent-500 shrink-0" title="Businesses differ in this field"></span>
                             )}
@@ -500,7 +503,7 @@ export default function ComparePage() {
                         <td className="bg-background-100/60 px-4 py-3 border-b border-background-200/40">
                           <div className="flex items-center gap-2">
                             <i className="ri-sticky-note-line text-foreground-400 text-sm"></i>
-                            <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">My Notes</span>
+                            <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">{t("compare.myNotes")}</span>
                             {hasNotes && (
                               <button
                                 onClick={clearAllNotes}
@@ -508,7 +511,7 @@ export default function ComparePage() {
                                 title="Clear all notes"
                               >
                                 <i className="ri-delete-bin-6-line text-[10px]"></i>
-                                Clear all
+                                {t("compare.clearAll")}
                               </button>
                             )}
                           </div>
@@ -518,7 +521,7 @@ export default function ComparePage() {
                             <textarea
                               value={notes[b.id] || ""}
                               onChange={(e) => setNote(b.id, e.target.value)}
-                              placeholder="Add a note about this business..."
+                              placeholder={t("compare.notePlaceholder")}
                               rows={3}
                               className="w-full px-3 py-2 text-sm text-foreground-700 bg-background-50 border border-background-200 rounded-lg resize-y focus:outline-none focus:border-primary-300 focus:ring-1 focus:ring-primary-200 placeholder:text-foreground-300 transition-colors"
                             ></textarea>
@@ -529,7 +532,7 @@ export default function ComparePage() {
                       {/* Action */}
                       <tr>
                         <td className="bg-background-100/60 px-4 py-3">
-                          <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">Details</span>
+                          <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">{t("compare.details")}</span>
                         </td>
                         {selectedBusinesses.map((b) => (
                           <td key={b.id} className="px-4 py-3">
@@ -538,7 +541,7 @@ export default function ComparePage() {
                               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer"
                             >
                               <i className="ri-arrow-right-line text-sm"></i>
-                              View Full Details
+                              {t("compare.viewFullDetails")}
                             </Link>
                           </td>
                         ))}
@@ -641,12 +644,12 @@ export default function ComparePage() {
                       <div className="pt-2 border-t border-background-200/50">
                         <div className="flex items-center gap-2 mb-2">
                           <i className="ri-sticky-note-line text-foreground-400 text-sm shrink-0"></i>
-                          <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">My Notes</span>
+                          <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">{t("compare.myNotes")}</span>
                         </div>
                         <textarea
                           value={notes[b.id] || ""}
                           onChange={(e) => setNote(b.id, e.target.value)}
-                          placeholder="Add a note about this business..."
+                          placeholder={t("compare.notePlaceholder")}
                           rows={3}
                           className="w-full px-3 py-2 text-sm text-foreground-700 bg-background-50 border border-background-200 rounded-lg resize-y focus:outline-none focus:border-primary-300 focus:ring-1 focus:ring-primary-200 placeholder:text-foreground-300 transition-colors"
                         ></textarea>
@@ -657,7 +660,7 @@ export default function ComparePage() {
                         className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer mt-2"
                       >
                         <i className="ri-arrow-right-line text-sm"></i>
-                        View Full Details
+                        {t("compare.viewFullDetails")}
                       </Link>
                     </div>
                   </div>
@@ -671,16 +674,16 @@ export default function ComparePage() {
               <div className="w-20 h-20 mx-auto mb-6 flex items-center justify-center rounded-full bg-accent-100">
                 <i className="ri-scales-line text-accent-500 text-2xl"></i>
               </div>
-              <h2 className="font-heading text-xl text-foreground-900 mb-2">Nothing to compare yet</h2>
+              <h2 className="font-heading text-xl text-foreground-900 mb-2">{t("compare.empty")}</h2>
               <p className="text-sm text-foreground-500 max-w-sm mx-auto mb-6">
-                Head over to the business directory, tap the Compare button, and select 2-4 businesses to see them side by side here.
+                {t("compare.emptyDescription")}
               </p>
               <Link
                 to="/explore"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer"
               >
                 <i className="ri-compass-3-line"></i>
-                Browse Directory
+                {t("compare.browseDirectory")}
               </Link>
             </div>
           </section>
@@ -692,20 +695,20 @@ export default function ComparePage() {
             <div className="bg-gradient-to-r from-primary-500 to-accent-500 rounded-2xl p-8 md:p-10 text-center">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/20 bg-white/5 mb-6">
                 <i className="ri-store-2-line text-white/80 text-sm"></i>
-                <span className="text-sm font-medium text-white/80">Discover more in Alanya</span>
+                <span className="text-sm font-medium text-white/80">{t("business.discoverMore")}</span>
               </div>
               <h2 className="font-heading text-2xl md:text-3xl text-white mb-3">
-                Ready to Explore Alanya?
+                {t("compare.readyToExplore")}
               </h2>
               <p className="text-white/60 text-sm md:text-base max-w-lg mx-auto mb-8">
-                Browse all restaurants, hotels, tours, and services. Plan your perfect Mediterranean getaway with the Alanya Holidays directory.
+                {t("compare.exploreDescription")}
               </p>
               <Link
                 to="/explore"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-primary-600 text-sm font-medium hover:bg-white/90 transition-colors whitespace-nowrap cursor-pointer"
               >
                 <i className="ri-compass-3-line"></i>
-                Explore Directory
+                {t("compare.exploreDirectory")}
               </Link>
             </div>
           </div>
@@ -755,8 +758,8 @@ export default function ComparePage() {
                       <i className="ri-file-list-3-line text-primary-500"></i>
                     </div>
                     <div>
-                      <h3 className="font-heading text-base font-semibold text-foreground-900">Comparison Report</h3>
-                      <p className="text-xs text-foreground-500">Ready to print or share</p>
+                      <h3 className="font-heading text-base font-semibold text-foreground-900">{t("compare.report")}</h3>
+                      <p className="text-xs text-foreground-500">{t("compare.reportReady")}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -765,14 +768,14 @@ export default function ComparePage() {
                       className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-foreground-200 text-sm text-foreground-700 font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer"
                     >
                       <i className="ri-share-forward-line text-sm"></i>
-                      Share
+                      {t("compare.share")}
                     </button>
                     <button
                       onClick={handlePrint}
                       className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer"
                     >
                       <i className="ri-printer-line text-sm"></i>
-                      Print
+                      {t("compare.print")}
                     </button>
                     <button
                       onClick={() => setShowReport(false)}
@@ -789,11 +792,11 @@ export default function ComparePage() {
                   <div className="px-8 pt-8 pb-6 border-b-2 border-foreground-900">
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <h1 className="font-heading text-2xl font-bold text-foreground-900 mb-1">Business Comparison Report</h1>
-                        <p className="text-sm text-foreground-500">Alanya Holidays — Local Business Directory</p>
+                        <h1 className="font-heading text-2xl font-bold text-foreground-900 mb-1">{t("compare.reportTitle")}</h1>
+                        <p className="text-sm text-foreground-500">{t("compare.localDirectory")}</p>
                       </div>
                       <div className="text-right">
-                        <div className="text-xs text-foreground-400 mb-1">Generated on</div>
+                        <div className="text-xs text-foreground-400 mb-1">{t("compare.generatedOn")}</div>
                         <div className="text-sm font-medium text-foreground-700">
                           {new Date().toLocaleDateString("en-US", {
                             year: "numeric",
@@ -848,7 +851,7 @@ export default function ComparePage() {
                           {/* Category */}
                           <tr className="border-b border-background-200">
                             <td className="py-2.5 pr-4">
-                              <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">Category</span>
+                              <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">{t("public.category")}</span>
                             </td>
                             {selectedBusinesses.map((b) => (
                               <td key={b.id} className="py-2.5 px-4 text-sm text-foreground-800">
@@ -860,7 +863,7 @@ export default function ComparePage() {
                           {/* Price Range */}
                           <tr className="border-b border-background-200">
                             <td className="py-2.5 pr-4">
-                              <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">Price</span>
+                              <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">{t("public.price")}</span>
                             </td>
                             {selectedBusinesses.map((b) => (
                               <td key={b.id} className="py-2.5 px-4">
@@ -874,7 +877,7 @@ export default function ComparePage() {
                           {/* Rating */}
                           <tr className="border-b border-background-200">
                             <td className="py-2.5 pr-4">
-                              <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">Rating</span>
+                              <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">{t("public.rating")}</span>
                             </td>
                             {selectedBusinesses.map((b) => (
                               <td key={b.id} className="py-2.5 px-4">
@@ -890,7 +893,7 @@ export default function ComparePage() {
                           {/* Description */}
                           <tr className="border-b border-background-200">
                             <td className="py-2.5 pr-4 align-top">
-                              <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">About</span>
+                              <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">{t("public.about")}</span>
                             </td>
                             {selectedBusinesses.map((b) => (
                               <td key={b.id} className="py-2.5 px-4 text-sm text-foreground-700 leading-relaxed align-top">
@@ -902,7 +905,7 @@ export default function ComparePage() {
                           {/* Address */}
                           <tr className="border-b border-background-200">
                             <td className="py-2.5 pr-4">
-                              <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">Address</span>
+                              <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">{t("public.address")}</span>
                             </td>
                             {selectedBusinesses.map((b) => (
                               <td key={b.id} className="py-2.5 px-4 text-sm text-foreground-700 leading-relaxed">
@@ -914,7 +917,7 @@ export default function ComparePage() {
                           {/* Opening Hours */}
                           <tr className="border-b border-background-200">
                             <td className="py-2.5 pr-4">
-                              <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">Hours</span>
+                              <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">{t("public.hours")}</span>
                             </td>
                             {selectedBusinesses.map((b) => (
                               <td key={b.id} className="py-2.5 px-4 text-sm text-foreground-700 whitespace-nowrap">
@@ -926,7 +929,7 @@ export default function ComparePage() {
                           {/* Contact info */}
                           <tr className="border-b border-background-200">
                             <td className="py-2.5 pr-4">
-                              <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">Contact</span>
+                              <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">{t("compare.contact")}</span>
                             </td>
                             {selectedBusinesses.map((b) => (
                               <td key={b.id} className="py-2.5 px-4 text-sm text-foreground-700">
@@ -951,7 +954,7 @@ export default function ComparePage() {
                           {/* Tags */}
                           <tr>
                             <td className="py-2.5 pr-4 align-top">
-                              <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">Tags</span>
+                              <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">{t("public.tags")}</span>
                             </td>
                             {selectedBusinesses.map((b) => (
                               <td key={b.id} className="py-2.5 px-4 align-top">
@@ -970,11 +973,11 @@ export default function ComparePage() {
                           {Object.values(notes).some((n: string) => n.trim()) && (
                             <tr>
                               <td className="py-2.5 pr-4 align-top">
-                                <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">Notes</span>
+                                <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">{t("public.notes")}</span>
                               </td>
                               {selectedBusinesses.map((b) => (
                                 <td key={b.id} className="py-2.5 px-4 text-sm text-foreground-700 leading-relaxed align-top whitespace-pre-wrap">
-                                  {notes[b.id] || <span className="text-foreground-300 italic">No notes</span>}
+                                  {notes[b.id] || <span className="text-foreground-300 italic">{t("compare.noNotes")}</span>}
                                 </td>
                               ))}
                             </tr>
@@ -989,21 +992,21 @@ export default function ComparePage() {
                     <div className="flex items-center justify-between gap-6">
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-foreground-500 mb-1">
-                          Alanya Holidays Business Directory
+                          {t("compare.businessDirectory")}
                         </p>
                         <p className="text-[11px] text-foreground-400">
-                          Generated {new Date().toLocaleDateString("en-US", {
+                          {t("compare.generated", { date: new Date().toLocaleDateString("en-US", {
                             year: "numeric",
                             month: "long",
                             day: "numeric",
-                          })}
+                          }) })}
                         </p>
                       </div>
                       {qrDataUrl && (
                         <div className="flex items-center gap-3 shrink-0">
                           <div className="text-right">
-                            <p className="text-[11px] font-semibold text-foreground-600 mb-0.5 whitespace-nowrap">View Online</p>
-                            <p className="text-[10px] text-foreground-400 whitespace-nowrap">Scan to compare</p>
+                            <p className="text-[11px] font-semibold text-foreground-600 mb-0.5 whitespace-nowrap">{t("compare.viewOnline")}</p>
+                            <p className="text-[10px] text-foreground-400 whitespace-nowrap">{t("compare.scanToCompare")}</p>
                           </div>
                           <div className="w-[72px] h-[72px] rounded-lg overflow-hidden border border-foreground-200 shrink-0">
                             <img

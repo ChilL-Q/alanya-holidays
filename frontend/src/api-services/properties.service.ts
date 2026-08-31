@@ -215,7 +215,6 @@ export class PropertiesService {
 
     if (params) {
       if (location && location !== "all") queryParams.location = location;
-      if (type && type !== "all") queryParams.type = type;
       if (minPrice !== undefined) queryParams.minPrice = minPrice;
       if (maxPrice !== undefined) queryParams.maxPrice = maxPrice;
       if (bedrooms !== undefined) queryParams.bedrooms = bedrooms;
@@ -237,6 +236,8 @@ export class PropertiesService {
           typeof filters === "string"
             ? filters
             : JSON.stringify(filters);
+      } else if (type && type !== "all") {
+        queryParams.filters = JSON.stringify({ types: [type] });
       }
     }
 

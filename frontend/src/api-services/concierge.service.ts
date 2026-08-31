@@ -1,5 +1,14 @@
 import { apiClient, ApiError } from "@/lib/api-client";
 import { yachts as domainYachts, yachtTypes, type Yacht, type CrewMember } from "@/domain/yachts";
+import { privateJets as curatedPrivateJets } from "@/mocks/private-jets";
+import { helicopterTours as curatedHelicopterTours } from "@/mocks/helicopter-tours";
+import { wineTastings as curatedWineTastings } from "@/mocks/wine-tastings";
+import { hammamSpaExperiences as curatedHammamSpaExperiences } from "@/mocks/hammam-spa";
+import { photographyExcursions as curatedPhotographyExcursions } from "@/mocks/photography-excursions";
+import { golfVacations as curatedGolfVacations } from "@/mocks/golf-vacations";
+import { personalChefs as curatedPersonalChefs } from "@/mocks/personal-chefs";
+import { personalDrivers as curatedPersonalDrivers } from "@/mocks/personal-drivers";
+import { personalShoppers as curatedPersonalShoppers } from "@/mocks/personal-shoppers";
 
 export type { Yacht, CrewMember };
 export { yachtTypes };
@@ -35,8 +44,8 @@ export const jetTypes = [
 export interface HelicopterTour {
   id: string;
   name: string;
-  company: string;
-  type: "Scenic Coastal Tour" | "Mountain & Canyon Safari" | "Sunset Romantic Flight" | "VIP Private Charter" | string;
+  company?: string;
+  type?: "Scenic Coastal Tour" | "Mountain & Canyon Safari" | "Sunset Romantic Flight" | "VIP Private Charter" | string;
   duration: string;
   maxPassengers: number;
   pricePerPerson: number;
@@ -47,7 +56,7 @@ export interface HelicopterTour {
   image: string;
   description: string;
   highlights: string[];
-  route: string[];
+  route: string | string[];
   includes: string[];
   rating: number;
   reviewCount: number;
@@ -94,7 +103,7 @@ export interface PersonalChef {
   rating: number;
   reviewCount: number;
   image: string;
-  bio: string;
+  bio?: string;
   sampleMenu?: Array<{ course: string; dish: string; description: string }>;
   servicesOffered?: string[];
   featured: boolean;
@@ -117,7 +126,7 @@ export interface PersonalDriver {
   company?: string;
   vehicle: string;
   vehicleType: string;
-  vehicleCapacity: number;
+  vehicleCapacity?: number;
   capacity?: number;
   languages: string[];
   base?: string;
@@ -135,7 +144,7 @@ export interface PersonalDriver {
   reviewCount: number;
   image: string;
   vehicleImage?: string;
-  bio: string;
+  bio?: string;
   amenities?: string[];
   includes?: string[];
   popularRoutes?: Array<{ name: string; duration: string; price: number }>;
@@ -175,7 +184,7 @@ export interface PersonalShopper {
   rating: number;
   reviewCount: number;
   image: string;
-  bio: string;
+  bio?: string;
   exclusivePerks?: string[];
   curatedBoutiques?: Array<{ name: string; category: string; discount: string }>;
   featured: boolean;
@@ -196,22 +205,22 @@ export interface WineTasting {
   id: string;
   name: string;
   venue: string;
-  sommelier: string;
-  type: "Classic Tasting" | "Premium Tasting" | "Sunset Vineyard Tour" | "Private Sommelier Masterclass" | string;
+  sommelier?: string;
+  type?: "Classic Tasting" | "Premium Tasting" | "Sunset Vineyard Tour" | "Private Sommelier Masterclass" | string;
   duration: string;
   groupSize: string;
   pricePerPerson: number;
   currency: string;
   image: string;
   description: string;
-  winesIncluded: number;
+  winesIncluded: number | string;
   wineTypes: string[];
-  foodPairing: string[];
+  foodPairing: string | string[];
   includes: string[];
   rating: number;
   reviewCount: number;
   featured: boolean;
-  language: string[];
+  language: string | string[];
 }
 
 export const wineTastingTypes = [
@@ -227,7 +236,7 @@ export const tastingStyles = wineTastingTypes;
 export interface HammamSpa {
   id: string;
   name: string;
-  venue: string;
+  venue?: string;
   location?: string;
   type: "Traditional Turkish Bath" | "VIP Luxury Package" | "Couples Ritual" | "Aromatherapy & Massage" | string;
   duration: string;
@@ -262,9 +271,9 @@ export const spaTypes = hammamSpaTypes;
 export interface GolfVacation {
   id: string;
   name: string;
-  course: string;
+  course?: string;
   location: string;
-  type: "Championship 18-Hole" | "All-Inclusive Golf & Stay" | "PGA Pro Coaching" | "Executive 9-Hole & Spa" | string;
+  type?: "Championship 18-Hole" | "All-Inclusive Golf & Stay" | "PGA Pro Coaching" | "Executive 9-Hole & Spa" | string;
   holes?: number;
   par?: number;
   designer?: string;
@@ -278,7 +287,7 @@ export interface GolfVacation {
   language?: string;
   courses?: string[];
   priceIncludes?: string[];
-  currency: string;
+  currency?: string;
   image: string;
   description: string;
   courseFeatures?: string[];
@@ -303,22 +312,22 @@ export const golfStyles = golfTypes;
 export interface PhotographyExcursion {
   id: string;
   name: string;
-  photographer: string;
-  type: "Sunset & Landscape" | "Old Town & Culture" | "Drone & Aerial" | "Couples & Portrait" | "Private VIP Session" | string;
+  photographer?: string;
+  type?: "Sunset & Landscape" | "Old Town & Culture" | "Drone & Aerial" | "Couples & Portrait" | "Private VIP Session" | string;
   focus?: string;
   bestTime?: string;
   privatePrice?: number;
   duration: string;
   groupSize: string;
-  photosDelivered: number;
-  editedPhotos: number;
-  deliveryTimeDays: number;
+  photosDelivered?: number;
+  editedPhotos?: number;
+  deliveryTimeDays?: number;
   pricePerPerson: number;
   currency: string;
   image: string;
   description: string;
   locations: string[];
-  gearIncluded: string[];
+  gearIncluded?: string[];
   includes: string[];
   skillLevel?: string;
   guide?: string;
@@ -597,6 +606,15 @@ export class ConciergeService {
     return [];
   }
 
+  private async getCategoryWithFallback<T>(category: string, fallback: readonly T[]): Promise<T[]> {
+    try {
+      const items = await this.getOfferingsByCategory<T>(category);
+      return items.length > 0 ? items : [...fallback];
+    } catch {
+      return [...fallback];
+    }
+  }
+
   /**
    * Submits a concierge enquiry request.
    */
@@ -686,39 +704,39 @@ export class ConciergeService {
   }
 
   async getPrivateJets(): Promise<PrivateJet[]> {
-    return this.getOfferingsByCategory<PrivateJet>("private-jet");
+    return this.getCategoryWithFallback<PrivateJet>("private-jet", curatedPrivateJets);
   }
 
   async getHelicopterTours(): Promise<HelicopterTour[]> {
-    return this.getOfferingsByCategory<HelicopterTour>("helicopter");
+    return this.getCategoryWithFallback<HelicopterTour>("helicopter", curatedHelicopterTours);
   }
 
   async getWineTastings(): Promise<WineTasting[]> {
-    return this.getOfferingsByCategory<WineTasting>("wine-tasting");
+    return this.getCategoryWithFallback<WineTasting>("wine-tasting", curatedWineTastings);
   }
 
   async getHammamSpaExperiences(): Promise<HammamSpa[]> {
-    return this.getOfferingsByCategory<HammamSpa>("hammam-spa");
+    return this.getCategoryWithFallback<HammamSpa>("hammam-spa", curatedHammamSpaExperiences);
   }
 
   async getPhotographyExcursions(): Promise<PhotographyExcursion[]> {
-    return this.getOfferingsByCategory<PhotographyExcursion>("photography");
+    return this.getCategoryWithFallback<PhotographyExcursion>("photography", curatedPhotographyExcursions);
   }
 
   async getGolfVacations(): Promise<GolfVacation[]> {
-    return this.getOfferingsByCategory<GolfVacation>("golf");
+    return this.getCategoryWithFallback<GolfVacation>("golf", curatedGolfVacations);
   }
 
   async getPersonalChefs(): Promise<PersonalChef[]> {
-    return this.getOfferingsByCategory<PersonalChef>("personal-chef");
+    return this.getCategoryWithFallback<PersonalChef>("personal-chef", curatedPersonalChefs);
   }
 
   async getPersonalDrivers(): Promise<PersonalDriver[]> {
-    return this.getOfferingsByCategory<PersonalDriver>("personal-driver");
+    return this.getCategoryWithFallback<PersonalDriver>("personal-driver", curatedPersonalDrivers);
   }
 
   async getPersonalShoppers(): Promise<PersonalShopper[]> {
-    return this.getOfferingsByCategory<PersonalShopper>("personal-shopper");
+    return this.getCategoryWithFallback<PersonalShopper>("personal-shopper", curatedPersonalShoppers);
   }
 
   getLuxuryExperiences(): LuxuryExperienceItem[] {

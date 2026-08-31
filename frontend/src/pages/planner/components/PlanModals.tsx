@@ -1,5 +1,7 @@
 import React, { useRef } from "react";
 import type { Plan, PlanItem } from "@/hooks/usePlanner";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 // Create Plan Modal
 interface CreatePlanModalProps {
@@ -21,6 +23,7 @@ export const CreatePlanModal: React.FC<CreatePlanModalProps> = ({
   onPlanDescriptionChange,
   onCreate,
 }) => {
+  const { t } = useTranslation();
   if (!isOpen) return null;
 
   return (
@@ -30,19 +33,19 @@ export const CreatePlanModal: React.FC<CreatePlanModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-6 py-5 border-b border-background-200">
-          <h3 className="font-heading text-lg font-semibold text-foreground-900">Create New Plan</h3>
-          <p className="text-xs text-foreground-500 mt-1">Give your plan a name and start building your itinerary</p>
+          <h3 className="font-heading text-lg font-semibold text-foreground-900">{t("planner.createPlan")}</h3>
+          <p className="text-xs text-foreground-500 mt-1">{t("planner.createPlanDescription")}</p>
         </div>
         <div className="px-6 py-5 space-y-4">
           <div>
             <label className="block text-xs font-semibold text-foreground-500 uppercase tracking-wider mb-1.5">
-              Plan Name *
+              {t("planner.planNameRequired")}
             </label>
             <input
               type="text"
               value={planName}
               onChange={(e) => onPlanNameChange(e.target.value)}
-              placeholder="e.g., Weekend in Alanya, Food Tour, Beach Day..."
+              placeholder={t("planner.planNamePlaceholder")}
               className="w-full px-3 py-2.5 text-sm rounded-xl border border-background-200 bg-background-50 focus:outline-none focus:border-primary-300 text-foreground-700 placeholder:text-foreground-300"
               onKeyDown={(e) => {
                 if (e.key === "Enter") onCreate();
@@ -52,12 +55,12 @@ export const CreatePlanModal: React.FC<CreatePlanModalProps> = ({
           </div>
           <div>
             <label className="block text-xs font-semibold text-foreground-500 uppercase tracking-wider mb-1.5">
-              Description (optional)
+              {t("planner.descriptionOptional")}
             </label>
             <textarea
               value={planDescription}
               onChange={(e) => onPlanDescriptionChange(e.target.value)}
-              placeholder="What's this plan about? Any notes for yourself..."
+              placeholder={t("planner.descriptionPlaceholder")}
               rows={3}
               className="w-full px-3 py-2.5 text-sm rounded-xl border border-background-200 bg-background-50 focus:outline-none focus:border-primary-300 text-foreground-700 placeholder:text-foreground-300 resize-y"
             ></textarea>
@@ -68,14 +71,14 @@ export const CreatePlanModal: React.FC<CreatePlanModalProps> = ({
             onClick={onClose}
             className="px-4 py-2 rounded-full border border-foreground-200 text-sm text-foreground-600 font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer"
           >
-            Cancel
+            {t("public.cancel")}
           </button>
           <button
             onClick={onCreate}
             disabled={!planName.trim()}
             className="px-5 py-2 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors whitespace-nowrap cursor-pointer"
           >
-            Create Plan
+            {t("planner.createPlanButton")}
           </button>
         </div>
       </div>
@@ -109,6 +112,7 @@ export const EditPlanModal: React.FC<EditPlanModalProps> = ({
   onDeleteRequest,
   onDuplicate,
 }) => {
+  const { t } = useTranslation();
   if (!isOpen || !selectedPlan) return null;
 
   return (
@@ -118,12 +122,12 @@ export const EditPlanModal: React.FC<EditPlanModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-6 py-5 border-b border-background-200">
-          <h3 className="font-heading text-lg font-semibold text-foreground-900">Edit Plan</h3>
+          <h3 className="font-heading text-lg font-semibold text-foreground-900">{t("planner.editPlan")}</h3>
         </div>
         <div className="px-6 py-5 space-y-4">
           <div>
             <label className="block text-xs font-semibold text-foreground-500 uppercase tracking-wider mb-1.5">
-              Plan Name *
+              {t("planner.planNameRequired")}
             </label>
             <input
               type="text"
@@ -138,7 +142,7 @@ export const EditPlanModal: React.FC<EditPlanModalProps> = ({
           </div>
           <div>
             <label className="block text-xs font-semibold text-foreground-500 uppercase tracking-wider mb-1.5">
-              Description
+              {t("planner.description")}
             </label>
             <textarea
               value={editPlanDescription}
@@ -155,14 +159,14 @@ export const EditPlanModal: React.FC<EditPlanModalProps> = ({
               className="px-3.5 py-2 rounded-full border border-red-200 text-xs text-red-600 font-medium hover:bg-red-50 transition-colors whitespace-nowrap cursor-pointer"
             >
               <i className="ri-delete-bin-6-line mr-1"></i>
-              Delete
+              {t("planner.delete")}
             </button>
             <button
               onClick={onDuplicate}
               className="px-3.5 py-2 rounded-full border border-foreground-200 text-xs text-foreground-600 font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer"
             >
               <i className="ri-file-copy-line mr-1"></i>
-              Duplicate
+              {t("planner.duplicate")}
             </button>
           </div>
           <div className="flex items-center gap-3">
@@ -170,14 +174,14 @@ export const EditPlanModal: React.FC<EditPlanModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 rounded-full border border-foreground-200 text-sm text-foreground-600 font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer"
             >
-              Cancel
+              {t("public.cancel")}
             </button>
             <button
               onClick={onSave}
               disabled={!editPlanName.trim()}
               className="px-5 py-2 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors whitespace-nowrap cursor-pointer"
             >
-              Save Changes
+              {t("planner.saveChanges")}
             </button>
           </div>
         </div>
@@ -204,6 +208,7 @@ export const SharePlanModal: React.FC<SharePlanModalProps> = ({
   onShareAuthorNameChange,
   onConfirmShare,
 }) => {
+  const { t } = useTranslation();
   if (!isOpen || !selectedPlan) return null;
 
   return (
@@ -215,19 +220,19 @@ export const SharePlanModal: React.FC<SharePlanModalProps> = ({
         <div className="w-14 h-14 mx-auto mb-4 flex items-center justify-center rounded-full bg-accent-100">
           <i className="ri-share-forward-line text-accent-500 text-xl"></i>
         </div>
-        <h3 className="font-heading text-base font-semibold text-foreground-900 mb-1 text-center">Share as Template?</h3>
+        <h3 className="font-heading text-base font-semibold text-foreground-900 mb-1 text-center">{t("planner.shareAsTemplateQuestion")}</h3>
         <p className="text-sm text-foreground-500 mb-4 text-center">
-          <strong>{selectedPlan.name}</strong> will appear in the Community Templates section where other travelers can copy it as a starting point for their own plans.
+          {t("planner.shareDescription", { name: selectedPlan.name })}
         </p>
         <div className="mb-4">
           <label className="block text-xs font-semibold text-foreground-500 uppercase tracking-wider mb-1.5 text-left">
-            Your Name
+            {t("public.yourName")}
           </label>
           <input
             type="text"
             value={shareAuthorName}
             onChange={(e) => onShareAuthorNameChange(e.target.value)}
-            placeholder="How you'll appear to the community"
+            placeholder={t("planner.shareNamePlaceholder")}
             className="w-full px-3 py-2.5 text-sm rounded-xl border border-background-200 bg-background-50 focus:outline-none focus:border-accent-300 text-foreground-700 placeholder:text-foreground-300"
             autoFocus
             onKeyDown={(e) => {
@@ -235,7 +240,7 @@ export const SharePlanModal: React.FC<SharePlanModalProps> = ({
             }}
           />
           <p className="text-xs text-foreground-400 mt-1.5 text-left">
-            {selectedPlan.items.length} items · Your plan stays in your library unchanged
+            {t("planner.itemsInLibrary", { count: selectedPlan.items.length })}
           </p>
         </div>
         <div className="flex items-center gap-3 justify-center">
@@ -243,13 +248,13 @@ export const SharePlanModal: React.FC<SharePlanModalProps> = ({
             onClick={onClose}
             className="px-4 py-2 rounded-full border border-foreground-200 text-sm text-foreground-600 font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer"
           >
-            Cancel
+            {t("public.cancel")}
           </button>
           <button
             onClick={onConfirmShare}
             className="px-5 py-2 rounded-full bg-accent-500 text-white text-sm font-medium hover:bg-accent-600 transition-colors whitespace-nowrap cursor-pointer"
           >
-            Share Plan
+            {t("planner.sharePlan")}
           </button>
         </div>
       </div>
@@ -271,6 +276,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
   selectedPlan,
   onConfirmDelete,
 }) => {
+  const { t } = useTranslation();
   if (!isOpen || !selectedPlan) return null;
 
   return (
@@ -282,22 +288,22 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
         <div className="w-14 h-14 mx-auto mb-4 flex items-center justify-center rounded-full bg-red-100">
           <i className="ri-error-warning-line text-red-500 text-xl"></i>
         </div>
-        <h3 className="font-heading text-base font-semibold text-foreground-900 mb-1">Delete Plan?</h3>
+        <h3 className="font-heading text-base font-semibold text-foreground-900 mb-1">{t("planner.deletePlanQuestion")}</h3>
         <p className="text-sm text-foreground-500 mb-6">
-          This will permanently delete <strong>{selectedPlan.name}</strong> and all its items. This cannot be undone.
+          {t("planner.deletePlanDescription", { name: selectedPlan.name })}
         </p>
         <div className="flex items-center gap-3 justify-center">
           <button
             onClick={onClose}
             className="px-4 py-2 rounded-full border border-foreground-200 text-sm text-foreground-600 font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer"
           >
-            Cancel
+            {t("public.cancel")}
           </button>
           <button
             onClick={onConfirmDelete}
             className="px-5 py-2 rounded-full bg-red-500 text-white text-sm font-medium hover:bg-red-600 transition-colors whitespace-nowrap cursor-pointer"
           >
-            Delete Plan
+            {t("planner.deletePlan")}
           </button>
         </div>
       </div>
@@ -327,6 +333,7 @@ export const PrintPlanModal: React.FC<PrintPlanModalProps> = ({
   getItemDisplayInfo,
   onPrint,
 }) => {
+  const { t } = useTranslation();
   const printRef = useRef<HTMLDivElement>(null);
 
   if (!isOpen || !selectedPlan) return null;
@@ -361,8 +368,8 @@ export const PrintPlanModal: React.FC<PrintPlanModalProps> = ({
                 <i className="ri-printer-line text-primary-500"></i>
               </div>
               <div>
-                <h3 className="font-heading text-base font-semibold text-foreground-900">Print Plan</h3>
-                <p className="text-xs text-foreground-500">Ready to print your itinerary</p>
+                <h3 className="font-heading text-base font-semibold text-foreground-900">{t("planner.printPlan")}</h3>
+                <p className="text-xs text-foreground-500">{t("planner.printReady")}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -371,7 +378,7 @@ export const PrintPlanModal: React.FC<PrintPlanModalProps> = ({
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer"
               >
                 <i className="ri-printer-line text-sm"></i>
-                Print
+                {t("planner.print")}
               </button>
               <button
                 onClick={onClose}
@@ -397,9 +404,9 @@ export const PrintPlanModal: React.FC<PrintPlanModalProps> = ({
                 <p className="text-sm text-foreground-600 mb-3">{selectedPlan.description}</p>
               )}
               <div className="flex items-center gap-4 text-xs text-foreground-500">
-                <span>{selectedPlan.items.length} items</span>
-                <span>{dayLabels.length} {dayLabels.length === 1 ? "day" : "days"}</span>
-                <span>Alanya Holidays Planner</span>
+                <span>{t("planner.items", { count: selectedPlan.items.length })}</span>
+                <span>{t(dayLabels.length === 1 ? "planner.day" : "planner.days", { count: dayLabels.length })}</span>
+                <span>{t("planner.brand")}</span>
               </div>
             </div>
 

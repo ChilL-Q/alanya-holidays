@@ -12,8 +12,10 @@ import {
   type BlogTag,
 } from "@/api-services/blog.service";
 import { logger } from "@/lib/logger";
+import { useTranslation } from "react-i18next";
 
 export default function TravelGuidesPage() {
+  const { t } = useTranslation();
   const [guides, setGuides] = useState<BlogPostItem[]>([]);
   const [tags, setTags] = useState<BlogTag[]>([]);
   const [selectedTag, setSelectedTag] = useState<string>("All");
@@ -52,6 +54,7 @@ export default function TravelGuidesPage() {
 
     blogService
       .getPosts({
+        contentType: "guide",
         category: categoryParam,
         search: searchParam,
       })
@@ -70,6 +73,7 @@ export default function TravelGuidesPage() {
       .catch((err) => {
         logger.warn("Failed to fetch guides:", err);
         if (isMounted) {
+          setGuides(selectedTag === "All" && !searchParam ? mockTravelGuides : []);
           setIsLoading(false);
         }
       });
@@ -106,7 +110,7 @@ export default function TravelGuidesPage() {
         <section className="print-hide relative w-full h-[320px] md:h-[420px] overflow-hidden">
           <PageHeroImage
             page="travelGuides"
-            alt="Alanya Travel Guides"
+            alt={t("public.guides.heroAlt")}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-foreground-950/60 via-foreground-950/40 to-foreground-950/80"></div>
 
@@ -116,18 +120,18 @@ export default function TravelGuidesPage() {
                 to="/"
                 className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2"
               >
-                Home
+                {t("nav.home")}
               </Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <span className="text-white/90 text-sm">Travel Guides</span>
+              <span className="text-white/90 text-sm">{t("public.travelGuides")}</span>
             </div>
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
               <div>
                 <h1 className="font-heading text-3xl md:text-5xl text-white mb-2">
-                  Travel Guides
+                  {t("public.travelGuides")}
                 </h1>
                 <p className="text-white/75 text-sm md:text-base max-w-xl">
-                  Community-written guides to help you experience the very best of Alanya — written by locals and verified expats.
+                  {t("public.guides.description")}
                 </p>
               </div>
 
@@ -137,14 +141,14 @@ export default function TravelGuidesPage() {
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-accent-500 hover:bg-accent-600 text-white text-sm font-medium transition-all shadow-md hover:shadow-lg cursor-pointer whitespace-nowrap"
                 >
                   <i className="ri-quill-pen-line text-base"></i>
-                  Submit Community Guide
+                  {t("public.guides.submit")}
                 </button>
                 <button
                   onClick={handlePrintAll}
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white text-sm font-medium transition-all border border-white/20 cursor-pointer whitespace-nowrap"
                 >
                   <i className="ri-file-pdf-2-line text-base"></i>
-                  Download All as PDF
+                  {t("public.guides.downloadPdf")}
                 </button>
               </div>
             </div>
@@ -166,7 +170,7 @@ export default function TravelGuidesPage() {
                       : "bg-white border border-foreground-200 text-foreground-700 hover:border-primary-300 hover:text-primary-600"
                   }`}
                 >
-                  All Categories
+                  {t("public.allCategories")}
                 </button>
                 {tags.map((t) => (
                   <button
@@ -190,7 +194,7 @@ export default function TravelGuidesPage() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search travel guides..."
+                  placeholder={t("public.guides.searchPlaceholder")}
                   className="w-full pl-9 pr-8 py-2 rounded-full border border-foreground-200 bg-white text-xs md:text-sm text-foreground-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder:text-foreground-400"
                 />
                 {searchQuery && (
@@ -209,14 +213,14 @@ export default function TravelGuidesPage() {
             {isLoading && guides.length === 0 ? (
               <div className="py-20 text-center">
                 <i className="ri-loader-4-line animate-spin text-3xl text-primary-500 mb-3 block mx-auto"></i>
-                <p className="text-foreground-500 text-sm">Loading curated travel guides...</p>
+                <p className="text-foreground-500 text-sm">{t("public.guides.loading")}</p>
               </div>
             ) : guides.length === 0 ? (
               <div className="py-20 text-center bg-white rounded-2xl border border-background-200 p-8">
                 <i className="ri-compass-3-line text-5xl text-foreground-300 mb-4 block"></i>
-                <h3 className="font-heading text-lg text-foreground-800 mb-2">No guides found</h3>
+                <h3 className="font-heading text-lg text-foreground-800 mb-2">{t("public.guides.noGuides")}</h3>
                 <p className="text-sm text-foreground-500 max-w-md mx-auto mb-6">
-                  No travel guides matched your active filter. Try selecting another category or submit your own guide.
+                  {t("public.guides.noGuidesDescription")}
                 </p>
                 <button
                   onClick={() => {
@@ -225,7 +229,7 @@ export default function TravelGuidesPage() {
                   }}
                   className="px-5 py-2 rounded-full bg-primary-500 text-white text-xs font-medium hover:bg-primary-600 transition-colors cursor-pointer"
                 >
-                  Reset Filters
+                  {t("public.resetFilters")}
                 </button>
               </div>
             ) : (
@@ -266,7 +270,7 @@ export default function TravelGuidesPage() {
                       </div>
 
                       <div className="pt-4 border-t border-background-100 flex items-center justify-between text-xs text-primary-600 font-medium">
-                        <span>Read Full Guide</span>
+                        <span>{t("public.guides.readFull")}</span>
                         <i className="ri-arrow-right-line group-hover:translate-x-1 transition-transform"></i>
                       </div>
                     </div>
@@ -286,13 +290,13 @@ export default function TravelGuidesPage() {
         <div className="all-guides-print print-only hidden w-full max-w-4xl mx-auto px-4 py-8">
           <div className="text-center mb-10">
             <h1 className="font-heading text-2xl text-foreground-900 mb-2">
-              Alanya Travel Guides — Complete Collection
+              {t("public.guides.printTitle")}
             </h1>
             <p className="text-sm text-foreground-500">
-              Community-written guides by Alanya locals · alanyatogether.com
+              {t("public.guides.printByline")}
             </p>
             <p className="text-sm text-foreground-400 mt-1">
-              {guides.length} guides · approximately {totalReadingTime} minutes total reading time
+              {t("public.guides.printStats", { count: guides.length, minutes: totalReadingTime })}
             </p>
           </div>
 

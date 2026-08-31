@@ -23,6 +23,12 @@ export class BusinessApplicationsService {
     return this.execute(() => this.repository.findMine(userId));
   }
 
+  hasApprovedBusinessAccount(userId: string): Promise<boolean> {
+    return this.execute(() =>
+      this.repository.hasApprovedBusinessAccount(userId),
+    );
+  }
+
   submit(
     userId: string,
     dto: CreateBusinessApplicationDto,

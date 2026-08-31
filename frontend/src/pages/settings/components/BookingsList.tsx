@@ -3,8 +3,10 @@ import { Link } from "react-router-dom";
 import { Compass, Calendar, Users, MapPin, AlertCircle, RefreshCw, ChevronRight, XCircle, CheckCircle2, Clock } from "lucide-react";
 import { bookingsService, type BookingItem } from "@/api-services/bookings.service";
 import { logger } from "@/lib/logger";
+import { useTranslation } from "react-i18next";
 
 export function BookingsList() {
+  const { t } = useTranslation();
   const [bookings, setBookings] = useState<BookingItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,11 +21,11 @@ export function BookingsList() {
       setBookings(Array.isArray(data) ? data : []);
     } catch (err: unknown) {
       logger.error("Failed to load user bookings:", err);
-      setError("Unable to load bookings. Please check your connection and try again.");
+      setError(t("settings.loadBookingsError", { defaultValue: "Unable to load bookings. Please check your connection and try again." }));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void fetchBookings();
@@ -139,7 +141,7 @@ export function BookingsList() {
         <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center mx-auto mb-4">
           <Compass className="w-8 h-8" />
         </div>
-        <h3 className="text-lg font-bold text-slate-900 mb-1">No bookings or inquiries found</h3>
+        <h3 className="text-lg font-bold text-slate-900 mb-1">{t("settings.noBookings")}</h3>
         <p className="text-sm text-slate-500 max-w-md mx-auto mb-6">
           You haven't reserved any luxury villas, yacht charters, or VIP concierge experiences yet.
         </p>
@@ -227,7 +229,7 @@ export function BookingsList() {
               <div className="flex items-center gap-2 text-slate-700">
                 <Calendar className="w-4 h-4 text-indigo-500 shrink-0" />
                 <div>
-                  <div className="text-[11px] text-slate-400 uppercase font-semibold">Stay Period</div>
+                  <div className="text-[11px] text-slate-400 uppercase font-semibold">{t("settings.stayPeriod")}</div>
                   <div className="text-xs font-medium">
                     {formatDate(booking.check_in)} — {formatDate(booking.check_out)}
                   </div>
@@ -237,7 +239,7 @@ export function BookingsList() {
               <div className="flex items-center gap-2 text-slate-700">
                 <Users className="w-4 h-4 text-indigo-500 shrink-0" />
                 <div>
-                  <div className="text-[11px] text-slate-400 uppercase font-semibold">Party Size</div>
+                  <div className="text-[11px] text-slate-400 uppercase font-semibold">{t("settings.partySize")}</div>
                   <div className="text-xs font-medium">
                     {booking.guests ? `${booking.guests} Guests` : "1 Guest"}
                   </div>
@@ -246,7 +248,7 @@ export function BookingsList() {
 
               <div className="flex items-center justify-start sm:justify-end gap-2 text-slate-700">
                 <div className="text-left sm:text-right">
-                  <div className="text-[11px] text-slate-400 uppercase font-semibold">Total Price</div>
+                  <div className="text-[11px] text-slate-400 uppercase font-semibold">{t("settings.totalPrice")}</div>
                   <div className="text-sm font-bold text-slate-900 font-mono">
                     {booking.total_price ? `${booking.total_price.toFixed(2)} EUR` : "—"}
                   </div>

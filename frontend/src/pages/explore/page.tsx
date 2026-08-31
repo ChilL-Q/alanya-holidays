@@ -19,8 +19,11 @@ import { EmptyState } from "@/components/base/EmptyState";
 import LoadingSpinner from "@/components/base/LoadingSpinner";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useCompare } from "@/hooks/useCompare";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export default function ExplorePage() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
@@ -146,7 +149,7 @@ export default function ExplorePage() {
   }, [allBusinesses, searchQuery, activeCategory, sortBy, showFavoritesOnly, isFavorite]);
 
   const currentCategory = businessCategories.find((c) => c.id === activeCategory);
-  const sortLabel = sortBy === "rating" ? "Top Rated" : sortBy === "reviews" ? "Most Reviewed" : "A-Z";
+  const sortLabel = sortBy === "rating" ? t("public.topRated") : sortBy === "reviews" ? t("public.mostReviewed") : "A-Z";
 
   return (
     <>
@@ -162,15 +165,15 @@ export default function ExplorePage() {
 
           <div className="absolute bottom-0 left-0 right-0 w-full px-4 md:px-8 lg:px-12 pb-10 md:pb-14">
             <div className="flex items-center gap-2 mb-4">
-              <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Home</Link>
+                <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">{t("nav.home")}</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm" />
-              <span className="text-white/90 text-sm">Business Directory</span>
+              <span className="text-white/90 text-sm">{t("public.businessDirectory")}</span>
             </div>
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
               <div>
-                <h1 className="font-heading text-3xl md:text-5xl text-white mb-2">Alanya Business Directory</h1>
+                <h1 className="font-heading text-3xl md:text-5xl text-white mb-2">{t("public.directoryTitle")}</h1>
                 <p className="text-white/70 text-sm md:text-base max-w-xl">
-                  Find the best restaurants, hotels, tours, services, and more — all verified local businesses in one place.
+                  {t("public.exploreDescription")}
                 </p>
               </div>
               <button
@@ -179,7 +182,7 @@ export default function ExplorePage() {
                 className="self-start md:self-auto inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary-500 text-white text-sm font-semibold hover:bg-primary-600 transition-colors shadow-sm cursor-pointer whitespace-nowrap"
               >
                 <i className="ri-add-circle-fill text-base" />
-                List Your Business
+                {t("public.listYourBusiness")}
               </button>
             </div>
           </div>
@@ -193,7 +196,7 @@ export default function ExplorePage() {
                 <i className="ri-search-line text-foreground-400 text-lg" />
                 <input
                   type="text"
-                  placeholder="Search businesses by name, category, or keyword..."
+                  placeholder={t("public.directorySearch")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="flex-1 text-sm text-foreground-900 placeholder:text-foreground-400 py-3 bg-transparent border-none outline-none"
@@ -213,7 +216,7 @@ export default function ExplorePage() {
                 className="flex items-center gap-2 px-5 py-3 rounded-xl bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <i className="ri-search-line text-sm" />
-                Search
+                {t("public.searchBusinesses")}
               </button>
             </div>
           </div>
@@ -249,7 +252,7 @@ export default function ExplorePage() {
                 }`}
               >
                 <i className={`${showFavoritesOnly ? "ri-heart-fill" : "ri-heart-line"} text-sm`} />
-                My Favorites
+                {t("public.myFavorites")}
                 {favoriteCount > 0 && (
                   <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-full ${
                     showFavoritesOnly ? "bg-white/20 text-white" : "bg-accent-100 text-accent-700"
@@ -269,14 +272,14 @@ export default function ExplorePage() {
               <div>
                 <h2 className="font-heading text-xl md:text-2xl text-foreground-900 mb-1">
                   {showFavoritesOnly
-                    ? "My Favorites"
+                    ? t("public.myFavorites")
                     : currentCategory && activeCategory !== "all"
                       ? currentCategory.name
-                      : "All Businesses"}
+                      : t("public.allBusinesses")}
                 </h2>
                 <p className="text-sm text-foreground-500">
-                  {filteredBusinesses.length} {filteredBusinesses.length === 1 ? "business" : "businesses"} found
-                  {showFavoritesOnly && " in your favorites"}
+                  {t(filteredBusinesses.length === 1 ? "public.businessFound" : "public.businessesFound", { count: filteredBusinesses.length })}
+                  {showFavoritesOnly && t("public.inFavorites")}
                   {searchQuery && (
                     <span> for &quot;{searchQuery}&quot;</span>
                   )}
@@ -296,7 +299,7 @@ export default function ExplorePage() {
                     }`}
                   >
                     <i className="ri-grid-fill text-sm" />
-                    Grid
+                    {t("public.grid")}
                   </button>
                   <button
                     type="button"
@@ -308,7 +311,7 @@ export default function ExplorePage() {
                     }`}
                   >
                     <i className="ri-list-check-3 text-sm" />
-                    List
+                    {t("public.list")}
                   </button>
                   <button
                     type="button"
@@ -320,7 +323,7 @@ export default function ExplorePage() {
                     }`}
                   >
                     <i className="ri-map-pin-line text-sm" />
-                    Map
+                    {t("public.map")}
                   </button>
                 </div>
 
@@ -336,7 +339,7 @@ export default function ExplorePage() {
                     }`}
                   >
                     <i className={`${compareMode ? "ri-scales-fill" : "ri-scales-line"} text-sm`} />
-                    Compare
+                    {t("public.compare")}
                   </button>
                 )}
 
@@ -417,10 +420,10 @@ export default function ExplorePage() {
               ) : (
                 <EmptyState
                   icon="ri-search-line"
-                  title="No businesses found"
-                  description="Try adjusting your search or filters. We couldn't find any businesses matching your criteria."
+                  title={t("public.noBusinesses")}
+                  description={t("public.adjustSearch")}
                   action={{
-                    label: "Reset Filters",
+                    label: t("public.resetFilters"),
                     onClick: () => {
                       setSearchQuery("");
                       setActiveCategory("all");
@@ -458,10 +461,10 @@ export default function ExplorePage() {
               ) : (
                 <EmptyState
                   icon="ri-search-line"
-                  title="No businesses found"
-                  description="Try adjusting your search or filters. We couldn't find any businesses matching your criteria."
+                  title={t("public.noBusinesses")}
+                  description={t("public.adjustSearch")}
                   action={{
-                    label: "Reset Filters",
+                    label: t("public.resetFilters"),
                     onClick: () => {
                       setSearchQuery("");
                       setActiveCategory("all");
@@ -505,10 +508,10 @@ export default function ExplorePage() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-white whitespace-nowrap">
-                    {selectedCount} {selectedCount === 1 ? "business" : "businesses"} selected
+                    {t("public.selected", { count: selectedCount })}
                   </p>
                   <p className="text-xs text-white/50 whitespace-nowrap">
-                    {selectedCount < 2 ? "Select at least 2 to compare" : "Ready to compare!"}
+                    {selectedCount < 2 ? t("public.selectMore") : t("public.readyCompare")}
                   </p>
                 </div>
               </div>
@@ -518,7 +521,7 @@ export default function ExplorePage() {
                   onClick={clearSelection}
                   className="px-4 py-2 rounded-full text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors whitespace-nowrap cursor-pointer"
                 >
-                  Clear
+                  {t("public.clear")}
                 </button>
                 <button
                   type="button"
@@ -534,7 +537,7 @@ export default function ExplorePage() {
                   }`}
                 >
                   <i className="ri-scales-line text-sm mr-1.5" />
-                  Compare Now
+                  {t("public.compareNow")}
                 </button>
               </div>
             </div>
@@ -546,13 +549,13 @@ export default function ExplorePage() {
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/20 bg-white/5 mb-6">
               <i className="ri-store-2-line text-accent-400 text-sm" />
-              <span className="text-sm font-medium text-white/80">Own a business in Alanya?</span>
+              <span className="text-sm font-medium text-white/80">{t("public.ownBusinessCta")}</span>
             </div>
             <h2 className="font-heading text-2xl md:text-4xl text-white mb-4">
-              List Your Business on Alanya Holidays
+              {t("public.listBusinessTitle")}
             </h2>
             <p className="text-white/60 text-sm md:text-base max-w-xl mx-auto mb-8">
-              Get discovered by thousands of travelers searching for restaurants, tours, hotels, and services in the Alanya region. Join the directory and grow your business.
+              {t("public.listBusinessDescription")}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <button
@@ -561,7 +564,7 @@ export default function ExplorePage() {
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap shadow-sm cursor-pointer"
               >
                 <i className="ri-add-circle-line text-sm" />
-                Add Your Business
+                {t("public.addBusiness")}
               </button>
               <Link
                 to="/register"

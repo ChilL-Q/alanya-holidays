@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   BadRequestException,
+  ForbiddenException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -9,6 +10,7 @@ import { ForumEventService } from './application/forum-event.service';
 import { ForumReportService } from './application/forum-report.service';
 import { ForumRepository } from './forum.repository';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
+import { BusinessApplicationsService } from '../business-applications/business-applications.service';
 
 describe('Forum Invariants Safety Net (PR-1 Invariant Spec)', () => {
   let discussionService: ForumDiscussionService;
@@ -80,6 +82,7 @@ describe('Forum Invariants Safety Net (PR-1 Invariant Spec)', () => {
       getEvents: jest.fn().mockResolvedValue([]),
       getEventBySlug: jest.fn(),
       getEventSlugs: jest.fn().mockResolvedValue([]),
+      getEventOwnership: jest.fn(),
       insertEvent: jest
         .fn()
         .mockImplementation((data) =>
@@ -88,7 +91,7 @@ describe('Forum Invariants Safety Net (PR-1 Invariant Spec)', () => {
       updateEvent: jest
         .fn()
         .mockImplementation((id, data) => Promise.resolve({ id, ...data })),
-      deleteEvent: jest.fn().mockResolvedValue(undefined),
+      deleteEvent: jest.fn().mockResolvedValue(true),
       getEventRsvpAttendees: jest.fn().mockResolvedValue([]),
       checkEventRsvp: jest.fn(),
       insertEventRsvp: jest.fn().mockResolvedValue(undefined),
@@ -117,6 +120,12 @@ describe('Forum Invariants Safety Net (PR-1 Invariant Spec)', () => {
         {
           provide: UserRolesRepository,
           useValue: mockUserRolesRepo,
+        },
+        {
+          provide: BusinessApplicationsService,
+          useValue: {
+            hasApprovedBusinessAccount: jest.fn().mockResolvedValue(true),
+          },
         },
       ],
     }).compile();
@@ -164,25 +173,98 @@ describe('Forum Invariants Safety Net (PR-1 Invariant Spec)', () => {
         ).resolves.toEqual({ success: true });
       });
 
-      it('Event mutations and attendee queries require admin role', async () => {
+      it('Event mutations require ownership while admin-only reads stay protected', async () => {
         mockUserRolesRepo.getRole.mockResolvedValue('user');
 
         await expect(
           eventService.createForumEvent(
-            { title: 'Party', event_date: '2026-09-01' },
+            {
+              title: 'Party',
+              event_date: '2026-09-01',
+              is_published: true,
+            },
             userAlice,
           ),
-        ).rejects.toThrow(UnauthorizedException);
+        ).resolves.toEqual(
+          expect.objectContaining({
+            host_id: userAlice,
+            created_by: userAlice,
+            is_published: false,
+          }),
+        );
+
+        mockRepository.getEventOwnership.mockResolvedValue({
+          host_id: userAlice,
+          created_by: userAlice,
+          is_published: false,
+        });
         await expect(
           eventService.updateForumEvent(
             eventId,
             { title: 'New Party' },
             userAlice,
           ),
-        ).rejects.toThrow(UnauthorizedException);
+        ).resolves.toBeDefined();
         await expect(
           eventService.deleteForumEvent(eventId, userAlice),
-        ).rejects.toThrow(UnauthorizedException);
+        ).resolves.toEqual({ success: true });
+
+        mockRepository.getEventOwnership
+          .mockResolvedValueOnce({
+            host_id: userBob,
+            created_by: userBob,
+            is_published: false,
+          })
+          .mockResolvedValueOnce({
+            host_id: userBob,
+            created_by: userBob,
+            is_published: false,
+          });
+        await expect(
+          eventService.updateForumEvent(
+            eventId,
+            { title: 'Forged Party' },
+            userAlice,
+          ),
+        ).rejects.toThrow(ForbiddenException);
+        await expect(
+          eventService.deleteForumEvent(eventId, userAlice),
+        ).rejects.toThrow(ForbiddenException);
+
+        mockRepository.getEventOwnership
+          .mockResolvedValueOnce({
+            host_id: userAlice,
+            created_by: userAlice,
+            is_published: false,
+          })
+          .mockResolvedValueOnce({
+            host_id: userAlice,
+            created_by: userAlice,
+            is_published: true,
+          })
+          .mockResolvedValueOnce({
+            host_id: userAlice,
+            created_by: userAlice,
+            is_published: true,
+          });
+        await expect(
+          eventService.updateForumEvent(
+            eventId,
+            { is_published: true },
+            userAlice,
+          ),
+        ).rejects.toThrow(ForbiddenException);
+        await expect(
+          eventService.updateForumEvent(
+            eventId,
+            { title: 'Published edit' },
+            userAlice,
+          ),
+        ).rejects.toThrow(ForbiddenException);
+        await expect(
+          eventService.deleteForumEvent(eventId, userAlice),
+        ).rejects.toThrow(ForbiddenException);
+
         await expect(
           eventService.getEventAttendees(eventId, userAlice),
         ).rejects.toThrow(UnauthorizedException);

@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { productsService, type ShopProduct as FeaturedProduct } from "@/api-services/products.service";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 function getCategoryBadge(product: FeaturedProduct): { label: string; icon: string } {
   const catName = product.product_categories?.name || "";
@@ -20,6 +22,7 @@ function formatPrice(product: FeaturedProduct): string {
 }
 
 export default function FeaturedProducts() {
+  const { t } = useTranslation();
   const [products, setProducts] = useState<FeaturedProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -87,9 +90,9 @@ export default function FeaturedProducts() {
           <div className="mb-10">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-foreground-200 bg-white mb-6">
               <i className="ri-star-line text-accent-500 text-sm"></i>
-              <span className="text-sm font-medium text-foreground-700">Featured Products</span>
+              <span className="text-sm font-medium text-foreground-700">{t("public.featuredProducts")}</span>
             </div>
-            <h2 className="font-heading text-3xl md:text-4xl text-foreground-900 mb-3">Handpicked for You</h2>
+            <h2 className="font-heading text-3xl md:text-4xl text-foreground-900 mb-3">{t("public.handpickedForYou")}</h2>
             <p className="text-foreground-500 text-sm md:text-base max-w-xl">
               Gift cards and community favorites — every purchase supports AlanyaHolidays.
             </p>
@@ -119,8 +122,8 @@ export default function FeaturedProducts() {
 
   // Find the hottest gift card (highest price among gift cards)
   const giftCards = products.filter((p) => p.product_categories?.name === "Gift Cards");
-  const maxGiftPrice = giftCards.length > 0 ? Math.max(...giftCards.map((p) => Number(p.price))) : 0;
-  const hottestGiftId = maxGiftPrice > 0 ? giftCards.find((p) => Number(p.price) === maxGiftPrice)?.id ?? null : null;
+  const maxGiftPrice = giftCards.length !== 0 ? Math.max(...giftCards.map(function getPrice(p) { return Number(p.price); })) : 0;
+  const hottestGiftId = maxGiftPrice !== 0 ? giftCards.find((p) => Number(p.price) === maxGiftPrice)?.id ?? null : null;
 
   return (
     <section className="py-16 md:py-24 bg-background-100">
@@ -130,9 +133,9 @@ export default function FeaturedProducts() {
           <div>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-foreground-200 bg-white mb-6">
               <i className="ri-star-line text-accent-500 text-sm"></i>
-              <span className="text-sm font-medium text-foreground-700">Featured Products</span>
+              <span className="text-sm font-medium text-foreground-700">{t("public.featuredProducts")}</span>
             </div>
-            <h2 className="font-heading text-3xl md:text-4xl text-foreground-900 mb-3">Handpicked for You</h2>
+            <h2 className="font-heading text-3xl md:text-4xl text-foreground-900 mb-3">{t("public.handpickedForYou")}</h2>
             <p className="text-foreground-500 text-sm md:text-base max-w-xl">
               Gift cards and community favorites — every purchase supports AlanyaHolidays.
             </p>
@@ -235,7 +238,7 @@ export default function FeaturedProducts() {
           {/* Mobile scroll hint */}
           <div className="flex md:hidden items-center justify-center mt-5 gap-1.5">
             <i className="ri-arrow-left-right-line text-foreground-300 text-xs"></i>
-            <span className="text-xs text-foreground-400">Swipe to explore</span>
+            <span className="text-xs text-foreground-400">{t("public.swipeToExplore")}</span>
           </div>
         </div>
 

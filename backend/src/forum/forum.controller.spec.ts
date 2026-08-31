@@ -61,6 +61,13 @@ describe('ForumController', () => {
 
       getForumEvents: jest.fn().mockResolvedValue([]),
       getForumEvent: jest.fn().mockResolvedValue({ id: 'evt-1' }),
+      getMyForumEvents: jest.fn().mockResolvedValue([
+        {
+          id: 'published-own',
+          host_id: 'merchant-1',
+          is_published: true,
+        },
+      ]),
       createForumEvent: jest.fn().mockResolvedValue({ id: 'evt-1' }),
       updateForumEvent: jest.fn().mockResolvedValue({ id: 'evt-1' }),
       deleteForumEvent: jest.fn().mockResolvedValue({ success: true }),
@@ -443,36 +450,60 @@ describe('ForumController', () => {
       );
     });
 
+    it('should delegate the authenticated merchant event list', async () => {
+      const user: AuthUser = { id: 'merchant-1' };
+
+      const result = await controller.getMyForumEvents(user);
+
+      expect(mockService.getMyForumEvents).toHaveBeenCalledWith('merchant-1');
+      expect(result).toEqual([
+        expect.objectContaining({
+          id: 'published-own',
+          host_id: 'merchant-1',
+          is_published: true,
+        }),
+      ]);
+      expect(result).not.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ host_id: 'other-merchant' }),
+        ]),
+      );
+    });
+
     it('should delegate event create, update, delete, and getAttendees', async () => {
-      const user: AuthUser = { id: 'admin-1' };
+      const user: AuthUser = { id: 'merchant-1' };
       const createBody: CreateForumEventDto = {
         title: 'New Meetup',
         event_date: '2026-09-01',
+        is_published: true,
       };
       await controller.createForumEvent(createBody, user);
       expect(mockService.createForumEvent).toHaveBeenCalledWith(
         createBody,
-        'admin-1',
+        'merchant-1',
       );
 
-      const updateBody: UpdateForumEventDto = { title: 'Updated' };
+      const updateBody: UpdateForumEventDto = {
+        title: 'Updated',
+        is_published: true,
+      };
       await controller.updateForumEvent('evt-1', updateBody, user);
       expect(mockService.updateForumEvent).toHaveBeenCalledWith(
         'evt-1',
         updateBody,
-        'admin-1',
+        'merchant-1',
       );
 
       await controller.deleteForumEvent('evt-1', user);
       expect(mockService.deleteForumEvent).toHaveBeenCalledWith(
         'evt-1',
-        'admin-1',
+        'merchant-1',
       );
 
       await controller.getEventAttendees('evt-1', user);
       expect(mockService.getEventAttendees).toHaveBeenCalledWith(
         'evt-1',
-        'admin-1',
+        'merchant-1',
       );
     });
 

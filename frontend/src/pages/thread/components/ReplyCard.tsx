@@ -5,16 +5,21 @@ import { useAuth } from "@/context/AuthContext";
 import RichTextEditor from "@/components/base/RichTextEditor";
 import { logger } from "@/lib/logger";
 import ReportModal from "./ReportModal";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface ReplyCardProps {
   reply: ThreadReply;
   depth?: number;
   onLike: (replyId: string) => void;
   onReply: (replyId: string) => void;
-  onUpdate?: (replyId: string, newContent: string) => Promise<void> | void;
+  onUpdate?: ReplyUpdateHandler;
 }
 
+type ReplyUpdateHandler = { (replyId: string, newContent: string): Promise<void> | void };
+
 export default function ReplyCard({ reply, depth = 0, onLike, onReply, onUpdate }: ReplyCardProps) {
+  const { t } = useTranslation();
   const { user, profile } = useAuth();
   const [showReplies, setShowReplies] = useState(depth < 2);
   const [isEditing, setIsEditing] = useState(false);
@@ -64,10 +69,10 @@ export default function ReplyCard({ reply, depth = 0, onLike, onReply, onUpdate 
   const handleReportSubmit = async (reason: string) => {
     const success = await forumService.reportContent("comment", reply.id, reason);
     if (success) {
-      alert("Report submitted successfully.");
+      alert(t("public.reportSuccess"));
       setIsReportModalOpen(false);
     } else {
-      alert("Failed to submit report. Please try again.");
+      alert(t("public.reportError"));
     }
   };
 
@@ -112,10 +117,10 @@ export default function ReplyCard({ reply, depth = 0, onLike, onReply, onUpdate 
                 setIsEditing(true);
               }}
               className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium text-foreground-500 hover:text-primary-600 hover:bg-background-100 transition-colors"
-              aria-label="Edit reply"
+              aria-label={t("public.editReply")}
             >
               <i className="ri-edit-line text-xs"></i>
-              <span>Edit</span>
+              <span>{t("public.edit")}</span>
             </button>
           )}
         </div>
@@ -127,7 +132,7 @@ export default function ReplyCard({ reply, depth = 0, onLike, onReply, onUpdate 
               <RichTextEditor
                 value={editContent}
                 onChange={setEditContent}
-                placeholder="Edit your reply..."
+                placeholder={t("public.editReplyPlaceholder")}
                 userId={user?.id}
               />
               <div className="flex items-center justify-end gap-2 pt-1">
@@ -137,7 +142,7 @@ export default function ReplyCard({ reply, depth = 0, onLike, onReply, onUpdate 
                   disabled={isSaving}
                   className="px-3 py-1 rounded-lg border border-background-200 text-xs font-medium text-foreground-600 hover:bg-background-100 disabled:opacity-50 transition-colors cursor-pointer"
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button
                   type="button"
@@ -146,7 +151,7 @@ export default function ReplyCard({ reply, depth = 0, onLike, onReply, onUpdate 
                   className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-primary-500 text-white text-xs font-medium hover:bg-primary-600 disabled:opacity-50 transition-colors cursor-pointer shadow-xs"
                 >
                   {isSaving && <i className="ri-loader-4-line animate-spin text-xs"></i>}
-                  <span>{isSaving ? "Saving..." : "Save"}</span>
+                  <span>{isSaving ? t("common.saving") : t("common.save")}</span>
                 </button>
               </div>
             </div>
@@ -178,7 +183,7 @@ export default function ReplyCard({ reply, depth = 0, onLike, onReply, onUpdate 
               className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] md:text-xs font-medium text-foreground-400 hover:text-foreground-600 hover:bg-background-100 transition-all"
             >
               <i className="ri-reply-line text-xs"></i>
-              Reply
+              {t("public.reply")}
             </button>
           )}
 
@@ -187,10 +192,10 @@ export default function ReplyCard({ reply, depth = 0, onLike, onReply, onUpdate 
             type="button"
             onClick={() => setIsReportModalOpen(true)}
             className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] md:text-xs font-medium text-foreground-400 hover:text-rose-500 hover:bg-background-100 transition-all cursor-pointer"
-            aria-label="Report reply"
+            aria-label={t("public.reportReply")}
           >
             <i className="ri-flag-line text-xs"></i>
-            <span>Report</span>
+            <span>{t("public.report")}</span>
           </button>
         </div>
       </div>
@@ -204,7 +209,7 @@ export default function ReplyCard({ reply, depth = 0, onLike, onReply, onUpdate 
               className="flex items-center gap-1.5 text-xs text-primary-500 hover:text-primary-600 font-medium py-1.5 px-3 transition-colors"
             >
               <i className="ri-arrow-down-s-line"></i>
-              Show {reply.replies?.length} {reply.replies?.length === 1 ? "reply" : "replies"}
+              {t(reply.replies?.length === 1 ? "public.showReply" : "public.showReplies", { count: reply.replies?.length })}
             </button>
           ) : (
             <>
@@ -224,7 +229,7 @@ export default function ReplyCard({ reply, depth = 0, onLike, onReply, onUpdate 
                   className="flex items-center gap-1.5 text-xs text-foreground-400 hover:text-foreground-600 font-medium py-1.5 px-3 transition-colors"
                 >
                   <i className="ri-arrow-up-s-line"></i>
-                  Hide replies
+                  {t("public.hideReplies")}
                 </button>
               )}
             </>

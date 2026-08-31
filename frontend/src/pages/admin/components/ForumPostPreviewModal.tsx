@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import type { ForumReportAdminItem } from "@/api-services/admin.service";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface ForumPostPreviewModalProps {
   report: ForumReportAdminItem | null;
@@ -27,6 +29,7 @@ export default function ForumPostPreviewModal({
   onTogglePin,
   onDelete,
 }: ForumPostPreviewModalProps) {
+  const { t } = useTranslation();
   const [submitting, setSubmitting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -38,8 +41,8 @@ export default function ForumPostPreviewModal({
 
   const contentTitle = isPost ? post?.title : undefined;
   const contentBody = isPost
-    ? post?.content || "No post body available."
-    : comment?.body || "No comment text available.";
+    ? post?.content || t("admin.noPostBody")
+    : comment?.body || t("admin.noCommentText");
 
   const isRemoved = isPost
     ? post?.is_removed === true
@@ -110,21 +113,21 @@ export default function ForumPostPreviewModal({
                 id="preview-modal-title"
                 className="text-lg font-bold text-secondary-900 dark:text-white"
               >
-                Report Inspection & Moderation
+                {t("admin.reportInspection")}
               </h3>
               <p className="text-xs text-secondary-500 dark:text-slate-400">
-                Target:{" "}
+                {t("admin.target")}:{" "}
                 <span className="font-semibold uppercase text-accent-600 dark:text-accent-400">
                   {report.target_type}
                 </span>{" "}
-                • Reported on {new Date(report.created_at).toLocaleDateString()}
+                • {t("admin.reportedOn", { date: new Date(report.created_at).toLocaleDateString() })}
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t("common.close")}
             className="text-secondary-400 hover:text-secondary-600 dark:hover:text-slate-200 p-2 rounded-lg hover:bg-secondary-100 dark:hover:bg-slate-800 transition-colors"
           >
             <i className="ri-close-line text-xl" />
@@ -135,15 +138,15 @@ export default function ForumPostPreviewModal({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-xl bg-secondary-50 dark:bg-slate-800/60 border border-secondary-200/70 dark:border-slate-700/60 mb-4 text-xs">
           <div>
             <span className="text-secondary-500 dark:text-slate-400 block">
-              Reporter:
+              {t("admin.reporter")}:
             </span>
             <span className="font-semibold text-secondary-900 dark:text-white">
-              {report.reporter?.full_name || report.reporter_id || "Anonymous User"}
+              {report.reporter?.full_name || report.reporter_id || t("admin.anonymousUser")}
             </span>
           </div>
           <div>
             <span className="text-secondary-500 dark:text-slate-400 block">
-              Flag Reason:
+              {t("admin.flagReason")}:
             </span>
             <span className="inline-block px-2 py-0.5 mt-0.5 rounded-full font-bold uppercase text-[10px] bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
               {report.reason}
@@ -151,7 +154,7 @@ export default function ForumPostPreviewModal({
           </div>
           <div>
             <span className="text-secondary-500 dark:text-slate-400 block">
-              Report Status:
+              {t("admin.reportStatus")}:
             </span>
             <span
               className={`font-semibold ${
@@ -160,12 +163,12 @@ export default function ForumPostPreviewModal({
                   : "text-amber-600 dark:text-amber-400"
               }`}
             >
-              {report.resolved ? "Resolved" : "Pending Action"}
+              {report.resolved ? t("admin.resolved") : t("admin.pendingAction")}
             </span>
           </div>
           <div>
             <span className="text-secondary-500 dark:text-slate-400 block">
-              Content Visibility:
+              {t("admin.contentVisibility")}:
             </span>
             <span
               className={`font-semibold ${
@@ -174,7 +177,7 @@ export default function ForumPostPreviewModal({
                   : "text-emerald-600 dark:text-emerald-400"
               }`}
             >
-              {isRemoved ? "Soft-Removed (Hidden)" : "Publicly Visible"}
+              {isRemoved ? t("admin.softRemoved") : t("admin.publiclyVisible")}
             </span>
           </div>
         </div>
@@ -182,7 +185,7 @@ export default function ForumPostPreviewModal({
         {/* Content Box */}
         <div className="mb-6">
           <label className="block text-xs font-bold text-secondary-700 dark:text-slate-300 mb-1.5 uppercase tracking-wide">
-            Reported Content:
+            {t("admin.reportedContent")}:
           </label>
           <div className="p-4 rounded-xl border border-secondary-200 dark:border-slate-800 bg-secondary-50/50 dark:bg-slate-950 text-sm text-secondary-800 dark:text-slate-200 max-h-56 overflow-y-auto space-y-2">
             {contentTitle && (
@@ -198,7 +201,7 @@ export default function ForumPostPreviewModal({
         {confirmDelete ? (
           <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 flex flex-col sm:flex-row items-center justify-between gap-3">
             <span className="text-xs font-semibold text-rose-800 dark:text-rose-300">
-              Permanently delete this {report.target_type}? This cannot be undone.
+              {t("admin.permanentlyDelete", { target: report.target_type })}
             </span>
             <div className="flex items-center gap-2">
               <button
@@ -206,7 +209,7 @@ export default function ForumPostPreviewModal({
                 onClick={() => setConfirmDelete(false)}
                 className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-secondary-200 dark:bg-slate-700 text-secondary-800 dark:text-slate-200 hover:bg-secondary-300 transition-colors cursor-pointer"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 type="button"
@@ -214,7 +217,7 @@ export default function ForumPostPreviewModal({
                 onClick={handleDelete}
                 className="px-3 py-1.5 text-xs font-bold rounded-lg bg-rose-600 text-white hover:bg-rose-700 transition-colors cursor-pointer"
               >
-                {submitting ? "Deleting..." : "Confirm Delete"}
+                {submitting ? t("admin.deleting") : t("admin.confirmDelete")}
               </button>
             </div>
           </div>
@@ -235,8 +238,8 @@ export default function ForumPostPreviewModal({
                 <i className={isRemoved ? "ri-restart-line" : "ri-eye-off-line"} />
                 <span>
                   {isRemoved
-                    ? `Restore ${isPost ? "Post" : "Comment"}`
-                    : `Remove ${isPost ? "Post" : "Comment"}`}
+                    ? t(isPost ? "admin.restorePost" : "admin.restoreComment")
+                    : t(isPost ? "admin.removePost" : "admin.removeComment")}
                 </span>
               </button>
 
@@ -253,7 +256,7 @@ export default function ForumPostPreviewModal({
                   }`}
                 >
                   <i className="ri-pushpin-line" />
-                  <span>{isPinned ? "Unpin Topic" : "Pin Topic"}</span>
+                  <span>{isPinned ? t("admin.unpinTopic") : t("admin.pinTopic")}</span>
                 </button>
               )}
 
@@ -265,7 +268,7 @@ export default function ForumPostPreviewModal({
                   className="px-3 py-2 text-xs font-semibold rounded-xl border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
                   <i className="ri-delete-bin-line" />
-                  <span>Hard Delete</span>
+                  <span>{t("admin.hardDelete")}</span>
                 </button>
               )}
             </div>
@@ -276,7 +279,7 @@ export default function ForumPostPreviewModal({
                 onClick={onClose}
                 className="px-4 py-2 text-xs font-semibold rounded-xl border border-secondary-300 dark:border-slate-700 text-secondary-700 dark:text-slate-300 hover:bg-secondary-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
-                Close
+                {t("common.close")}
               </button>
               {!report.resolved && (
                 <button
@@ -286,7 +289,7 @@ export default function ForumPostPreviewModal({
                   className="px-4 py-2 text-xs font-bold rounded-xl bg-accent-600 hover:bg-accent-700 text-white shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
                   <i className="ri-check-line text-sm" />
-                  <span>{submitting ? "Resolving..." : "Mark as Resolved"}</span>
+                  <span>{submitting ? t("admin.resolving") : t("admin.markAsResolved")}</span>
                 </button>
               )}
             </div>

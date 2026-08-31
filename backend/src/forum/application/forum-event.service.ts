@@ -1,7 +1,13 @@
-import { Injectable, Optional } from '@nestjs/common';
+import {
+  Injectable,
+  ForbiddenException,
+  NotFoundException,
+  Optional,
+} from '@nestjs/common';
 import { slugify, generateUniqueSlug } from '../../utils/slugify';
 import { ForumRepository, EVENT_SELECT } from '../forum.repository';
 import { UserRolesRepository } from '../../common/auth/user-roles.repository';
+import { BusinessApplicationsService } from '../../business-applications/business-applications.service';
 import { assertAdmin } from '../domain/forum-authorization.helper';
 import {
   CreateForumEventDto,
@@ -20,12 +26,49 @@ import {
 export class ForumEventService {
   constructor(
     private readonly forumRepository: ForumRepository,
+    private readonly businessApplicationsService: BusinessApplicationsService,
     @Optional() private readonly userRolesRepo?: UserRolesRepository,
   ) {}
 
   private async requireAdmin(userId: string): Promise<void> {
     const role = await this.userRolesRepo?.getRole(userId);
     assertAdmin(role);
+  }
+
+  private async getRole(userId: string): Promise<string | undefined> {
+    return this.userRolesRepo?.getRole(userId);
+  }
+
+  private async requireEventManager(
+    userId: string,
+  ): Promise<'admin' | 'merchant'> {
+    if ((await this.getRole(userId)) === 'admin') return 'admin';
+    if (
+      !(await this.businessApplicationsService.hasApprovedBusinessAccount(
+        userId,
+      ))
+    ) {
+      throw new ForbiddenException(
+        'An approved business account is required to manage events',
+      );
+    }
+    return 'merchant';
+  }
+
+  private async requireEventOwnerOrAdmin(
+    eventId: string,
+    userId: string,
+  ): Promise<'admin' | 'owner'> {
+    if ((await this.requireEventManager(userId)) === 'admin') return 'admin';
+    const ownership = await this.forumRepository.getEventOwnership(eventId);
+    if (!ownership) throw new NotFoundException('Event not found');
+    if (ownership.host_id !== userId && ownership.created_by !== userId) {
+      throw new ForbiddenException('Not authorized');
+    }
+    if (ownership.is_published) {
+      throw new ForbiddenException('Only admins can modify a published event');
+    }
+    return 'owner';
   }
 
   private async resolveEventSlug(baseSlug: string): Promise<string> {
@@ -76,15 +119,47 @@ export class ForumEventService {
   ): Promise<ForumEvent | null> {
     const data = await this.forumRepository.getEventBySlug(slug, EVENT_SELECT);
     if (!data) return null;
+    if (data.is_published === false) {
+      if (!userId) return null;
+      const role = await this.getRole(userId);
+      if (
+        role !== 'admin' &&
+        data.host_id !== userId &&
+        data.created_by !== userId
+      ) {
+        return null;
+      }
+      if (
+        role !== 'admin' &&
+        !(await this.businessApplicationsService.hasApprovedBusinessAccount(
+          userId,
+        ))
+      ) {
+        return null;
+      }
+    }
     const [annotated] = await this.annotateRsvp([data], userId);
     return annotated ?? null;
+  }
+
+  async getMyForumEvents(userId: string): Promise<ForumEvent[]> {
+    await this.requireEventManager(userId);
+    const data = await this.forumRepository.getEvents(
+      {
+        ownerId: userId,
+        includeUnpublished: true,
+        limit: 100,
+      },
+      EVENT_SELECT,
+    );
+    return this.annotateRsvp(data, userId);
   }
 
   async createForumEvent(
     input: CreateForumEventDto,
     userId: string,
   ): Promise<ForumEvent> {
-    await this.requireAdmin(userId);
+    const access = await this.requireEventManager(userId);
     const slug = await this.resolveEventSlug(slugify(input.title));
     return this.forumRepository.insertEvent({
       title: input.title.trim(),
@@ -93,9 +168,9 @@ export class ForumEventService {
       location: input.location?.trim() || null,
       event_date: input.event_date,
       image_url: input.image_url || null,
-      host_id: input.host_id || null,
+      host_id: access === 'admin' ? input.host_id || null : userId,
       category_id: input.category_id || null,
-      is_published: input.is_published ?? true,
+      is_published: access === 'admin' ? (input.is_published ?? true) : false,
       created_by: userId,
     });
   }
@@ -105,7 +180,10 @@ export class ForumEventService {
     updates: UpdateForumEventDto,
     userId: string,
   ): Promise<ForumEvent> {
-    await this.requireAdmin(userId);
+    const access = await this.requireEventOwnerOrAdmin(id, userId);
+    if (access !== 'admin' && updates.is_published === true) {
+      throw new ForbiddenException('Only admins can publish an event');
+    }
     const safe: UpdateForumEventDbInput = {};
     if (updates.title !== undefined) safe.title = updates.title.trim();
     if (updates.description !== undefined)
@@ -115,21 +193,42 @@ export class ForumEventService {
     if (updates.event_date !== undefined) safe.event_date = updates.event_date;
     if (updates.image_url !== undefined)
       safe.image_url = updates.image_url || null;
-    if (updates.host_id !== undefined) safe.host_id = updates.host_id || null;
+    if (access === 'admin' && updates.host_id !== undefined)
+      safe.host_id = updates.host_id || null;
     if (updates.category_id !== undefined)
       safe.category_id = updates.category_id || null;
     if (updates.is_published !== undefined)
       safe.is_published = updates.is_published;
 
-    return this.forumRepository.updateEvent(id, safe);
+    const updated = await this.forumRepository.updateEvent(
+      id,
+      safe,
+      access === 'owner' ? userId : undefined,
+    );
+    if (!updated) {
+      if (access === 'admin') throw new NotFoundException('Event not found');
+      throw new ForbiddenException(
+        'Event ownership or publication status changed',
+      );
+    }
+    return updated;
   }
 
   async deleteForumEvent(
     id: string,
     userId: string,
   ): Promise<ForumActionResponse> {
-    await this.requireAdmin(userId);
-    await this.forumRepository.deleteEvent(id);
+    const access = await this.requireEventOwnerOrAdmin(id, userId);
+    const deleted = await this.forumRepository.deleteEvent(
+      id,
+      access === 'owner' ? userId : undefined,
+    );
+    if (!deleted) {
+      if (access === 'admin') throw new NotFoundException('Event not found');
+      throw new ForbiddenException(
+        'Event ownership or publication status changed',
+      );
+    }
     return { success: true };
   }
 

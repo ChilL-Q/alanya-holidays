@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { forumService, type Category } from "@/api-services/forum.service";
 import { logger } from "@/lib/logger";
+import { useTranslation } from "react-i18next";
 
 export default function CategoriesGrid() {
+  const { t } = useTranslation();
   const [categoriesList, setCategoriesList] = useState<Category[]>([]);
 
   useEffect(() => {
@@ -31,15 +33,14 @@ export default function CategoriesGrid() {
           <div className="flex items-center gap-2 mb-3">
             <i className="ri-grid-line text-accent-500 text-lg"></i>
             <span className="text-sm font-semibold text-accent-500 uppercase tracking-wider">
-              Explore
+              {t("home.categoriesExplore", "Explore")}
             </span>
           </div>
           <h2 className="font-heading text-3xl md:text-5xl text-foreground-900 mb-4">
-            Browse Categories
+            {t("home.browseCategories", "Browse Categories")}
           </h2>
           <p className="text-foreground-500 text-base md:text-lg max-w-xl">
-            From travel planning to local culture, find the right space for your
-            questions and stories.
+            {t("home.categoriesDescription", "From travel planning to local culture, find the right space for your questions and stories.")}
           </p>
         </div>
 

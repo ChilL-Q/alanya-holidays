@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { DISTRICT_PROFILES, type DistrictProfile } from "../data/regionalData";
+import { useTranslation } from "react-i18next";
 
 interface DistrictProfilesGridProps {
   profiles?: DistrictProfile[];
@@ -38,6 +39,7 @@ export default function DistrictProfilesGrid({ profiles = DISTRICT_PROFILES }: D
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [expandedDistrictId, setExpandedDistrictId] = useState<string | null>("alanya");
+  const { t } = useTranslation();
 
   const filteredProfiles = useMemo(() => {
     return profiles.filter((profile) => {
@@ -69,7 +71,7 @@ export default function DistrictProfilesGrid({ profiles = DISTRICT_PROFILES }: D
         <div className="max-w-3xl mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-100 dark:bg-primary-950/80 border border-primary-200 dark:border-primary-800/60 text-primary-800 dark:text-primary-300 text-xs font-semibold uppercase tracking-wider mb-3">
             <i className="ri-map-pin-line" />
-            <span>District Intelligence & Expat Profiles</span>
+            <span>{t("insights.districtIntelligence")}</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground-900 dark:text-foreground-50 tracking-tight">
             Explore 8 Key Municipal Districts
@@ -105,14 +107,14 @@ export default function DistrictProfilesGrid({ profiles = DISTRICT_PROFILES }: D
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search district, vibe, beach..."
+              placeholder={t("insights.searchPlaceholder")}
               className="w-full pl-9 pr-8 py-2 rounded-xl bg-white dark:bg-background-800 border border-background-200 dark:border-background-700 text-xs sm:text-sm text-foreground-900 dark:text-foreground-100 placeholder:text-foreground-400 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-foreground-400 hover:text-foreground-600 text-xs p-1"
-                aria-label="Clear search"
+                aria-label={t("insights.clearSearch")}
               >
                 <i className="ri-close-line" />
               </button>
@@ -176,19 +178,19 @@ export default function DistrictProfilesGrid({ profiles = DISTRICT_PROFILES }: D
                   {/* Key Metrics Pill Grid */}
                   <div className="grid grid-cols-3 gap-2 p-3 rounded-xl bg-background-50/80 dark:bg-background-900/60 border border-background-100 dark:border-background-700/50 mb-4 text-center">
                     <div>
-                      <div className="text-[10px] text-foreground-500 uppercase font-medium">Population</div>
+                      <div className="text-[10px] text-foreground-500 uppercase font-medium">{t("insights.population")}</div>
                       <div className="text-xs font-bold text-foreground-900 dark:text-foreground-100 mt-0.5">
                         {district.population}
                       </div>
                     </div>
                     <div>
-                      <div className="text-[10px] text-foreground-500 uppercase font-medium">Foreigners</div>
+                      <div className="text-[10px] text-foreground-500 uppercase font-medium">{t("insights.foreigners")}</div>
                       <div className="text-xs font-bold text-primary-600 dark:text-primary-400 mt-0.5">
                         {district.foreignPopulation}
                       </div>
                     </div>
                     <div>
-                      <div className="text-[10px] text-foreground-500 uppercase font-medium">Blue Flag</div>
+                      <div className="text-[10px] text-foreground-500 uppercase font-medium">{t("insights.blueFlag")}</div>
                       <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
                         {district.blueFlagBeaches > 0 ? `${district.blueFlagBeaches} 🏖️` : "—"}
                       </div>
@@ -245,7 +247,7 @@ export default function DistrictProfilesGrid({ profiles = DISTRICT_PROFILES }: D
                     onClick={() => toggleExpand(district.id)}
                     className="text-[11px] text-foreground-500 hover:text-foreground-800 dark:hover:text-foreground-200 px-2 py-1 rounded transition-colors"
                   >
-                    {isExpanded ? "Less info" : "Details"}
+                    {isExpanded ? t("insights.lessInfo", { defaultValue: "Less info" }) : t("insights.details", { defaultValue: "Details" })}
                   </button>
                 </div>
               </div>

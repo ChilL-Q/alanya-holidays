@@ -4,6 +4,8 @@ import type {
   GiftCardTier,
   BadgeVariant,
 } from "../data/giftCardsData";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface GiftCardCardProps {
   collection: GiftCardCollection;
@@ -21,6 +23,7 @@ export default function GiftCardCard({
   collection,
   onAddToCart,
 }: GiftCardCardProps) {
+  const { t } = useTranslation();
   // Default to recommended tier or first tier
   const defaultTierId = useMemo(() => {
     const rec = collection.tiers.find((t) => t.recommended);
@@ -168,7 +171,7 @@ export default function GiftCardCard({
         <div className="mt-auto pt-4 border-t border-background-200 flex items-center justify-between gap-3">
           <div>
             <span className="block text-[11px] uppercase tracking-wider text-foreground-400 font-medium">
-              Total Price
+              {t("services.gifts.totalPrice")}
             </span>
             <span className="text-xl font-heading font-bold text-foreground-900">
               {selectedTier?.money.format() || "—"}
@@ -181,11 +184,11 @@ export default function GiftCardCard({
           <button
             type="button"
             onClick={handleAdd}
-            aria-label={`Add ${collection.title} - ${selectedTier?.name} to cart`}
+            aria-label={t("services.gifts.addGiftCard", { title: collection.title, tier: selectedTier?.name })}
             className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 active:scale-95 text-white text-sm font-semibold shadow-sm shadow-primary-500/25 transition-all cursor-pointer"
           >
             <i className="ri-shopping-cart-2-line text-base"></i>
-            <span>Add to Cart</span>
+            <span>{t("services.gifts.addToCart")}</span>
           </button>
         </div>
       </div>

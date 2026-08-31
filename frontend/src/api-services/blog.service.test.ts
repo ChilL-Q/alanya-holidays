@@ -218,6 +218,80 @@ describe("blog.service", () => {
     });
   });
 
+  describe("merchant content endpoints", () => {
+    it("loads direct posts and submissions from auth-scoped endpoints", async () => {
+      vi.spyOn(apiClient, "get")
+        .mockResolvedValueOnce({
+          data: [
+            {
+              id: "post-1",
+              title: "My guide",
+              slug: "my-guide",
+              content: "Guide content",
+              category: "Guides",
+              status: "draft",
+            },
+          ],
+          total: 1,
+        })
+        .mockResolvedValueOnce([
+          {
+            id: "submission-1",
+            user_id: "user-1",
+            title: "My blog",
+            content: "Submission content",
+            category: "Local Life",
+            status: "pending_review",
+            created_at: "2026-08-01T00:00:00Z",
+          },
+        ]);
+
+      await expect(blogService.getMyPosts()).resolves.toEqual([
+        expect.objectContaining({ id: "post-1", category: "Guides" }),
+      ]);
+      await expect(blogService.getMySubmissions()).resolves.toEqual([
+        expect.objectContaining({ id: "submission-1" }),
+      ]);
+      expect(apiClient.get).toHaveBeenNthCalledWith(1, "/blog/posts/me", {
+        params: { limit: 50 },
+      });
+      expect(apiClient.get).toHaveBeenNthCalledWith(2, "/blog/submissions/me", {
+        params: { limit: 50 },
+      });
+    });
+
+    it("uses owner-checked edit and resubmit endpoints", async () => {
+      vi.spyOn(apiClient, "patch").mockResolvedValueOnce({
+        id: "submission-1",
+        user_id: "user-1",
+        title: "Updated",
+        content: "Updated content",
+        category: "Guides",
+        status: "rejected",
+        created_at: "2026-08-01T00:00:00Z",
+      });
+      vi.spyOn(apiClient, "post").mockResolvedValueOnce({
+        id: "submission-1",
+        status: "pending_review",
+      });
+
+      await blogService.updateMySubmission("submission-1", {
+        title: "Updated",
+        content: "Updated content",
+        category: "Guides",
+      });
+      await blogService.resubmitMySubmission("submission-1");
+
+      expect(apiClient.patch).toHaveBeenCalledWith(
+        "/blog/submissions/submission-1",
+        expect.objectContaining({ title: "Updated" })
+      );
+      expect(apiClient.post).toHaveBeenCalledWith(
+        "/blog/submissions/submission-1/resubmit"
+      );
+    });
+  });
+
   describe("getGuideContent", () => {
     it("should return dynamic guide content synthesized from post", async () => {
       vi.spyOn(apiClient, "get").mockResolvedValueOnce({

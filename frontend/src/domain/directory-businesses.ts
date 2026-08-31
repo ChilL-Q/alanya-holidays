@@ -23,6 +23,7 @@ export interface Business {
   is_claimed?: boolean;
   is_verified?: boolean;
   claimed_at?: string;
+  can_claim?: boolean;
   status?: string;
   tier?: string;
 }

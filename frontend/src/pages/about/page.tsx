@@ -4,62 +4,57 @@ import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
 import PageHeroImage from "@/components/base/PageHeroImage";
 import { forumService, type ForumStats, type ForumMember } from "@/api-services/forum.service";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 const values = [
   {
     icon: "ri-heart-3-line",
-    title: "Community First",
-    description:
-      "Every decision we make puts the community at the center. We believe real connections happen when people feel welcome and supported.",
+    title: "services.about.value.community",
+    description: "services.about.value.communityDesc",
   },
   {
     icon: "ri-compass-3-line",
-    title: "Local Knowledge",
-    description:
-      "Alanya is our home. We champion authentic, insider perspectives from people who live, work, and breathe this beautiful coastal city every day.",
+    title: "services.about.value.local",
+    description: "services.about.value.localDesc",
   },
   {
     icon: "ri-shake-hands-line",
-    title: "Inclusivity",
-    description:
-      "Whether you are a tourist planning your first visit, a digital nomad passing through, or a lifelong resident — there is a seat at the table for you.",
+    title: "services.about.value.inclusive",
+    description: "services.about.value.inclusiveDesc",
   },
   {
     icon: "ri-lightbulb-flash-line",
-    title: "Curiosity",
-    description:
-      "Great conversations start with great questions. We encourage curiosity about culture, food, history, and the hidden corners of Antalya.",
+    title: "services.about.value.curiosity",
+    description: "services.about.value.curiosityDesc",
   },
 ];
 
 const milestones = [
   {
     year: "2023",
-    title: "The Idea",
-    description:
-      "A WhatsApp group of 15 expats sharing restaurant tips and beach recommendations grows beyond what a chat app can handle. The seed of Alanya Holidays is planted.",
+    title: "services.about.milestone.idea",
+    description: "services.about.milestone.ideaDesc",
   },
   {
     year: "2024",
-    title: "Launch",
-    description:
-      "Alanya Holidays goes live with 8 categories, a handful of passionate early members, and one goal: make Alanya the most connected community on the Mediterranean.",
+    title: "services.about.milestone.launch",
+    description: "services.about.milestone.launchDesc",
   },
   {
     year: "2025",
-    title: "Growth",
-    description:
-      "The community hits 15,000 members. Weekly meetups, language exchanges, and hiking groups become a regular fixture. The first Community Leader program launches.",
+    title: "services.about.milestone.growth",
+    description: "services.about.milestone.growthDesc",
   },
   {
     year: "2026",
-    title: "Thriving",
-    description:
-      "Now 18,000+ members strong with 3.8k discussions spanning every corner of Alanya life. And we are just getting started.",
+    title: "services.about.milestone.thriving",
+    description: "services.about.milestone.thrivingDesc",
   },
 ];
 
 export default function AboutPage() {
+  const { t } = useTranslation();
   const [stats, setStats] = useState<ForumStats | null>(null);
   const [communityLeaders, setCommunityLeaders] = useState<ForumMember[]>([]);
 
@@ -106,19 +101,19 @@ export default function AboutPage() {
                 to="/"
                 className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2"
               >
-                Home
+                {t("services.home")}
               </Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <span className="text-white/90 text-sm">About</span>
+              <span className="text-white/90 text-sm">{t("services.about.breadcrumb")}</span>
             </div>
 
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
               <div>
                 <h1 className="font-heading text-3xl md:text-5xl text-white mb-2">
-                  About Alanya Holidays
+                  {t("services.about.title")}
                 </h1>
                 <p className="text-white/70 text-sm md:text-base max-w-xl">
-                  The story behind the community that connects travelers, expats, and locals across the Alanya coast.
+                  {t("services.about.hero")}
                 </p>
               </div>
 
@@ -127,21 +122,21 @@ export default function AboutPage() {
                   <p className="text-white text-xl md:text-2xl font-semibold">
                     {totalMembers.toLocaleString()}
                   </p>
-                  <p className="text-white/50 text-xs">Members</p>
+                  <p className="text-white/50 text-xs">{t("services.about.members")}</p>
                 </div>
                 <div className="w-px h-8 bg-white/20"></div>
                 <div className="text-center">
                   <p className="text-white text-xl md:text-2xl font-semibold">
                     {(totalThreads / 1000).toFixed(1)}k
                   </p>
-                  <p className="text-white/50 text-xs">Discussions</p>
+                  <p className="text-white/50 text-xs">{t("services.about.discussions")}</p>
                 </div>
                 <div className="w-px h-8 bg-white/20"></div>
                 <div className="text-center">
                   <p className="text-white text-xl md:text-2xl font-semibold">
                     {onlineNow.toLocaleString()}
                   </p>
-                  <p className="text-white/50 text-xs">Online Now</p>
+                  <p className="text-white/50 text-xs">{t("services.about.onlineNow")}</p>
                 </div>
               </div>
             </div>
@@ -153,23 +148,19 @@ export default function AboutPage() {
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-foreground-200 bg-white mb-8">
               <i className="ri-community-line text-primary-500 text-sm"></i>
-              <span className="text-sm font-medium text-foreground-700">Our Story</span>
+              <span className="text-sm font-medium text-foreground-700">{t("services.about.ourStory")}</span>
             </div>
 
             <h2 className="font-heading text-3xl md:text-5xl lg:text-6xl text-foreground-900 leading-tight mb-6">
-              More than a forum — we are a community built around a place we all love
+              {t("services.about.storyTitle")}
             </h2>
 
             <p className="text-foreground-600 text-base md:text-lg leading-relaxed max-w-2xl mx-auto mb-6">
-              Alanya Holidays was born from a simple truth: the best recommendations do not come
-              from guidebooks. They come from people who live here, eat here, hike these trails,
-              and swim these waters every day.
+              {t("services.about.storyOne")}
             </p>
 
             <p className="text-foreground-600 text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
-              What started as a small WhatsApp group has grown into the largest English-speaking
-              community on the Turkish Riviera — a place where travelers find hidden gems, expats
-              build real friendships, and locals share the culture they are proud of.
+              {t("services.about.storyTwo")}
             </p>
           </div>
         </section>
@@ -178,10 +169,10 @@ export default function AboutPage() {
         <section className="w-full px-4 md:px-8 lg:px-12 py-16 md:py-20 bg-background-100">
           <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
             {[
-              { value: totalMembers.toLocaleString(), label: "Members", icon: "ri-user-3-line" },
-              { value: totalThreads.toLocaleString(), label: "Threads", icon: "ri-discuss-line" },
-              { value: totalReplies.toLocaleString(), label: "Replies", icon: "ri-chat-3-line" },
-              { value: onlineNow.toLocaleString(), label: "Online Now", icon: "ri-flashlight-line" },
+              { value: totalMembers.toLocaleString(), label: "services.about.members", icon: "ri-user-3-line" },
+              { value: totalThreads.toLocaleString(), label: "services.about.threads", icon: "ri-discuss-line" },
+              { value: totalReplies.toLocaleString(), label: "services.about.replies", icon: "ri-chat-3-line" },
+              { value: onlineNow.toLocaleString(), label: "services.about.onlineNow", icon: "ri-flashlight-line" },
             ].map((stat) => (
               <div key={stat.label} className="text-center p-6 rounded-2xl bg-white">
                 <div className="w-12 h-12 mx-auto flex items-center justify-center rounded-full bg-accent-100 mb-4">
@@ -190,7 +181,7 @@ export default function AboutPage() {
                 <p className="font-heading text-3xl md:text-4xl text-foreground-900 font-bold mb-1">
                   {stat.value}
                 </p>
-                <p className="text-sm text-foreground-500">{stat.label}</p>
+                <p className="text-sm text-foreground-500">{t(stat.label)}</p>
               </div>
             ))}
           </div>
@@ -202,13 +193,13 @@ export default function AboutPage() {
             <div className="text-center mb-12 md:mb-16">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-foreground-200 bg-white mb-6">
                 <i className="ri-star-line text-accent-500 text-sm"></i>
-                <span className="text-sm font-medium text-foreground-700">What We Stand For</span>
+                <span className="text-sm font-medium text-foreground-700">{t("services.about.whatWeStandFor")}</span>
               </div>
               <h2 className="font-heading text-3xl md:text-4xl text-foreground-900 mb-4">
-                Our Core Values
+                {t("services.about.coreValues")}
               </h2>
               <p className="text-foreground-500 text-sm md:text-base max-w-xl mx-auto">
-                These principles guide every feature we build, every event we host, and every conversation we welcome.
+                {t("services.about.valuesIntro")}
               </p>
             </div>
 
@@ -221,8 +212,8 @@ export default function AboutPage() {
                   <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-primary-100 mb-4">
                     <i className={`${v.icon} text-primary-600 text-lg`}></i>
                   </div>
-                  <h3 className="font-heading text-lg text-foreground-900 mb-2">{v.title}</h3>
-                  <p className="text-sm text-foreground-500 leading-relaxed">{v.description}</p>
+                  <h3 className="font-heading text-lg text-foreground-900 mb-2">{t(v.title)}</h3>
+                  <p className="text-sm text-foreground-500 leading-relaxed">{t(v.description)}</p>
                 </div>
               ))}
             </div>
@@ -235,13 +226,13 @@ export default function AboutPage() {
             <div className="text-center mb-12">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-foreground-200 bg-white mb-6">
                 <i className="ri-group-line text-secondary-500 text-sm"></i>
-                <span className="text-sm font-medium text-foreground-700">The Heart of the Forum</span>
+                <span className="text-sm font-medium text-foreground-700">{t("services.about.heart")}</span>
               </div>
               <h2 className="font-heading text-3xl md:text-4xl text-foreground-900 mb-4">
-                Meet Our Community Leaders
+                {t("services.about.leaders")}
               </h2>
               <p className="text-foreground-500 text-sm md:text-base max-w-xl mx-auto">
-                These dedicated members go above and beyond — organizing events, welcoming newcomers, and keeping the community vibrant.
+                {t("services.about.leadersIntro")}
               </p>
             </div>
 
@@ -272,7 +263,7 @@ export default function AboutPage() {
                   <div className="flex items-center justify-center gap-4 mt-4 pt-4 border-t border-background-100">
                     <div className="text-center">
                       <p className="text-sm font-semibold text-foreground-900">{leader.posts.toLocaleString()}</p>
-                      <p className="text-xs text-foreground-400">Posts</p>
+                      <p className="text-xs text-foreground-400">{t("services.about.posts")}</p>
                     </div>
                   </div>
                 </div>
@@ -287,10 +278,10 @@ export default function AboutPage() {
             <div className="text-center mb-12 md:mb-16">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-foreground-200 bg-white mb-6">
                 <i className="ri-timeline-view text-primary-500 text-sm"></i>
-                <span className="text-sm font-medium text-foreground-700">The Journey</span>
+                <span className="text-sm font-medium text-foreground-700">{t("services.about.journey")}</span>
               </div>
               <h2 className="font-heading text-3xl md:text-4xl text-foreground-900 mb-4">
-                How It All Started
+                {t("services.about.started")}
               </h2>
             </div>
 
@@ -314,8 +305,8 @@ export default function AboutPage() {
                       <span className="inline-block px-3 py-1 rounded-full bg-accent-100 text-accent-700 text-xs font-bold mb-3">
                         {milestone.year}
                       </span>
-                      <h3 className="font-heading text-lg text-foreground-900 mb-2">{milestone.title}</h3>
-                      <p className="text-sm text-foreground-500 leading-relaxed">{milestone.description}</p>
+                      <h3 className="font-heading text-lg text-foreground-900 mb-2">{t(milestone.title)}</h3>
+                      <p className="text-sm text-foreground-500 leading-relaxed">{t(milestone.description)}</p>
                     </div>
 
                     {/* Spacer for the other side */}
@@ -331,25 +322,24 @@ export default function AboutPage() {
         <section className="w-full px-4 md:px-8 lg:px-12 py-16 md:py-24 bg-gradient-to-r from-primary-500 to-primary-600">
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="font-heading text-3xl md:text-4xl text-white mb-4">
-              Ready to become part of the story?
+              {t("services.about.ctaTitle")}
             </h2>
             <p className="text-white/80 text-sm md:text-base mb-8">
-              Join {totalMembers.toLocaleString()}+ members who are already sharing,
-              discovering, and connecting on Alanya Holidays. It is free and takes less than a minute.
+              {t("services.about.cta", { count: totalMembers.toLocaleString() })}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link
                 to="/register"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-white text-primary-600 rounded-full text-sm font-semibold hover:bg-white/95 transition-colors whitespace-nowrap"
               >
-                Create Your Profile
+                {t("services.about.createProfile")}
                 <i className="ri-arrow-right-line"></i>
               </Link>
               <Link
                 to="/categories"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 text-white border border-white/30 rounded-full text-sm font-medium hover:bg-white/20 transition-colors whitespace-nowrap"
               >
-                Explore Categories
+                {t("services.about.exploreCategories")}
               </Link>
             </div>
           </div>

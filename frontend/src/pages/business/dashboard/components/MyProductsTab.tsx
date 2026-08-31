@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import i18n from "@/i18n";
 import {
   Package,
   Plus,
@@ -7,12 +9,21 @@ import {
   X,
   AlertCircle,
   Loader2,
+  Lock,
+  Trash2,
+  Zap,
 } from "lucide-react";
 import {
   productsService,
   type SellerProduct,
 } from "@/api-services/products.service";
 import { logger } from "@/lib/logger";
+import { ApiError } from "@/lib/api-client";
+
+interface MyProductsTabProps {
+  hasPremiumAccess: boolean;
+  onOpenUpgradeModal: () => void;
+}
 
 interface ProductFormState {
   name: string;
@@ -32,7 +43,21 @@ const STATUS_BADGES: Record<string, string> = {
     "bg-secondary-100 dark:bg-slate-800 text-secondary-600 dark:text-slate-400 border-secondary-200 dark:border-slate-700",
 };
 
-export const MyProductsTab: React.FC = () => {
+const getProductErrorMessage = (error: unknown): string => {
+  if (error instanceof ApiError && error.status === 401) {
+    return i18n.t("merchant.sessionExpired");
+  }
+  if (error instanceof ApiError && error.status === 403) {
+    return i18n.t("merchant.premiumRequired");
+  }
+  return i18n.t("merchant.productsUpdateFailed");
+};
+
+export const MyProductsTab: React.FC<MyProductsTabProps> = ({
+  hasPremiumAccess,
+  onOpenUpgradeModal,
+}) => {
+  const { t } = useTranslation();
   const [products, setProducts] = useState<SellerProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,6 +65,8 @@ export const MyProductsTab: React.FC = () => {
   const [editingId, setEditingId] = useState<number | "new" | null>(null);
   const [form, setForm] = useState<ProductFormState>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<SellerProduct | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const loadProducts = useCallback(async () => {
     setLoading(true);
@@ -48,15 +75,20 @@ export const MyProductsTab: React.FC = () => {
       setProducts(await productsService.getMyProducts());
     } catch (err) {
       logger.error("Failed to load seller products:", err);
-      setError("Failed to load your products. Please try again.");
+      setError(getProductErrorMessage(err));
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    void loadProducts();
-  }, [loadProducts]);
+    if (hasPremiumAccess) {
+      void loadProducts();
+    } else {
+      setLoading(false);
+      setProducts([]);
+    }
+  }, [hasPremiumAccess, loadProducts]);
 
   const openCreateForm = () => {
     setForm(EMPTY_FORM);
@@ -102,11 +134,55 @@ export const MyProductsTab: React.FC = () => {
       await loadProducts();
     } catch (err) {
       logger.error("Failed to save product:", err);
-      setError("Failed to save the product. Please try again.");
+      setError(getProductErrorMessage(err));
     } finally {
       setSaving(false);
     }
   };
+
+  const handleDelete = async () => {
+    if (!productToDelete || deleting) return;
+    const previousProducts = products;
+    const deletedProduct = productToDelete;
+    setDeleting(true);
+    setProductToDelete(null);
+    setProducts((current) =>
+      current.filter((product) => product.id !== deletedProduct.id)
+    );
+    setError(null);
+    try {
+      await productsService.deleteMyProduct(deletedProduct.id);
+    } catch (err) {
+      // Roll back the optimistic removal if authorization or persistence fails.
+      setProducts(previousProducts);
+      setError(getProductErrorMessage(err));
+      logger.error("Failed to delete product:", err);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  if (!hasPremiumAccess) {
+    return (
+      <section className="relative overflow-hidden rounded-2xl bg-slate-950 border border-amber-500/30 p-8 sm:p-12 text-center">
+        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-300">
+          <Lock className="h-8 w-8" />
+        </div>
+        <h2 className="text-xl font-bold text-white">{t("merchant.unlockProducts")}</h2>
+        <p className="mx-auto mt-2 max-w-xl text-sm text-slate-300">
+          {t("merchant.productsDescription")}
+        </p>
+        <button
+          type="button"
+          onClick={onOpenUpgradeModal}
+          className="mt-6 inline-flex items-center gap-2 rounded-xl bg-amber-500 px-6 py-3 text-sm font-bold text-slate-950 transition-colors hover:bg-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
+        >
+          <Zap className="h-4 w-4" />
+          {t("merchant.upgradeSubscription")}
+        </button>
+      </section>
+    );
+  }
 
   if (loading) {
     return (
@@ -142,7 +218,7 @@ export const MyProductsTab: React.FC = () => {
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all shadow-md shadow-amber-500/20 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            Add Product
+            {t("merchant.addProduct")}
           </button>
         </div>
       )}
@@ -151,50 +227,50 @@ export const MyProductsTab: React.FC = () => {
       {editingId !== null && (
         <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-800 shadow-sm space-y-4">
           <h3 className="font-bold text-secondary-900 dark:text-white">
-            {editingId === "new" ? "New Product" : "Edit Product"}
+            {editingId === "new" ? t("merchant.newProduct") : t("merchant.editProduct")}
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <label className="text-xs font-semibold text-secondary-700 dark:text-slate-300 space-y-1.5">
-              Name *
+              {t("merchant.nameRequired")}
               <input
                 type="text"
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                placeholder="Handmade ceramic bowl"
+                placeholder={t("merchant.productNamePlaceholder")}
                 maxLength={120}
                 className="w-full px-3 py-2.5 rounded-xl border border-secondary-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm text-secondary-900 dark:text-white outline-none focus:border-amber-400 transition-colors"
               />
             </label>
             <label className="text-xs font-semibold text-secondary-700 dark:text-slate-300 space-y-1.5">
-              Price (EUR) *
+              {t("merchant.priceRequired")}
               <input
                 type="number"
                 min="0"
                 step="0.01"
                 value={form.price}
                 onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
-                placeholder="24.90"
+                placeholder={t("merchant.pricePlaceholder")}
                 className="w-full px-3 py-2.5 rounded-xl border border-secondary-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm text-secondary-900 dark:text-white outline-none focus:border-amber-400 transition-colors"
               />
             </label>
             <label className="text-xs font-semibold text-secondary-700 dark:text-slate-300 space-y-1.5">
-              Stock
+              {t("merchant.stock")}
               <input
                 type="number"
                 min="0"
                 value={form.stock}
                 onChange={(e) => setForm((f) => ({ ...f, stock: e.target.value }))}
-                placeholder="10"
+                placeholder={t("merchant.stockPlaceholder")}
                 className="w-full px-3 py-2.5 rounded-xl border border-secondary-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm text-secondary-900 dark:text-white outline-none focus:border-amber-400 transition-colors"
               />
             </label>
             <label className="text-xs font-semibold text-secondary-700 dark:text-slate-300 space-y-1.5">
-              Description
+              {t("merchant.descriptionLabel")}
               <input
                 type="text"
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                placeholder="Short description shown to buyers"
+                placeholder={t("merchant.descriptionPlaceholder")}
                 maxLength={500}
                 className="w-full px-3 py-2.5 rounded-xl border border-secondary-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm text-secondary-900 dark:text-white outline-none focus:border-amber-400 transition-colors"
               />
@@ -208,7 +284,7 @@ export const MyProductsTab: React.FC = () => {
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 transition-all cursor-pointer"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-              Save Product
+              {t("merchant.saveProduct")}
             </button>
             <button
               type="button"
@@ -216,7 +292,7 @@ export const MyProductsTab: React.FC = () => {
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-secondary-100 hover:bg-secondary-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-secondary-800 dark:text-slate-200 transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
-              Cancel
+              {t("common.cancel")}
             </button>
           </div>
         </div>
@@ -229,9 +305,9 @@ export const MyProductsTab: React.FC = () => {
             <Package className="w-8 h-8" />
           </div>
           <div className="max-w-md mx-auto space-y-1.5">
-            <h3 className="text-lg font-bold text-secondary-900 dark:text-white">No products yet</h3>
+            <h3 className="text-lg font-bold text-secondary-900 dark:text-white">{t("merchant.noProducts")}</h3>
             <p className="text-xs sm:text-sm text-secondary-500 dark:text-slate-400">
-              Add your first product and it will appear in the Alanya Holidays shop for buyers to purchase.
+              {t("merchant.productsEmptyDescription")}
             </p>
           </div>
         </div>
@@ -265,7 +341,7 @@ export const MyProductsTab: React.FC = () => {
                   </p>
                 )}
                 <p className="text-xs text-secondary-500 dark:text-slate-400 mt-1">
-                  Stock: {product.stock} · Added{" "}
+                  {t("merchant.stock")}: {product.stock} · {t("merchant.added")} {" "}
                   {product.created_at &&
                     new Date(product.created_at).toLocaleDateString("en-US", {
                       month: "short",
@@ -286,12 +362,56 @@ export const MyProductsTab: React.FC = () => {
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-secondary-100 hover:bg-secondary-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-secondary-800 dark:text-slate-200 transition-colors cursor-pointer"
               >
                 <Pencil className="w-3.5 h-3.5" />
-                Edit
+                {t("merchant.edit")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setProductToDelete(product)}
+                disabled={deleting}
+                aria-label={`Delete ${product.name}`}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 px-4 py-2 text-xs font-semibold text-rose-700 transition-colors hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 disabled:opacity-50 dark:border-rose-900 dark:text-rose-300 dark:hover:bg-rose-950/30"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                {t("merchant.delete")}
               </button>
             </div>
           </div>
         ))}
       </div>
+
+      {productToDelete && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-product-title"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4"
+        >
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900">
+            <h2 id="delete-product-title" className="text-lg font-bold text-secondary-900 dark:text-white">
+              {t("merchant.deleteProductQuestion")}
+            </h2>
+            <p className="mt-2 text-sm text-secondary-600 dark:text-slate-300">
+              {t("merchant.productRemoved", { name: productToDelete.name })}
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setProductToDelete(null)}
+                className="rounded-xl bg-secondary-100 px-4 py-2 text-sm font-semibold text-secondary-800 hover:bg-secondary-200 dark:bg-slate-800 dark:text-slate-200"
+              >
+                {t("common.cancel")}
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleDelete()}
+                className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-500"
+              >
+                {t("merchant.deleteProduct")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

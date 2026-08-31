@@ -28,6 +28,7 @@ const application = {
 describe('BusinessApplicationsService', () => {
   const repository = {
     findMine: jest.fn(),
+    hasApprovedBusinessAccount: jest.fn(),
     create: jest.fn(),
     findAll: jest.fn(),
     approve: jest.fn(),
@@ -38,6 +39,17 @@ describe('BusinessApplicationsService', () => {
   );
 
   beforeEach(() => jest.clearAllMocks());
+
+  it('delegates approved business capability to the authoritative repository', async () => {
+    repository.hasApprovedBusinessAccount.mockResolvedValue(true);
+
+    await expect(service.hasApprovedBusinessAccount('user-1')).resolves.toBe(
+      true,
+    );
+    expect(repository.hasApprovedBusinessAccount).toHaveBeenCalledWith(
+      'user-1',
+    );
+  });
 
   it('scopes applicant reads and writes to the authenticated user id', async () => {
     repository.findMine.mockResolvedValue(application);

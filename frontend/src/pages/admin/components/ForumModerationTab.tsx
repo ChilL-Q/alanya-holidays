@@ -9,6 +9,8 @@ import {
   type ForumStatsAdminItem,
 } from "@/api-services/admin.service";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface ForumModerationTabProps {
   onReportCountUpdate?: (counts: { total: number; pending: number }) => void;
@@ -17,6 +19,7 @@ interface ForumModerationTabProps {
 export default function ForumModerationTab({
   onReportCountUpdate,
 }: ForumModerationTabProps) {
+  const { t } = useTranslation();
   const [subView, setSubView] = useState<"reports" | "removed_comments">("reports");
   const [stats, setStats] = useState<ForumStatsAdminItem | null>(null);
   const [reports, setReports] = useState<ForumReportAdminItem[]>([]);
@@ -52,11 +55,11 @@ export default function ForumModerationTab({
         });
       }
     } catch {
-      setError("Failed to load forum moderation data. Please try again.");
+      setError(t("adminQueue.forumError"));
     } finally {
       setLoading(false);
     }
-  }, [onReportCountUpdate]);
+  }, [onReportCountUpdate, t]);
 
   useEffect(() => {
     void fetchData();
@@ -213,7 +216,7 @@ export default function ForumModerationTab({
             }`}
           >
             <i className="ri-alarm-warning-line text-base" />
-            <span>Violation Reports Queue</span>
+            <span>{t("adminQueue.violationQueue")}</span>
             {reports.filter((r) => !r.resolved).length > 0 && (
               <span className="ml-1.5 px-2 py-0.5 text-xs font-bold rounded-full bg-rose-500 text-white">
                 {reports.filter((r) => !r.resolved).length}
@@ -231,7 +234,7 @@ export default function ForumModerationTab({
             }`}
           >
             <i className="ri-chat-delete-line text-base" />
-            <span>Removed Comments</span>
+            <span>{t("adminQueue.removedComments")}</span>
             {removedComments.length > 0 && (
               <span className="ml-1.5 px-2 py-0.5 text-xs font-bold rounded-full bg-secondary-200 dark:bg-slate-700 text-secondary-800 dark:text-slate-200">
                 {removedComments.length}
@@ -266,10 +269,10 @@ export default function ForumModerationTab({
         <div className="bg-white dark:bg-slate-900 border border-secondary-200 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
           <div className="p-4 sm:p-5 border-b border-secondary-100 dark:border-slate-800">
             <h3 className="text-base font-bold text-secondary-900 dark:text-white">
-              Soft-Deleted Comments Queue
+              {t("adminQueue.softDeletedQueue")}
             </h3>
             <p className="text-xs text-secondary-500 dark:text-slate-400">
-              Audit log of comments hidden from public discussions
+              {t("adminQueue.hiddenCommentAudit")}
             </p>
           </div>
 
@@ -277,10 +280,10 @@ export default function ForumModerationTab({
             <div className="p-12 text-center text-secondary-400 dark:text-slate-500">
               <i className="ri-chat-check-line text-3xl mb-2 block text-emerald-500" />
               <p className="text-sm font-semibold text-secondary-800 dark:text-slate-200">
-                No Removed Comments
+                {t("adminQueue.noRemovedComments")}
               </p>
               <p className="text-xs text-secondary-500 dark:text-slate-400 mt-1">
-                No comments are currently soft-deleted.
+                {t("adminQueue.noSoftDeleted")}
               </p>
             </div>
           ) : (
@@ -288,10 +291,10 @@ export default function ForumModerationTab({
               <table className="w-full text-left text-sm text-secondary-700 dark:text-slate-300">
                 <thead className="bg-secondary-50 dark:bg-slate-800/80 text-xs font-semibold text-secondary-500 dark:text-slate-400 uppercase tracking-wider border-b border-secondary-200 dark:border-slate-800">
                   <tr>
-                    <th className="py-3.5 px-4">Date</th>
-                    <th className="py-3.5 px-4">Author</th>
-                    <th className="py-3.5 px-4">Comment Text</th>
-                    <th className="py-3.5 px-4 text-right">Actions</th>
+                    <th className="py-3.5 px-4">{t("adminQueue.date")}</th>
+                    <th className="py-3.5 px-4">{t("adminQueue.author")}</th>
+                    <th className="py-3.5 px-4">{t("adminQueue.commentText")}</th>
+                    <th className="py-3.5 px-4 text-right">{t("adminQueue.actions")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-secondary-100 dark:divide-slate-800">
@@ -304,7 +307,7 @@ export default function ForumModerationTab({
                         {new Date(comment.created_at).toLocaleDateString()}
                       </td>
                       <td className="py-3.5 px-4 whitespace-nowrap font-medium text-secondary-900 dark:text-white text-xs">
-                        {comment.author_name || comment.user_id || "Anonymous"}
+                        {comment.author_name || comment.user_id || t("adminQueue.anonymousAuthor")}
                       </td>
                       <td className="py-3.5 px-4 text-xs text-secondary-700 dark:text-slate-300 max-w-md truncate">
                         <span title={comment.body}>{comment.body}</span>
@@ -316,14 +319,14 @@ export default function ForumModerationTab({
                             onClick={() => handleToggleRemove("comment", comment.id, false)}
                             className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 hover:bg-emerald-100 transition-colors cursor-pointer"
                           >
-                            Restore
+                            {t("adminQueue.restore")}
                           </button>
                           <button
                             type="button"
                             onClick={() => handleDelete("comment", comment.id)}
                             className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800 hover:bg-rose-100 transition-colors cursor-pointer"
                           >
-                            Hard Delete
+                            {t("adminQueue.hardDelete")}
                           </button>
                         </div>
                       </td>

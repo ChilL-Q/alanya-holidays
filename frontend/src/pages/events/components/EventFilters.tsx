@@ -1,4 +1,6 @@
 import { eventCategories } from "@/api-services/events.service";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface EventFiltersProps {
   activeCategory: string | null;
@@ -28,14 +30,15 @@ export default function EventFilters({
   showSaved,
   onSavedToggle,
 }: EventFiltersProps) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-      <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide flex-wrap" role="group" aria-label="Event categories">
+      <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide flex-wrap" role="group" aria-label={t("events.categories", "Event categories")}>
         <button
           type="button"
           onClick={() => onCategoryChange(null)}
           aria-pressed={activeCategory === null}
-          aria-label="Show all event categories"
+          aria-label={t("events.allCategories", "Show all event categories")}
           className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all shrink-0 ${
             activeCategory === null
               ? "bg-primary-500 text-background-50"
@@ -43,7 +46,7 @@ export default function EventFilters({
           }`}
         >
           <i className="ri-apps-2-line"></i>
-          All Events
+          {t("events.allEvents", "All Events")}
         </button>
 
         {eventCategories.map((cat) => (
@@ -52,7 +55,7 @@ export default function EventFilters({
             type="button"
             onClick={() => onCategoryChange(cat === activeCategory ? null : cat)}
             aria-pressed={activeCategory === cat}
-            aria-label={`Filter events by ${cat}`}
+            aria-label={t("events.filterBy", "Filter events by {{category}}", { category: cat })}
             className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all shrink-0 ${
               activeCategory === cat
                 ? "bg-accent-500 text-background-50"
@@ -65,12 +68,12 @@ export default function EventFilters({
         ))}
       </div>
 
-      <div className="flex items-center gap-2 ml-auto shrink-0" role="group" aria-label="Quick event filters">
+      <div className="flex items-center gap-2 ml-auto shrink-0" role="group" aria-label={t("events.quickFilters", "Quick event filters")}>
         <button
           type="button"
           onClick={() => onSavedToggle(!showSaved)}
           aria-pressed={showSaved}
-          aria-label="Show only saved events"
+          aria-label={t("events.savedOnly", "Show only saved events")}
           className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
             showSaved
               ? "bg-primary-100 text-primary-700"
@@ -78,13 +81,13 @@ export default function EventFilters({
           }`}
         >
           <i className={`${showSaved ? "ri-bookmark-fill" : "ri-bookmark-line"}`}></i>
-          Saved
+          {t("events.saved", "Saved")}
         </button>
         <button
           type="button"
           onClick={() => onFeaturedToggle(!showFeatured)}
           aria-pressed={showFeatured}
-          aria-label="Show only featured events"
+          aria-label={t("events.featuredOnly", "Show only featured events")}
           className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
             showFeatured
               ? "bg-primary-100 text-primary-700"
@@ -92,7 +95,7 @@ export default function EventFilters({
           }`}
         >
           <i className={`${showFeatured ? "ri-star-fill" : "ri-star-line"}`}></i>
-          Featured
+          {t("events.featured", "Featured")}
         </button>
       </div>
     </div>

@@ -38,6 +38,19 @@ describe("CreatorUgcFloatingWidget", () => {
     expect(screen.getByText(/Share with the Community/i)).toBeInTheDocument();
   });
 
+  it("keeps the mobile trigger compact while preserving its accessible label", () => {
+    renderWidget(["/"]);
+    const trigger = screen.getByRole("button", {
+      name: /open community post widget/i,
+    });
+
+    expect(trigger).toHaveClass("max-sm:w-12", "max-sm:h-12", "max-sm:p-0", "max-sm:rounded-full");
+    expect(screen.getByText(/Post a tip, story, or question/i).parentElement).toHaveClass(
+      "hidden",
+      "sm:flex"
+    );
+  });
+
   it("switches to a compact trigger on the events page to avoid covering cards", () => {
     renderWidget(["/events"]);
     expect(screen.getByRole("button", { name: /open community post widget/i })).toBeInTheDocument();

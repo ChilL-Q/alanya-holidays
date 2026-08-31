@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
 import type { InquiryState } from "@/lib/inquiry-confirmation";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 const subjectIcons: Record<string, string> = {
   "Yacht Charter": "ri-sailboat-line",
@@ -14,17 +16,18 @@ const subjectIcons: Record<string, string> = {
   "Photography Excursion": "ri-camera-lens-line",
 };
 
-const subjectLinks: Record<string, { label: string; to: string }> = {
-  "Yacht Charter": { label: "Explore more yachts", to: "/yacht-charters" },
-  "Villa Stay": { label: "Browse more villas", to: "/villa-stays" },
-  "Luxury Experience": { label: "Explore experiences", to: "/explore" },
-  "Helicopter Tour": { label: "See more tours", to: "/helicopter-tours" },
-  "Wine Tasting": { label: "Discover more tastings", to: "/wine-tastings" },
-  "Hammam & Spa": { label: "View more spa experiences", to: "/hammam-spa" },
-  "Photography Excursion": { label: "Find more excursions", to: "/photography-excursions" },
+const subjectLinks: Record<string, { labelKey: string; to: string }> = {
+  "Yacht Charter": { labelKey: "public.exploreYachts", to: "/yacht-charters" },
+  "Villa Stay": { labelKey: "public.browseVillas", to: "/villa-stays" },
+  "Luxury Experience": { labelKey: "public.exploreExperiences", to: "/explore" },
+  "Helicopter Tour": { labelKey: "public.seeTours", to: "/helicopter-tours" },
+  "Wine Tasting": { labelKey: "public.discoverTastings", to: "/wine-tastings" },
+  "Hammam & Spa": { labelKey: "public.viewSpa", to: "/hammam-spa" },
+  "Photography Excursion": { labelKey: "public.findExcursions", to: "/photography-excursions" },
 };
 
 export default function BookingConfirmationPage() {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const inquiry = (location.state as InquiryState) || null;
@@ -46,27 +49,27 @@ export default function BookingConfirmationPage() {
   const relatedLink = subjectLinks[inquiry.subject];
 
   const messageLabel = inquiry.subject
-    ? `Your ${inquiry.subject} enquiry`
-    : "Your enquiry";
+    ? `${inquiry.subject} ${t("public.enquiryWord")}`
+    : t("public.yourEnquiry");
 
   const timelineSteps = [
     {
-      icon: "ri-mail-check-line",
-      title: "Confirmation sent",
-      description: `A copy of your enquiry has been sent to ${inquiry.email}. Check your inbox for reference.`,
-      time: "Instantly",
+      icon: "ri-file-list-3-line",
+      title: t("public.requestRecorded"),
+      description: t("public.recordedDescription", { email: inquiry.email }),
+      time: t("public.complete"),
     },
     {
       icon: "ri-user-star-line",
-      title: "Concierge assigned",
-      description: "One of our Alanya-based concierge specialists will personally review your request and prepare a tailored response.",
-      time: "Within 6 hours",
+      title: t("public.teamReview"),
+      description: t("public.teamReviewDescription"),
+      time: t("public.next"),
     },
     {
       icon: "ri-message-3-line",
-      title: "Personalised reply",
-      description: "You will receive a detailed email with availability, pricing, and recommendations specific to your enquiry — nothing generic, nothing automated.",
-      time: "Within 24 hours",
+      title: t("public.personalisedReply"),
+      description: t("public.replyDescription"),
+      time: t("public.afterReview"),
     },
   ];
 
@@ -90,15 +93,15 @@ export default function BookingConfirmationPage() {
             </div>
 
             <h1 className="font-heading text-3xl md:text-5xl text-foreground-900 mb-3">
-              {messageLabel} has been sent
+              {messageLabel} {t("public.sent")}
             </h1>
             <p className="text-foreground-500 text-sm md:text-base max-w-lg mx-auto mb-2">
-              Thank you, {inquiry.name}. Our concierge team will review your request and get back to you with a personalised response.
+              {t("public.thankYou", { name: inquiry.name })}
             </p>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-background-200/70 mt-3">
               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
               <span className="text-sm text-foreground-600">
-                Expected response: <strong className="text-foreground-900">under 24 hours</strong>
+                {t("public.status")}: <strong className="text-foreground-900">{t("public.queued")}</strong>
               </span>
             </div>
           </div>
@@ -114,8 +117,8 @@ export default function BookingConfirmationPage() {
                   <i className={`${icon} text-accent-600`}></i>
                 </div>
                 <div>
-                  <p className="text-xs text-foreground-400 uppercase tracking-wide">Enquiry Summary</p>
-                  <p className="text-sm font-semibold text-foreground-900">{inquiry.subject || "General Enquiry"}</p>
+                <p className="text-xs text-foreground-400 uppercase tracking-wide">{t("public.enquirySummary")}</p>
+                  <p className="text-sm font-semibold text-foreground-900">{inquiry.subject || t("public.generalEnquiry")}</p>
                 </div>
               </div>
 
@@ -123,17 +126,17 @@ export default function BookingConfirmationPage() {
               <div className="px-6 md:px-8 py-5 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-xs text-foreground-400 mb-1">Your Name</p>
+                    <p className="text-xs text-foreground-400 mb-1">{t("public.yourName")}</p>
                     <p className="text-sm font-medium text-foreground-900">{inquiry.name}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-foreground-400 mb-1">Email Address</p>
+                    <p className="text-xs text-foreground-400 mb-1">{t("public.emailAddress")}</p>
                     <p className="text-sm font-medium text-foreground-900">{inquiry.email}</p>
                   </div>
                 </div>
 
                 <div>
-                  <p className="text-xs text-foreground-400 mb-1">Your Message</p>
+                  <p className="text-xs text-foreground-400 mb-1">{t("public.yourMessage")}</p>
                   <div className="bg-background-50 rounded-xl p-4 border border-background-200/60">
                     <p className="text-sm text-foreground-700 leading-relaxed whitespace-pre-wrap">{inquiry.message}</p>
                   </div>
@@ -141,7 +144,7 @@ export default function BookingConfirmationPage() {
 
                 <div className="flex items-center gap-2 text-xs text-foreground-400">
                   <i className="ri-time-line"></i>
-                  <span>Submitted on {inquiry.timestamp}</span>
+                  <span>{t("public.submittedOn", { date: inquiry.timestamp })}</span>
                 </div>
               </div>
             </div>
@@ -152,7 +155,7 @@ export default function BookingConfirmationPage() {
         <section className={`w-full px-4 md:px-8 lg:px-12 py-12 md:py-16 bg-background-100 transition-all duration-700 delay-400 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
           <div className="max-w-2xl mx-auto">
             <div className="text-center mb-10 md:mb-12">
-              <h2 className="font-heading text-2xl md:text-3xl text-foreground-900 mb-3">What happens next</h2>
+              <h2 className="font-heading text-2xl md:text-3xl text-foreground-900 mb-3">{t("public.whatNext")}</h2>
               <p className="text-sm text-foreground-500 max-w-md mx-auto">
                 Here is what to expect while our concierge team prepares your personalised response.
               </p>
@@ -190,7 +193,7 @@ export default function BookingConfirmationPage() {
         {/* Next Steps CTAs */}
         <section className={`w-full px-4 md:px-8 lg:px-12 py-12 md:py-16 bg-background-50 transition-all duration-700 delay-600 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
           <div className="max-w-2xl mx-auto text-center">
-            <h2 className="font-heading text-2xl md:text-3xl text-foreground-900 mb-6">While you wait</h2>
+            <h2 className="font-heading text-2xl md:text-3xl text-foreground-900 mb-6">{t("public.whileWait")}</h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
               {relatedLink && (
@@ -202,8 +205,8 @@ export default function BookingConfirmationPage() {
                     <i className={`${icon} text-accent-600 text-lg`}></i>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-foreground-900 group-hover:text-accent-700 transition-colors">{relatedLink.label}</p>
-                    <p className="text-xs text-foreground-500">Continue planning your trip</p>
+                  <p className="text-sm font-medium text-foreground-900 group-hover:text-accent-700 transition-colors">{t(relatedLink.labelKey)}</p>
+                    <p className="text-xs text-foreground-500">{t("public.continuePlanning")}</p>
                   </div>
                   <i className="ri-arrow-right-line ml-auto text-foreground-300 group-hover:text-foreground-500"></i>
                 </Link>
@@ -217,8 +220,8 @@ export default function BookingConfirmationPage() {
                   <i className="ri-book-open-line text-secondary-600 text-lg"></i>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-foreground-900 group-hover:text-accent-700 transition-colors">Travel Guides</p>
-                  <p className="text-xs text-foreground-500">Curated itineraries &amp; local tips</p>
+                  <p className="text-sm font-medium text-foreground-900 group-hover:text-accent-700 transition-colors">{t("public.travelGuides")}</p>
+                  <p className="text-xs text-foreground-500">{t("public.curatedGuides")}</p>
                 </div>
                 <i className="ri-arrow-right-line ml-auto text-foreground-300 group-hover:text-foreground-500"></i>
               </Link>
@@ -229,7 +232,7 @@ export default function BookingConfirmationPage() {
               className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary-500 text-white text-sm font-semibold hover:bg-primary-600 transition-colors whitespace-nowrap"
             >
               <i className="ri-home-line"></i>
-              Back to Home
+              {t("public.backHome")}
             </Link>
           </div>
         </section>
@@ -237,7 +240,7 @@ export default function BookingConfirmationPage() {
         {/* Direct Contact Fallback */}
         <section className="w-full px-4 md:px-8 lg:px-12 py-12 md:py-16 bg-background-100">
           <div className="max-w-xl mx-auto text-center">
-            <p className="text-sm text-foreground-400 mb-4">Need to reach us sooner?</p>
+            <p className="text-sm text-foreground-400 mb-4">{t("public.reachSooner")}</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <a
                 href="mailto:contact@alanyaholidays.com"

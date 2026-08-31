@@ -21,6 +21,9 @@ const SearchPage = lazy(() => import("../pages/search/page"));
 const ExplorePage = lazy(() => import("../pages/explore/page"));
 const TravelGuidesPage = lazy(() => import("../pages/travel-guides/page"));
 const CommunityHubPage = lazy(() => import("../pages/community-hub/page"));
+const MembersPage = lazy(() => import("../pages/members/page"));
+const MemberProfilePage = lazy(() => import("../pages/member/page"));
+const PlannerPage = lazy(() => import("../pages/planner/page"));
 const ShopPage = lazy(() => import("../pages/shop/page"));
 const ProductDetailPage = lazy(() => import("../pages/product-detail/page"));
 const BusinessDetailPage = lazy(() => import("../pages/business/page"));
@@ -107,6 +110,18 @@ const routes: RouteObject[] = [
   {
     path: "/community-hub",
     element: <CommunityHubPage />,
+  },
+  {
+    path: "/members",
+    element: <MembersPage />,
+  },
+  {
+    path: "/member/:memberId",
+    element: <MemberProfilePage />,
+  },
+  {
+    path: "/planner",
+    element: <PlannerPage />,
   },
   {
     path: "/categories",

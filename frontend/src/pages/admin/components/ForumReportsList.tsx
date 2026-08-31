@@ -1,5 +1,7 @@
 import React from "react";
 import type { ForumReportAdminItem } from "@/api-services/admin.service";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface ForumReportsListProps {
   reports: ForumReportAdminItem[];
@@ -32,6 +34,7 @@ export default function ForumReportsList({
   searchQuery,
   onSearchQueryChange,
 }: ForumReportsListProps) {
+  const { t } = useTranslation();
   const filteredReports = reports.filter((r) => {
     // Status filter
     if (statusFilter === "pending" && r.resolved) return false;
@@ -73,7 +76,7 @@ export default function ForumReportsList({
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchQueryChange(e.target.value)}
-            placeholder="Search by reporter, reason, or content..."
+            placeholder={t("admin.searchReportsPlaceholder")}
             className="w-full pl-10 pr-4 py-2 text-sm bg-secondary-50 dark:bg-slate-800 border border-secondary-200 dark:border-slate-700 rounded-xl text-secondary-900 dark:text-white placeholder-secondary-400 focus:outline-hidden focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 transition-all"
           />
         </div>
@@ -91,7 +94,7 @@ export default function ForumReportsList({
                   : "text-secondary-600 dark:text-slate-400 hover:text-secondary-900"
               }`}
             >
-              All ({reports.length})
+              {t("admin.allWithCount", { count: reports.length })}
             </button>
             <button
               type="button"
@@ -102,7 +105,7 @@ export default function ForumReportsList({
                   : "text-secondary-600 dark:text-slate-400 hover:text-secondary-900"
               }`}
             >
-              Pending ({reports.filter((r) => !r.resolved).length})
+              {t("admin.pendingWithCount", { count: reports.filter((r) => !r.resolved).length })}
             </button>
             <button
               type="button"
@@ -113,7 +116,7 @@ export default function ForumReportsList({
                   : "text-secondary-600 dark:text-slate-400 hover:text-secondary-900"
               }`}
             >
-              Resolved ({reports.filter((r) => r.resolved).length})
+              {t("admin.resolvedWithCount", { count: reports.filter((r) => r.resolved).length })}
             </button>
           </div>
 
@@ -128,7 +131,7 @@ export default function ForumReportsList({
                   : "text-secondary-600 dark:text-slate-400"
               }`}
             >
-              All Types
+              {t("admin.allTypes")}
             </button>
             <button
               type="button"
@@ -139,7 +142,7 @@ export default function ForumReportsList({
                   : "text-secondary-600 dark:text-slate-400"
               }`}
             >
-              Posts
+              {t("admin.posts")}
             </button>
             <button
               type="button"
@@ -150,7 +153,7 @@ export default function ForumReportsList({
                   : "text-secondary-600 dark:text-slate-400"
               }`}
             >
-              Comments
+              {t("admin.comments")}
             </button>
           </div>
         </div>
@@ -160,7 +163,7 @@ export default function ForumReportsList({
       {loading ? (
         <div className="p-12 text-center text-secondary-400 dark:text-slate-500">
           <i className="ri-loader-4-line animate-spin text-3xl mb-2 block" />
-          <p className="text-sm">Loading violation reports queue...</p>
+          <p className="text-sm">{t("admin.loadingReports")}</p>
         </div>
       ) : filteredReports.length === 0 ? (
         <div className="p-12 text-center text-secondary-400 dark:text-slate-500">
@@ -168,12 +171,12 @@ export default function ForumReportsList({
             <i className="ri-checkbox-circle-line text-emerald-500" />
           </div>
           <h3 className="text-base font-semibold text-secondary-800 dark:text-slate-200">
-            No Reports Found
+            {t("admin.noReports")}
           </h3>
           <p className="text-xs text-secondary-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
             {reports.length === 0
-              ? "All forum content is clean. There are currently no violation reports pending."
-              : "No reports match your current filter and search criteria."}
+              ? t("admin.noPendingReports")
+              : t("admin.noReportsMatch")}
           </p>
         </div>
       ) : (
@@ -181,13 +184,13 @@ export default function ForumReportsList({
           <table className="w-full text-left text-sm text-secondary-700 dark:text-slate-300">
             <thead className="bg-secondary-50 dark:bg-slate-800/80 text-xs font-semibold text-secondary-500 dark:text-slate-400 uppercase tracking-wider border-b border-secondary-200 dark:border-slate-800">
               <tr>
-                <th className="py-3.5 px-4">Date</th>
-                <th className="py-3.5 px-4">Target</th>
-                <th className="py-3.5 px-4">Reporter</th>
-                <th className="py-3.5 px-4">Reason</th>
-                <th className="py-3.5 px-4">Content Excerpt</th>
-                <th className="py-3.5 px-4">Status</th>
-                <th className="py-3.5 px-4 text-right">Actions</th>
+                <th className="py-3.5 px-4">{t("admin.date")}</th>
+                <th className="py-3.5 px-4">{t("admin.target")}</th>
+                <th className="py-3.5 px-4">{t("admin.reporter")}</th>
+                <th className="py-3.5 px-4">{t("admin.reason")}</th>
+                <th className="py-3.5 px-4">{t("admin.contentExcerpt")}</th>
+                <th className="py-3.5 px-4">{t("admin.status")}</th>
+                <th className="py-3.5 px-4 text-right">{t("admin.actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-secondary-100 dark:divide-slate-800">
@@ -222,7 +225,7 @@ export default function ForumReportsList({
                     </td>
                     <td className="py-3.5 px-4 whitespace-nowrap">
                       <span className="font-medium text-secondary-900 dark:text-white text-xs">
-                        {report.reporter?.full_name || "Anonymous"}
+                        {report.reporter?.full_name || t("admin.anonymous")}
                       </span>
                     </td>
                     <td className="py-3.5 px-4 whitespace-nowrap">
@@ -248,7 +251,7 @@ export default function ForumReportsList({
                               : "ri-time-fill"
                           }
                         />
-                        {report.resolved ? "Resolved" : "Pending"}
+                        {report.resolved ? t("admin.resolved") : t("admin.pending")}
                       </span>
                     </td>
                     <td className="py-3.5 px-4 text-right whitespace-nowrap">
@@ -258,16 +261,16 @@ export default function ForumReportsList({
                           onClick={() => onPreview(report)}
                           className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-secondary-100 dark:bg-slate-800 text-secondary-700 dark:text-slate-300 hover:bg-secondary-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                         >
-                          Preview
+                          {t("admin.preview")}
                         </button>
                         {!report.resolved && (
                           <button
                             type="button"
                             onClick={() => onResolve(report.id)}
                             className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-accent-100 dark:bg-accent-950/60 text-accent-700 dark:text-accent-300 hover:bg-accent-200 transition-colors cursor-pointer"
-                            title="Mark resolved"
+                            title={t("admin.markResolved")}
                           >
-                            Resolve
+                          {t("admin.resolve")}
                           </button>
                         )}
                         <button
@@ -284,7 +287,7 @@ export default function ForumReportsList({
                               ? "text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
                               : "text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
                           }`}
-                          title={isRemoved ? "Restore Content" : "Remove Content"}
+                          title={isRemoved ? t("admin.restoreContent") : t("admin.removeContent")}
                         >
                           <i className={isRemoved ? "ri-restart-line text-sm" : "ri-eye-off-line text-sm"} />
                         </button>

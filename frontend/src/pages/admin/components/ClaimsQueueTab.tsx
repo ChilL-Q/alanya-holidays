@@ -8,6 +8,8 @@ import ClaimDetailModal from "./ClaimDetailModal";
 import RejectReasonModal from "./RejectReasonModal";
 import BulkActionsToolbar from "./BulkActionsToolbar";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 type ClaimStatusFilter = "all" | "pending" | "approved" | "rejected";
 
@@ -19,23 +21,24 @@ const statusBadgeConfig: Record<string, { bg: string; text: string; label: strin
   approved: {
     bg: "bg-emerald-100 dark:bg-emerald-950/80 border-emerald-200 dark:border-emerald-800",
     text: "text-emerald-800 dark:text-emerald-300",
-    label: "Approved",
+    label: "adminQueue.claimApproved",
   },
   pending: {
     bg: "bg-amber-100 dark:bg-amber-950/80 border-amber-200 dark:border-amber-800",
     text: "text-amber-800 dark:text-amber-300",
-    label: "Pending Review",
+    label: "adminQueue.pendingReview",
   },
   rejected: {
     bg: "bg-rose-100 dark:bg-rose-950/80 border-rose-200 dark:border-rose-800",
     text: "text-rose-800 dark:text-rose-300",
-    label: "Rejected",
+    label: "adminQueue.claimRejected",
   },
 };
 
 export default function ClaimsQueueTab({
   onClaimCountUpdate,
 }: ClaimsQueueTabProps) {
+  const { t } = useTranslation();
   const [claims, setClaims] = useState<DirectoryClaim[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -72,11 +75,11 @@ export default function ClaimsQueueTab({
         onClaimCountUpdateRef.current({ total: data?.length || 0, pending });
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load claims queue");
+      setError(err instanceof Error ? err.message : t("adminQueue.claimsError"));
     } finally {
       setLoading(false);
     }
-  }, [statusFilter]);
+  }, [statusFilter, t]);
 
   useEffect(() => {
     void fetchClaims();
@@ -149,7 +152,7 @@ export default function ClaimsQueueTab({
     try {
       const ok = await adminService.approveClaim(claimId);
       if (ok) {
-        toast.success("Claim approved and business ownership transferred!");
+        toast.success(t("adminQueue.claimApprovedToast"));
         setClaims((prev) =>
           prev.map((c) => (c.id === claimId ? { ...c, status: "approved" } : c))
         );
@@ -159,7 +162,7 @@ export default function ClaimsQueueTab({
           return next;
         });
       } else {
-        toast.error("Failed to approve claim");
+        toast.error(t("adminQueue.approveFailed"));
       }
     } finally {
       setActionLoadingId(null);
@@ -173,7 +176,7 @@ export default function ClaimsQueueTab({
     try {
       const ok = await adminService.rejectClaim(id, reason);
       if (ok) {
-        toast.success("Claim rejected with feedback sent to claimant");
+        toast.success(t("adminQueue.claimRejectedFeedback"));
         setClaims((prev) =>
           prev.map((c) =>
             c.id === id ? { ...c, status: "rejected", rejection_reason: reason } : c
@@ -185,7 +188,7 @@ export default function ClaimsQueueTab({
           return next;
         });
       } else {
-        toast.error("Failed to reject claim");
+        toast.error(t("adminQueue.rejectFailed"));
       }
     } finally {
       setActionLoadingId(null);
@@ -207,15 +210,15 @@ export default function ClaimsQueueTab({
 
       const res = await adminService.batchApproveClaims(ids);
       if (res.successful.length > 0) {
-        toast.success(`Batch approved ${res.successful.length} claim(s)`);
+        toast.success(t("adminQueue.batchApproved", { count: res.successful.length }));
       }
       if (res.failed.length > 0) {
-        toast.error(`Failed to approve ${res.failed.length} claim(s)`);
+        toast.error(t("adminQueue.failedApproveCount", { count: res.failed.length }));
         await fetchClaims();
       }
       setSelectedIds(new Set());
     } catch {
-      toast.error("Error during batch approval");
+      toast.error(t("adminQueue.batchApprovalError"));
       await fetchClaims();
     } finally {
       setIsBulkLoading(false);
@@ -239,16 +242,16 @@ export default function ClaimsQueueTab({
 
       const res = await adminService.batchRejectClaims(ids, reason);
       if (res.successful.length > 0) {
-        toast.success(`Batch rejected ${res.successful.length} claim(s)`);
+        toast.success(t("adminQueue.batchRejected", { count: res.successful.length }));
       }
       if (res.failed.length > 0) {
-        toast.error(`Failed to reject ${res.failed.length} claim(s)`);
+        toast.error(t("adminQueue.failedRejectCount", { count: res.failed.length }));
         await fetchClaims();
       }
       setSelectedIds(new Set());
       setIsBulkRejectModalOpen(false);
     } catch {
-      toast.error("Error during batch rejection");
+      toast.error(t("adminQueue.batchRejectionError"));
       await fetchClaims();
     } finally {
       setIsBulkLoading(false);
@@ -275,7 +278,7 @@ export default function ClaimsQueueTab({
                       : "bg-secondary-100 dark:bg-slate-800 text-secondary-600 dark:text-slate-300 hover:bg-secondary-200 dark:hover:bg-slate-700"
                   }`}
                 >
-                  {st}
+                  {st === "all" ? t("adminQueue.all") : t(`adminQueue.status.${st}`)}
                   <span
                     className={`ml-1.5 px-1.5 py-0.5 rounded-full text-xs ${
                       isActive
@@ -297,13 +300,13 @@ export default function ClaimsQueueTab({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search claims by business name, claimant email, phone, or role..."
+            placeholder={t("adminQueue.searchClaims")}
             className="w-full pl-10 pr-10 py-2.5 text-sm rounded-xl border border-secondary-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-secondary-900 dark:text-white placeholder:text-secondary-400 dark:placeholder:text-slate-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-100 dark:focus:ring-purple-950 outline-none transition-all"
           />
           {searchQuery && (
             <button
               type="button"
-              aria-label="Clear search"
+              aria-label={t("adminQueue.clearSearch")}
               onClick={() => setSearchQuery("")}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary-400 hover:text-secondary-600 dark:text-slate-500 dark:hover:text-slate-300 text-base p-1"
             >
@@ -327,7 +330,7 @@ export default function ClaimsQueueTab({
             }}
             className="text-xs font-semibold text-rose-700 dark:text-rose-300 underline hover:no-underline cursor-pointer"
           >
-            Retry
+            {t("adminQueue.retry")}
           </button>
         </div>
       )}
@@ -352,10 +355,10 @@ export default function ClaimsQueueTab({
             <i className="ri-shield-check-line" />
           </div>
           <h3 className="text-base font-bold text-secondary-800 dark:text-white">
-            No ownership claims
+            {t("adminQueue.noClaims")}
           </h3>
           <p className="text-sm text-secondary-500 dark:text-slate-400 max-w-sm mx-auto mt-1">
-            There are currently no ownership claims matching your selected status filter.
+            {t("adminQueue.noClaimMatch")}
           </p>
         </div>
       ) : (
@@ -368,7 +371,7 @@ export default function ClaimsQueueTab({
                   <th className="w-12 px-4 py-3.5 text-center">
                     <input
                       type="checkbox"
-                      aria-label="Select all claims"
+                      aria-label={t("adminQueue.selectAllClaims")}
                       checked={isAllSelected}
                       onChange={(e) => {
                         if (e.target.checked) selectAllFiltered();
@@ -378,19 +381,19 @@ export default function ClaimsQueueTab({
                     />
                   </th>
                   <th className="px-6 py-3.5 text-left text-xs font-bold text-secondary-500 dark:text-slate-400 uppercase tracking-wider">
-                    Target Business
+                    {t("adminQueue.targetListing")}
                   </th>
                   <th className="px-6 py-3.5 text-left text-xs font-bold text-secondary-500 dark:text-slate-400 uppercase tracking-wider">
-                    Claimant Credentials
+                    {t("adminQueue.claimantCredentials")}
                   </th>
                   <th className="px-6 py-3.5 text-left text-xs font-bold text-secondary-500 dark:text-slate-400 uppercase tracking-wider">
-                    Verification
+                    {t("adminQueue.verification")}
                   </th>
                   <th className="px-6 py-3.5 text-left text-xs font-bold text-secondary-500 dark:text-slate-400 uppercase tracking-wider">
-                    Claimed At
+                    {t("adminQueue.claimedAt")}
                   </th>
                   <th className="px-6 py-3.5 text-right text-xs font-bold text-secondary-500 dark:text-slate-400 uppercase tracking-wider">
-                    Actions
+                    {t("adminQueue.actions")}
                   </th>
                 </tr>
               </thead>
@@ -417,7 +420,7 @@ export default function ClaimsQueueTab({
                       <td className="w-12 px-4 py-4 text-center">
                         <input
                           type="checkbox"
-                          aria-label={`Select claim for ${claim.business_name}`}
+                          aria-label={t("adminQueue.selectClaim", { name: claim.business_name })}
                           checked={isSelected}
                           onChange={() => toggleSelect(claim.id)}
                           className="w-4 h-4 rounded border-secondary-300 dark:border-slate-600 text-purple-600 focus:ring-purple-500 cursor-pointer"
@@ -442,7 +445,7 @@ export default function ClaimsQueueTab({
                           <div className="flex items-center space-x-2 text-sm text-secondary-900 dark:text-white font-medium">
                             <span>{claim.email}</span>
                             <span className="text-xs px-1.5 py-0.5 bg-secondary-100 dark:bg-slate-800 text-secondary-600 dark:text-slate-300 rounded">
-                              {claim.role || "Owner"}
+                              {claim.role || t("adminQueue.owner")}
                             </span>
                           </div>
                           <span className="text-xs text-secondary-500 dark:text-slate-400 block">
@@ -456,7 +459,7 @@ export default function ClaimsQueueTab({
                           <span
                             className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold border ${statusStyle.bg} ${statusStyle.text}`}
                           >
-                            {statusStyle.label}
+                            {statusStyle.label.startsWith("adminQueue.") ? t(statusStyle.label) : statusStyle.label}
                           </span>
                           <span
                             className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -468,12 +471,12 @@ export default function ClaimsQueueTab({
                             {isEmailVerified ? (
                               <>
                                 <i className="ri-check-line mr-1 text-xs" />
-                                Verified
+                                {t("adminQueue.emailVerified")}
                               </>
                             ) : (
                               <>
                                 <i className="ri-time-line mr-1 text-xs" />
-                                Token Pending
+                                {t("adminQueue.tokenPending")}
                               </>
                             )}
                           </span>
@@ -495,7 +498,7 @@ export default function ClaimsQueueTab({
                           <button
                             type="button"
                             onClick={() => setDetailClaim(claim)}
-                            title="View Claim Details"
+                            title={t("adminQueue.viewClaim")}
                             className="p-1.5 text-secondary-500 dark:text-slate-400 hover:text-secondary-900 dark:hover:text-white hover:bg-secondary-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
                           >
                             <i className="ri-eye-line text-lg" />
@@ -507,7 +510,7 @@ export default function ClaimsQueueTab({
                               data-testid={`approve-claim-${claim.id}`}
                               onClick={() => handleApproveClaim(claim.id)}
                               disabled={isActionLoading}
-                              title="Approve & Transfer Ownership"
+                              title={t("adminQueue.approveTransfer")}
                               className="p-1.5 text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-200 hover:bg-purple-50 dark:hover:bg-purple-950/40 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
                             >
                               <i className="ri-shield-check-line text-lg" />
@@ -519,7 +522,7 @@ export default function ClaimsQueueTab({
                               type="button"
                               onClick={() => setRejectingClaim(claim)}
                               disabled={isActionLoading}
-                              title="Reject Claim"
+                              title={t("adminQueue.rejectClaim")}
                               className="p-1.5 text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-200 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
                             >
                               <i className="ri-close-circle-line text-lg" />
@@ -545,9 +548,9 @@ export default function ClaimsQueueTab({
         onBatchApprove={handleBatchApprove}
         onBatchReject={() => setIsBulkRejectModalOpen(true)}
         isLoading={isBulkLoading}
-        itemLabel="claims"
-        approveLabel="Approve Selected"
-        rejectLabel="Reject Selected"
+        itemLabel={t("adminQueue.claims")}
+        approveLabel={t("adminQueue.approveSelected")}
+        rejectLabel={t("adminQueue.rejectSelected")}
       />
 
       {/* Claim Detail Modal */}
@@ -564,8 +567,8 @@ export default function ClaimsQueueTab({
         isOpen={Boolean(rejectingClaim)}
         onClose={() => setRejectingClaim(null)}
         onConfirm={handleConfirmReject}
-        title="Reject Ownership Claim"
-        itemName={rejectingClaim?.business_name || "this claim"}
+        title={t("adminQueue.rejectOwnership")}
+        itemName={rejectingClaim?.business_name || t("adminQueue.thisClaim")}
       />
 
       {/* Bulk Reject Reason Modal */}
@@ -573,8 +576,8 @@ export default function ClaimsQueueTab({
         isOpen={isBulkRejectModalOpen}
         onClose={() => setIsBulkRejectModalOpen(false)}
         onConfirm={handleConfirmBatchReject}
-        title="Batch Reject Ownership Claims"
-        itemName={`${selectedIds.size} selected claims`}
+        title={t("adminQueue.batchRejectOwnership")}
+        itemName={t("adminQueue.selectedClaims", { count: selectedIds.size })}
       />
     </div>
   );

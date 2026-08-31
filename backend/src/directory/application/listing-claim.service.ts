@@ -1,4 +1,9 @@
-import { Injectable, Optional, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Optional,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { DirectoryRepository } from '../directory.repository';
 import { UserRolesRepository } from '../../common/auth/user-roles.repository';
 import { DirectoryClaimRecord } from '../types/directory.types';
@@ -19,6 +24,16 @@ export class ListingClaimService {
     claim: SubmitClaimDto,
     userId: string,
   ): Promise<DirectoryClaimRecord> {
+    const eligibility =
+      await this.directoryRepository.getDirectoryListingClaimEligibility(
+        claim.listing_id,
+      );
+    if (!eligibility?.can_claim) {
+      throw new BadRequestException(
+        'This listing is not eligible for ownership claims',
+      );
+    }
+
     const verificationToken = randomBytes(32).toString('base64url');
     const verificationTokenHash = createHash('sha256')
       .update(verificationToken)

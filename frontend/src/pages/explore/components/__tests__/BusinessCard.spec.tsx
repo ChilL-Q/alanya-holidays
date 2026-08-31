@@ -87,7 +87,7 @@ describe("BusinessCard Component (Milestone M2 / R1)", () => {
     const handleClaim = vi.fn();
     render(
       <BrowserRouter>
-        <BusinessCard business={mockBusiness} onClaimClick={handleClaim} />
+        <BusinessCard business={{ ...mockBusiness, can_claim: true }} onClaimClick={handleClaim} />
       </BrowserRouter>
     );
 
@@ -95,7 +95,20 @@ describe("BusinessCard Component (Milestone M2 / R1)", () => {
     expect(claimBtn).toBeInTheDocument();
     fireEvent.click(claimBtn);
     expect(handleClaim).toHaveBeenCalledTimes(1);
-    expect(handleClaim).toHaveBeenCalledWith(mockBusiness);
+    expect(handleClaim).toHaveBeenCalledWith({ ...mockBusiness, can_claim: true });
+  });
+
+  it("does not expose a claim action when the server marks a listing ineligible", () => {
+    render(
+      <BrowserRouter>
+        <BusinessCard
+          business={{ ...mockBusiness, can_claim: false }}
+          onClaimClick={vi.fn()}
+        />
+      </BrowserRouter>
+    );
+
+    expect(screen.queryByTitle(/claim this listing/i)).not.toBeInTheDocument();
   });
 
   it("handles compare mode checkbox toggling", () => {

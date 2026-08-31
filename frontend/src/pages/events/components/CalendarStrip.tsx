@@ -1,5 +1,7 @@
 import { useEffect, useRef, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import type { ForumEvent } from "@/api-services/events.service";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface CalendarStripProps {
   events: ForumEvent[];
@@ -16,6 +18,7 @@ const formatLocalDate = (d: Date) => {
 };
 
 export default function CalendarStrip({ events, selectedDate, onDateSelect }: CalendarStripProps) {
+  const { t } = useTranslation();
   const today = new Date();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const parsedEventDates = events
@@ -142,7 +145,7 @@ export default function CalendarStrip({ events, selectedDate, onDateSelect }: Ca
                   : "bg-background-100 text-foreground-600 hover:bg-background-200"
               }`}
             >
-              <span className="text-xs font-medium">ALL</span>
+              <span className="text-xs font-medium">{t("public.all").toUpperCase()}</span>
               <i className="ri-calendar-line text-sm"></i>
             </button>
 

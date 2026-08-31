@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { memberRoles } from "@/api-services/forum.service";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface MemberFiltersProps {
   searchTerm: string;
@@ -18,6 +20,7 @@ export default function MemberFilters({
   sortBy,
   onSortChange,
 }: MemberFiltersProps) {
+  const { t } = useTranslation();
   const [roleOpen, setRoleOpen] = useState(false);
   const roleRef = useRef<HTMLDivElement>(null);
 
@@ -39,7 +42,7 @@ export default function MemberFilters({
           <i className="ri-search-line absolute left-4 top-1/2 -translate-y-1/2 text-foreground-400 text-sm"></i>
           <input
             type="text"
-            placeholder="Search members by name, username, or bio..."
+            placeholder={t("public.memberSearch")}
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
             className="w-full pl-10 pr-4 py-3 bg-background-50 border border-background-200/70 rounded-xl text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-300 transition-colors"
@@ -48,8 +51,8 @@ export default function MemberFilters({
         {/* Sort */}
         <div className="flex items-center bg-background-100 rounded-full p-1 gap-0.5 shrink-0 overflow-x-auto scrollbar-hide">
           {[
-            { value: "posts", label: "Most Posts", icon: "ri-chat-3-line" },
-            { value: "newest", label: "Newest", icon: "ri-calendar-line" },
+            { value: "posts", label: t("public.mostPosts"), icon: "ri-chat-3-line" },
+            { value: "newest", label: t("public.newest"), icon: "ri-calendar-line" },
           ].map((opt) => (
             <button
               key={opt.value}

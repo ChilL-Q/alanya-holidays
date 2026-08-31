@@ -57,4 +57,4 @@ jobs:
 
       - name: Run E2E Smoke Tests
         working-directory: frontend
-        run: pnpm exec playwright test e2e/auth.spec.ts e2e/booking.spec.ts e2e/checkout.spec.ts --config=playwright.config.ts --project=chromium
+        run: pnpm exec playwright test e2e/home.spec.ts e2e/navigation.spec.ts e2e/auth.spec.ts e2e/checkout.spec.ts e2e/enquiry.spec.ts --config=playwright.config.ts --project=chromium

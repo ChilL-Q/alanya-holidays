@@ -1,3 +1,6 @@
+import { useTranslation } from "react-i18next";
+import "@/i18n";
+
 export interface VideoEmbedProps {
   src: string;
   provider?: "youtube" | "vimeo" | "html5";
@@ -47,12 +50,13 @@ export default function VideoEmbed({
   trackLang = "en",
   className = "",
 }: VideoEmbedProps) {
+  const { t } = useTranslation();
   if (!src || typeof src !== "string" || !src.trim() || !isValidHttpOrPathUrl(src.trim())) {
     return (
       <div
         className={`p-6 text-center text-sm text-foreground-500 dark:text-foreground-400 bg-background-100 dark:bg-background-800/60 rounded-2xl border border-dashed border-background-300 dark:border-background-700 my-6 ${className}`}
       >
-        <p className="font-medium">Video unavailable</p>
+        <p className="font-medium">{t("public.videoUnavailable")}</p>
         {caption && <p className="text-xs text-foreground-400 mt-1">{caption}</p>}
       </div>
     );
@@ -75,7 +79,7 @@ export default function VideoEmbed({
         <div
           className={`p-6 text-center text-sm text-foreground-500 dark:text-foreground-400 bg-background-100 dark:bg-background-800/60 rounded-2xl border border-dashed border-background-300 dark:border-background-700 my-6 ${className}`}
         >
-          <p className="font-medium">Video unavailable</p>
+          <p className="font-medium">{t("public.videoUnavailable")}</p>
           {caption && <p className="text-xs text-foreground-400 mt-1">{caption}</p>}
         </div>
       );
@@ -113,7 +117,7 @@ export default function VideoEmbed({
         <div
           className={`p-6 text-center text-sm text-foreground-500 dark:text-foreground-400 bg-background-100 dark:bg-background-800/60 rounded-2xl border border-dashed border-background-300 dark:border-background-700 my-6 ${className}`}
         >
-          <p className="font-medium">Video unavailable</p>
+          <p className="font-medium">{t("public.videoUnavailable")}</p>
           {caption && <p className="text-xs text-foreground-400 mt-1">{caption}</p>}
         </div>
       );
@@ -172,7 +176,7 @@ export default function VideoEmbed({
                 default
               />
             )}
-            Your browser does not support the video tag.
+            {t("public.videoUnsupported")}
           </video>
         </div>
         {caption && (
@@ -189,7 +193,7 @@ export default function VideoEmbed({
     <div
       className={`p-6 text-center text-sm text-foreground-500 dark:text-foreground-400 bg-background-100 dark:bg-background-800/60 rounded-2xl border border-dashed border-background-300 dark:border-background-700 my-6 ${className}`}
     >
-      <p className="font-medium">Video unavailable</p>
+      <p className="font-medium">{t("public.videoUnavailable")}</p>
       {caption && <p className="text-xs text-foreground-400 mt-1">{caption}</p>}
     </div>
   );

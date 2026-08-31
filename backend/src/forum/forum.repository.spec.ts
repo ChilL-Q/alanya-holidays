@@ -18,6 +18,7 @@ describe('ForumRepository', () => {
       update: jest.fn().mockReturnThis(),
       delete: jest.fn().mockReturnThis(),
       eq: jest.fn().mockReturnThis(),
+      or: jest.fn().mockReturnThis(),
       in: jest.fn().mockReturnThis(),
       gte: jest.fn().mockReturnThis(),
       ilike: jest.fn().mockReturnThis(),
@@ -26,6 +27,10 @@ describe('ForumRepository', () => {
       range: jest.fn().mockReturnThis(),
       match: jest.fn().mockReturnThis(),
       single: jest.fn().mockResolvedValue({
+        data: result.data ?? null,
+        error: result.error ?? null,
+      }),
+      maybeSingle: jest.fn().mockResolvedValue({
         data: result.data ?? null,
         error: result.error ?? null,
       }),
@@ -436,10 +441,60 @@ describe('ForumRepository', () => {
       expect(inserted.id).toBe('e-1');
 
       const updated = await repository.updateEvent('e-1', { title: 'Updated' });
-      expect(updated.id).toBe('e-1');
+      expect(updated?.id).toBe('e-1');
 
-      mockClient.from.mockReturnValue(createQueryChain({ data: null }));
-      await repository.deleteEvent('e-1');
+      mockClient.from.mockReturnValue(
+        createQueryChain({ data: { id: 'e-1' } }),
+      );
+      await expect(repository.deleteEvent('e-1')).resolves.toBe(true);
+    });
+
+    it('atomically scopes merchant event mutations to an owned draft', async () => {
+      const updateChain = createQueryChain({
+        data: { id: 'e-1', is_published: false },
+      });
+      mockClient.from.mockReturnValueOnce(updateChain);
+
+      await repository.updateEvent(
+        'e-1',
+        { title: 'Draft edit' },
+        'merchant-1',
+      );
+
+      expect(updateChain.eq).toHaveBeenCalledWith('is_published', false);
+      expect(updateChain.or).toHaveBeenCalledWith(
+        'host_id.eq.merchant-1,created_by.eq.merchant-1',
+      );
+
+      const deleteChain = createQueryChain({ data: { id: 'e-1' } });
+      mockClient.from.mockReturnValueOnce(deleteChain);
+      await expect(repository.deleteEvent('e-1', 'merchant-1')).resolves.toBe(
+        true,
+      );
+      expect(deleteChain.eq).toHaveBeenCalledWith('is_published', false);
+      expect(deleteChain.or).toHaveBeenCalledWith(
+        'host_id.eq.merchant-1,created_by.eq.merchant-1',
+      );
+    });
+
+    it('scopes the merchant event list by owner without excluding published rows', async () => {
+      const listChain = createQueryChain({
+        data: [
+          { id: 'draft-own', is_published: false },
+          { id: 'published-own', is_published: true },
+        ],
+      });
+      mockClient.from.mockReturnValueOnce(listChain);
+
+      await repository.getEvents(
+        { ownerId: 'merchant-1', includeUnpublished: true },
+        '*',
+      );
+
+      expect(listChain.or).toHaveBeenCalledWith(
+        'host_id.eq.merchant-1,created_by.eq.merchant-1',
+      );
+      expect(listChain.eq).not.toHaveBeenCalledWith('is_published', false);
     });
   });
 

@@ -5,6 +5,7 @@ import {
   ForbiddenException,
   NotFoundException,
   BadRequestException,
+  ConflictException,
   Optional,
 } from '@nestjs/common';
 import { BlogRepository } from './blog.repository';
@@ -25,6 +26,7 @@ import {
   SubmissionCreatedResponse,
   SuccessResponse,
   UpdateBlogPostPayload,
+  UpdateBlogSubmissionPayload,
 } from './types/blog.types';
 import {
   CreateBlogCommentDto,
@@ -34,6 +36,7 @@ import {
   GetBlogQueryDto,
   GetBlogSubmissionsQueryDto,
   UpdateBlogPostDto,
+  UpdateBlogSubmissionDto,
 } from './dto';
 
 const generateExcerpt = (
@@ -184,6 +187,7 @@ export class BlogService {
       category: data.category || null,
       status: data.status || 'draft',
       is_featured: data.is_featured && role === 'admin' ? true : false,
+      content_type: data.content_type || 'blog',
       published_at: publishedAt,
     });
 
@@ -250,6 +254,9 @@ export class BlogService {
     }
     if (updates.is_featured !== undefined && role === 'admin') {
       safe.is_featured = updates.is_featured;
+    }
+    if (updates.content_type !== undefined) {
+      safe.content_type = updates.content_type;
     }
 
     const post = await this.blogRepository.updateBlogPost(id, safe);
@@ -422,6 +429,7 @@ export class BlogService {
       tag_ids: data.tags || [],
       status: 'pending_review',
       payment_details: data.payment_details || null,
+      content_type: data.content_type || 'blog',
     });
 
     return { submissionId: submission.id };
@@ -448,6 +456,98 @@ export class BlogService {
       query.limit ?? 20,
       query.offset ?? 0,
     );
+  }
+
+  async getUserBlogPosts(
+    query: GetBlogQueryDto,
+    userId: string,
+  ): Promise<BlogPostsListResult> {
+    return this.getBlogPosts({ ...query, authorId: userId }, userId);
+  }
+
+  private async checkSubmissionOwnership(
+    submissionId: string,
+    userId: string,
+  ): Promise<{ submission: BlogSubmission; role: string | undefined }> {
+    const submission =
+      await this.blogRepository.getBlogSubmissionById(submissionId);
+    if (!submission) throw new NotFoundException('Submission not found');
+    const role = await this.userRolesRepo.getRole(userId);
+    if (submission.user_id !== userId && role !== 'admin') {
+      // Deliberately hide another user's submission existence.
+      throw new NotFoundException('Submission not found');
+    }
+    return { submission, role };
+  }
+
+  async updateUserBlogSubmission(
+    submissionId: string,
+    updates: UpdateBlogSubmissionDto,
+    userId: string,
+  ): Promise<BlogSubmission> {
+    const { submission, role } = await this.checkSubmissionOwnership(
+      submissionId,
+      userId,
+    );
+    if (!['pending_review', 'rejected'].includes(submission.status)) {
+      throw new ForbiddenException(
+        'Approved submissions can no longer be edited',
+      );
+    }
+
+    const safe: UpdateBlogSubmissionPayload = {};
+    if (updates.title !== undefined) safe.title = updates.title.trim();
+    if (updates.content !== undefined)
+      safe.content = sanitizeHtml(updates.content);
+    if (updates.author_name !== undefined)
+      safe.author_name = updates.author_name.trim();
+    if (updates.author_email !== undefined)
+      safe.author_email = updates.author_email;
+    if (updates.category !== undefined) safe.category = updates.category.trim();
+    if (updates.video_url !== undefined)
+      safe.video_url = updates.video_url || null;
+    if (updates.media_urls !== undefined) safe.media_urls = updates.media_urls;
+    if (updates.tags !== undefined) safe.tag_ids = updates.tags;
+
+    const updated = await this.blogRepository.updateBlogSubmission(
+      submissionId,
+      safe,
+      role === 'admin' ? submission.user_id : userId,
+    );
+    if (!updated) {
+      throw new ConflictException(
+        'Submission status changed; reload and try again',
+      );
+    }
+    return updated;
+  }
+
+  async resubmitUserBlogSubmission(
+    submissionId: string,
+    userId: string,
+  ): Promise<BlogSubmission> {
+    const { submission } = await this.checkSubmissionOwnership(
+      submissionId,
+      userId,
+    );
+    if (submission.status !== 'rejected') {
+      throw new BadRequestException(
+        'Only rejected submissions can be resubmitted',
+      );
+    }
+
+    const updatedRows = await this.blogRepository.updateBlogSubmissionStatus(
+      submissionId,
+      'pending_review',
+      'rejected',
+      { rejection_reason: null },
+    );
+    if (!updatedRows || updatedRows.length === 0) {
+      throw new BadRequestException(
+        'Submission status changed; reload and try again',
+      );
+    }
+    return { ...submission, status: 'pending_review', rejection_reason: null };
   }
 
   async approveBlogSubmission(
@@ -486,6 +586,7 @@ export class BlogService {
         author_id: submission.user_id,
         status: 'published',
         is_featured: false,
+        content_type: submission.content_type || 'blog',
         published_at: new Date().toISOString(),
       });
 

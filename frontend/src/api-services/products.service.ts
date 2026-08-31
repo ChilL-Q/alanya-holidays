@@ -262,20 +262,15 @@ class ProductsService {
    * Dispatches GET /products/mine via apiClient.
    */
   async getMyProducts(options?: RequestOptions): Promise<SellerProduct[]> {
-    try {
-      const response = await apiClient.get<SellerProduct[] | { data: SellerProduct[] }>(
-        "/products/mine",
-        options
-      );
-      if (Array.isArray(response)) return response;
-      if (response && typeof response === "object" && "data" in response && Array.isArray(response.data)) {
-        return response.data;
-      }
-      return [];
-    } catch (err: unknown) {
-      logger.warn("Failed to fetch my products from API:", err);
-      return [];
+    const response = await apiClient.get<SellerProduct[] | { data: SellerProduct[] }>(
+      "/products/mine",
+      options
+    );
+    if (Array.isArray(response)) return response;
+    if (response && typeof response === "object" && "data" in response && Array.isArray(response.data)) {
+      return response.data;
     }
+    return [];
   }
 
   /**
@@ -292,6 +287,10 @@ class ProductsService {
    */
   async updateMyProduct(id: number, updates: SellerProductDraft): Promise<SellerProduct> {
     return apiClient.patch<SellerProduct>(`/products/mine/${id}`, updates);
+  }
+
+  async deleteMyProduct(id: number): Promise<{ success: boolean }> {
+    return apiClient.delete<{ success: boolean }>(`/products/mine/${id}`);
   }
 }
 

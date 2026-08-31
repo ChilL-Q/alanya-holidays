@@ -8,7 +8,7 @@ export default defineConfig({
   workers: process.env.CI ? 2 : undefined,
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: 'http://127.0.0.1:3000',
     trace: 'on-first-retry',
   },
   projects: [
@@ -18,6 +18,6 @@ export default defineConfig({
     },
   ],
   webServer: process.env.CI
-    ? { command: 'npm run build && npm run preview -- --port 3000', url: 'http://localhost:3000', reuseExistingServer: false }
-    : { command: 'npm run dev', url: 'http://localhost:3000', reuseExistingServer: true },
+    ? { command: 'npm run build && npm run preview -- --host 127.0.0.1 --port 3000', url: 'http://127.0.0.1:3000', reuseExistingServer: false }
+    : { command: 'npm run dev -- --host 127.0.0.1', url: 'http://127.0.0.1:3000', reuseExistingServer: true },
 });

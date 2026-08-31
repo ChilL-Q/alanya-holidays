@@ -9,5 +9,6 @@ import { BusinessApplicationsService } from './business-applications.service';
   imports: [AuthModule, SupabaseModule],
   controllers: [BusinessApplicationsController],
   providers: [BusinessApplicationsService, BusinessApplicationsRepository],
+  exports: [BusinessApplicationsService],
 })
 export class BusinessApplicationsModule {}

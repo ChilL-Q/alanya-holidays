@@ -219,6 +219,7 @@ export function mapBackendListingToBusiness(
     is_claimed: Boolean(item.claimed_at),
     is_verified: item.is_verified,
     claimed_at: item.claimed_at ?? undefined,
+    can_claim: item.can_claim === true,
     tier: item.tier,
     trustBadge: item.tier === "signature" ? "Signature Collection" : undefined,
   };

@@ -9,6 +9,8 @@ import { blogService, type BlogTag } from "@/api-services/blog.service";
 import { logger } from "@/lib/logger";
 import { ApiError } from "@/lib/api-client";
 import { deleteBlogImage, uploadBlogImage } from "@/api-services/storage.service";
+import { useTranslation } from "react-i18next";
+import i18n from "@/i18n";
 
 const MAX_COVER_SIZE = 5 * 1024 * 1024;
 const ALLOWED_COVER_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -17,24 +19,25 @@ type FieldErrors = Partial<Record<"title" | "content" | "videoUrl", string>>;
 
 const getSubmissionErrorMessage = (error: unknown): string => {
   if (!(error instanceof ApiError)) {
-    return "Failed to submit post. Please try again later.";
+    return i18n.t("blogSubmit.errorGeneric");
   }
   if (error.status === 401) {
-    return "Your session has expired. Please sign in again.";
+    return i18n.t("blogSubmit.errorSession");
   }
   if (error.status === 429) {
-    return "You have submitted too many posts. Please try again later.";
+    return i18n.t("blogSubmit.errorRate");
   }
   if (error.status === 400 || error.status === 422) {
-    return "Some fields are invalid. Please review your post and try again.";
+    return i18n.t("blogSubmit.errorFields");
   }
   if (error.status === 0 || error.status >= 500) {
-    return "The server is currently unavailable. Please try again later.";
+    return i18n.t("blogSubmit.errorServer");
   }
-  return "Failed to submit post. Please try again later.";
+  return i18n.t("blogSubmit.errorGeneric");
 };
 
 export default function BlogSubmitPage() {
+  const { t } = useTranslation();
   const { isAuthenticated, loading: authLoading, user } = useAuth();
   const navigate = useNavigate();
 
@@ -83,12 +86,12 @@ export default function BlogSubmitPage() {
     if (!file) return;
     if (!ALLOWED_COVER_TYPES.has(file.type)) {
       setCoverFile(null);
-      setCoverError("Please choose a JPG, PNG, or WebP image.");
+      setCoverError(t("blogSubmit.coverTypeError"));
       return;
     }
     if (file.size > MAX_COVER_SIZE) {
       setCoverFile(null);
-      setCoverError("Cover image must be 5 MB or smaller.");
+      setCoverError(t("blogSubmit.coverSizeError"));
       return;
     }
 
@@ -153,23 +156,23 @@ export default function BlogSubmitPage() {
     const trimmedContent = content.trim();
     const trimmedVideoUrl = videoUrl.trim();
 
-    if (!trimmedTitle) nextFieldErrors.title = "Please enter a post title.";
+    if (!trimmedTitle) nextFieldErrors.title = t("blogSubmit.titleRequired");
     else if (trimmedTitle.length > 150)
-      nextFieldErrors.title = "Post title must be 150 characters or fewer.";
+      nextFieldErrors.title = t("blogSubmit.titleTooLong");
 
     if (trimmedContent.length < 10)
-      nextFieldErrors.content = "Content must be at least 10 characters.";
+      nextFieldErrors.content = t("blogSubmit.contentTooShort");
     else if (trimmedContent.length > 100000)
-      nextFieldErrors.content = "Content must be 100,000 characters or fewer.";
+      nextFieldErrors.content = t("blogSubmit.contentTooLong");
 
     if (trimmedVideoUrl) {
       try {
         const parsedUrl = new URL(trimmedVideoUrl);
         if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
-          nextFieldErrors.videoUrl = "Please enter a valid HTTP or HTTPS URL.";
+          nextFieldErrors.videoUrl = t("blogSubmit.invalidUrl");
         }
       } catch {
-        nextFieldErrors.videoUrl = "Please enter a valid HTTP or HTTPS URL.";
+        nextFieldErrors.videoUrl = t("blogSubmit.invalidUrl");
       }
     }
 
@@ -212,7 +215,7 @@ export default function BlogSubmitPage() {
         failureStage === "upload"
           ? error instanceof ApiError && error.status === 401
             ? getSubmissionErrorMessage(error)
-            : "Cover image upload failed. Please try again or remove the image."
+            : t("blogSubmit.coverUploadFailed")
           : getSubmissionErrorMessage(error)
       );
     } finally {
@@ -245,17 +248,17 @@ export default function BlogSubmitPage() {
               to="/"
               className="text-foreground-500 hover:text-foreground-700 text-sm transition-colors underline underline-offset-2"
             >
-              Home
+              {t("nav.home")}
             </Link>
             <i className="ri-arrow-right-s-line text-foreground-400 text-sm"></i>
             <Link
               to="/blog"
               className="text-foreground-500 hover:text-foreground-700 text-sm transition-colors underline underline-offset-2"
             >
-              Blog
+              {t("public.blog")}
             </Link>
             <i className="ri-arrow-right-s-line text-foreground-400 text-sm"></i>
-            <span className="text-foreground-900 text-sm font-medium">Submit Post</span>
+            <span className="text-foreground-900 text-sm font-medium">{t("blogSubmit.submitPost")}</span>
           </div>
 
           {submittedSuccess ? (
@@ -264,17 +267,17 @@ export default function BlogSubmitPage() {
                 <i className="ri-checkbox-circle-line"></i>
               </div>
               <h2 className="font-heading text-2xl text-foreground-900 mb-2">
-                Post Submitted for Review!
+                {t("blogSubmit.submittedTitle")}
               </h2>
               <p className="text-sm text-foreground-600 max-w-md mx-auto leading-relaxed mb-6">
-                Thank you for contributing! Our editorial team will review your post and publish it to the blog shortly.
+                {t("blogSubmit.submittedDescription")}
               </p>
               <div className="flex items-center justify-center gap-3">
                 <Link
                   to="/blog"
                   className="px-6 py-2.5 rounded-full bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium transition-colors"
                 >
-                  Back to Blog
+                  {t("blogSubmit.backToBlog")}
                 </Link>
                 <button
                   onClick={() => {
@@ -291,7 +294,7 @@ export default function BlogSubmitPage() {
                   }}
                   className="px-6 py-2.5 rounded-full border border-foreground-200 hover:bg-background-100 text-foreground-700 text-sm font-medium transition-colors cursor-pointer"
                 >
-                  Submit Another
+                  {t("blogSubmit.submitAnother")}
                 </button>
               </div>
             </div>
@@ -305,10 +308,10 @@ export default function BlogSubmitPage() {
                   </div>
                   <div>
                     <h1 className="font-heading text-lg md:text-xl text-foreground-900">
-                      Submit Blog Post
+                      {t("blogSubmit.title")}
                     </h1>
                     <p className="text-xs text-foreground-500">
-                      Share your Alanya stories, tips, and experiences with the community.
+                      {t("blogSubmit.description")}
                     </p>
                   </div>
                 </div>
@@ -329,7 +332,7 @@ export default function BlogSubmitPage() {
                       htmlFor="blog-post-title"
                       className="block text-xs font-semibold text-foreground-700 uppercase tracking-wider mb-1.5"
                     >
-                      Post Title <span className="text-rose-500">*</span>
+                      {t("blogSubmit.postTitle")} <span className="text-rose-500">*</span>
                     </label>
                     <input
                       id="blog-post-title"
@@ -341,7 +344,7 @@ export default function BlogSubmitPage() {
                         setTitle(e.target.value);
                         setFieldErrors((prev) => ({ ...prev, title: undefined }));
                       }}
-                      placeholder="e.g., Hidden Gems in Alanya Old Town"
+                      placeholder={t("blogSubmit.titlePlaceholder")}
                       className="w-full px-4 py-2.5 rounded-xl border border-background-300 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-sm text-foreground-900 bg-white placeholder:text-foreground-400 transition-all"
                     />
                     {fieldErrors.title && (
@@ -356,7 +359,7 @@ export default function BlogSubmitPage() {
                       htmlFor="blog-category"
                       className="block text-xs font-semibold text-foreground-700 uppercase tracking-wider mb-1.5"
                     >
-                      Category
+                      {t("public.category")}
                     </label>
                     <select
                       id="blog-category"
@@ -374,7 +377,7 @@ export default function BlogSubmitPage() {
 
                   <fieldset>
                     <legend className="block text-xs font-semibold text-foreground-700 uppercase tracking-wider mb-1.5">
-                      Tags <span className="font-normal normal-case text-foreground-400">(up to 5)</span>
+                      {t("public.tags")} <span className="font-normal normal-case text-foreground-400">({t("blogSubmit.upToFive")})</span>
                     </legend>
                     {tags.length > 0 ? (
                       <div className="flex flex-wrap gap-2">
@@ -409,7 +412,7 @@ export default function BlogSubmitPage() {
                         })}
                       </div>
                     ) : (
-                      <p className="text-xs text-foreground-400">No tags are available.</p>
+                      <p className="text-xs text-foreground-400">{t("blogSubmit.noTags")}</p>
                     )}
                   </fieldset>
 
@@ -419,11 +422,11 @@ export default function BlogSubmitPage() {
                         htmlFor="blog-post-content"
                         className="block text-xs font-semibold text-foreground-700 uppercase tracking-wider"
                       >
-                        Content <span className="text-rose-500">*</span>
+                        {t("blogSubmit.content")} <span className="text-rose-500">*</span>
                       </label>
                       <div
                         className="inline-flex rounded-lg border border-background-300 bg-background-50 p-0.5"
-                        aria-label="Content editor mode"
+                        aria-label={t("blogSubmit.editorMode")}
                       >
                         <button
                           type="button"
@@ -435,7 +438,7 @@ export default function BlogSubmitPage() {
                               : "text-foreground-500 hover:text-foreground-800"
                           }`}
                         >
-                          Write
+                          {t("blogSubmit.write")}
                         </button>
                         <button
                           type="button"
@@ -447,7 +450,7 @@ export default function BlogSubmitPage() {
                               : "text-foreground-500 hover:text-foreground-800"
                           }`}
                         >
-                          Preview
+                          {t("blogSubmit.preview")}
                         </button>
                       </div>
                     </div>
@@ -455,13 +458,13 @@ export default function BlogSubmitPage() {
                       <div>
                         <div
                           className="flex flex-wrap items-center gap-1 rounded-t-xl border border-b-0 border-background-300 bg-background-50 p-2"
-                          aria-label="Markdown formatting"
+                          aria-label={t("blogSubmit.markdownFormatting")}
                         >
                           <button
                             type="button"
                             onClick={() => prefixSelectedLines("## ")}
-                            aria-label="Heading 2"
-                            title="Heading 2"
+                            aria-label={t("blogSubmit.headingTwo")}
+                            title={t("blogSubmit.headingTwo")}
                             className="rounded px-2 py-1 text-xs font-semibold text-foreground-600 hover:bg-white hover:text-foreground-900"
                           >
                             H2
@@ -469,8 +472,8 @@ export default function BlogSubmitPage() {
                           <button
                             type="button"
                             onClick={() => prefixSelectedLines("### ")}
-                            aria-label="Heading 3"
-                            title="Heading 3"
+                            aria-label={t("blogSubmit.headingThree")}
+                            title={t("blogSubmit.headingThree")}
                             className="rounded px-2 py-1 text-xs font-semibold text-foreground-600 hover:bg-white hover:text-foreground-900"
                           >
                             H3
@@ -479,8 +482,8 @@ export default function BlogSubmitPage() {
                           <button
                             type="button"
                             onClick={() => replaceContentSelection("**", "**", "bold text")}
-                            aria-label="Bold"
-                            title="Bold"
+                            aria-label={t("blogSubmit.bold")}
+                            title={t("blogSubmit.bold")}
                             className="rounded px-2 py-1 text-xs font-bold text-foreground-600 hover:bg-white hover:text-foreground-900"
                           >
                             B
@@ -488,8 +491,8 @@ export default function BlogSubmitPage() {
                           <button
                             type="button"
                             onClick={() => replaceContentSelection("*", "*", "italic text")}
-                            aria-label="Italic"
-                            title="Italic"
+                            aria-label={t("blogSubmit.italic")}
+                            title={t("blogSubmit.italic")}
                             className="rounded px-2 py-1 text-xs italic text-foreground-600 hover:bg-white hover:text-foreground-900"
                           >
                             I
@@ -499,8 +502,8 @@ export default function BlogSubmitPage() {
                             onClick={() =>
                               replaceContentSelection("[", "](https://example.com)", "link text")
                             }
-                            aria-label="Link"
-                            title="Link"
+                            aria-label={t("blogSubmit.link")}
+                            title={t("blogSubmit.link")}
                             className="rounded px-2 py-1 text-xs text-foreground-600 hover:bg-white hover:text-foreground-900"
                           >
                             <i className="ri-link" />
@@ -509,8 +512,8 @@ export default function BlogSubmitPage() {
                           <button
                             type="button"
                             onClick={() => prefixSelectedLines("- ")}
-                            aria-label="Bulleted list"
-                            title="Bulleted list"
+                            aria-label={t("blogSubmit.bulletedList")}
+                            title={t("blogSubmit.bulletedList")}
                             className="rounded px-2 py-1 text-xs text-foreground-600 hover:bg-white hover:text-foreground-900"
                           >
                             <i className="ri-list-unordered" />
@@ -518,8 +521,8 @@ export default function BlogSubmitPage() {
                           <button
                             type="button"
                             onClick={() => prefixSelectedLines("1. ")}
-                            aria-label="Numbered list"
-                            title="Numbered list"
+                            aria-label={t("blogSubmit.numberedList")}
+                            title={t("blogSubmit.numberedList")}
                             className="rounded px-2 py-1 text-xs text-foreground-600 hover:bg-white hover:text-foreground-900"
                           >
                             <i className="ri-list-ordered-2" />
@@ -536,7 +539,7 @@ export default function BlogSubmitPage() {
                           setContent(e.target.value);
                           setFieldErrors((prev) => ({ ...prev, content: undefined }));
                         }}
-                        placeholder="Write your blog post content here. Share your experiences, tips, and recommendations..."
+                        placeholder={t("blogSubmit.contentPlaceholder")}
                           className="w-full px-4 py-2.5 rounded-b-xl border border-background-300 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-sm text-foreground-900 bg-white placeholder:text-foreground-400 transition-all resize-y"
                         />
                       </div>
@@ -545,7 +548,7 @@ export default function BlogSubmitPage() {
                         {content.trim() ? (
                           <ArticleContentRenderer content={content} />
                         ) : (
-                          <p className="text-sm text-foreground-400">Nothing to preview yet.</p>
+                          <p className="text-sm text-foreground-400">{t("blogSubmit.nothingToPreview")}</p>
                         )}
                       </div>
                     )}
@@ -558,13 +561,13 @@ export default function BlogSubmitPage() {
 
                   <div>
                     <label className="block text-xs font-semibold text-foreground-700 uppercase tracking-wider mb-1.5">
-                      Cover Image
+                      {t("public.coverImage")}
                     </label>
                     <input
                       id="blog-cover-image"
                       type="file"
                       accept="image/jpeg,image/png,image/webp"
-                      aria-label="Cover image"
+                      aria-label={t("blogSubmit.coverAriaLabel")}
                       className="sr-only"
                       onChange={(event) => selectCoverFile(event.target.files?.[0])}
                     />
@@ -572,7 +575,7 @@ export default function BlogSubmitPage() {
                       <div className="relative overflow-hidden rounded-xl border border-background-300">
                         <img
                           src={coverPreviewUrl}
-                          alt="Cover preview"
+                          alt={t("public.coverPreview")}
                           className="h-48 w-full object-cover"
                         />
                         <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-3 bg-foreground-950/70 px-4 py-3 text-white">
@@ -582,7 +585,7 @@ export default function BlogSubmitPage() {
                             onClick={clearCoverFile}
                             className="text-xs font-medium hover:text-primary-200"
                           >
-                            Remove
+                            {t("public.remove")}
                           </button>
                         </div>
                       </div>
@@ -592,8 +595,8 @@ export default function BlogSubmitPage() {
                         className="flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-background-300 px-4 py-6 text-center transition-colors hover:border-primary-400 hover:bg-primary-50/40"
                       >
                         <i className="ri-image-add-line mb-2 text-2xl text-primary-500"></i>
-                        <span className="text-sm font-medium text-foreground-700">Choose cover image</span>
-                        <span className="mt-1 text-xs text-foreground-400">JPG, PNG or WebP · max 5 MB</span>
+                        <span className="text-sm font-medium text-foreground-700">{t("blogSubmit.chooseCover")}</span>
+                        <span className="mt-1 text-xs text-foreground-400">{t("blogSubmit.coverLimit")}</span>
                       </label>
                     )}
                     {coverError && <p className="mt-1.5 text-xs text-rose-600">{coverError}</p>}
@@ -604,7 +607,7 @@ export default function BlogSubmitPage() {
                       htmlFor="blog-video-url"
                       className="block text-xs font-semibold text-foreground-700 uppercase tracking-wider mb-1.5"
                     >
-                      Video URL (Optional)
+                      {t("blogSubmit.videoUrl")}
                     </label>
                     <input
                       id="blog-video-url"
@@ -616,7 +619,7 @@ export default function BlogSubmitPage() {
                         setVideoUrl(e.target.value);
                         setFieldErrors((prev) => ({ ...prev, videoUrl: undefined }));
                       }}
-                      placeholder="https://youtube.com/watch?v=..."
+                      placeholder={t("blogSubmit.videoPlaceholder")}
                       className="w-full px-4 py-2.5 rounded-xl border border-background-300 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-sm text-foreground-900 bg-white placeholder:text-foreground-400 transition-all"
                     />
                     {fieldErrors.videoUrl && (
@@ -631,7 +634,7 @@ export default function BlogSubmitPage() {
                       to="/blog"
                       className="px-5 py-2.5 rounded-full border border-background-300 hover:bg-background-100 text-foreground-700 text-sm font-medium transition-colors"
                     >
-                      Cancel
+                      {t("public.cancel")}
                     </Link>
                     <button
                       type="submit"
@@ -641,12 +644,12 @@ export default function BlogSubmitPage() {
                       {isSubmitting ? (
                         <>
                           <i className="ri-loader-4-line animate-spin text-base"></i>
-                          <span>Submitting...</span>
+                          <span>{t("blogSubmit.submitting")}</span>
                         </>
                       ) : (
                         <>
                           <i className="ri-send-plane-fill text-base"></i>
-                          <span>Submit Post</span>
+                          <span>{t("blogSubmit.submitPost")}</span>
                         </>
                       )}
                     </button>

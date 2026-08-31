@@ -11,8 +11,11 @@ import ViewToggle from "./components/ViewToggle";
 import MapView from "./components/MapView";
 import HostEventModal from "./components/HostEventModal";
 import { useEventsPage } from "./useEventsPage";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export default function EventsPage() {
+  const { t, i18n } = useTranslation();
   const { isAdmin } = useAuth();
   const {
     events,
@@ -186,10 +189,10 @@ export default function EventsPage() {
                 <div className="mb-10">
                   <div className="flex items-center gap-2 mb-2">
                     <i className="ri-bookmark-fill text-primary-500"></i>
-                    <span className="text-sm font-semibold text-primary-500 uppercase tracking-wider">Your Saved Events</span>
+                    <span className="text-sm font-semibold text-primary-500 uppercase tracking-wider">{t("events.savedEvents")}</span>
                     <span className="text-xs text-foreground-400 ml-1">{savedEvents.size}</span>
                   </div>
-                  <h2 className="font-heading text-2xl md:text-3xl text-foreground-900 mb-5">Your Saved Events</h2>
+                  <h2 className="font-heading text-2xl md:text-3xl text-foreground-900 mb-5">{t("events.savedEvents")}</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
                     {savedVisibleEvents.map((event) => (
                       <EventCard
@@ -211,9 +214,9 @@ export default function EventsPage() {
                 <div className="mb-10">
                   <div className="flex items-center gap-2 mb-2">
                     <i className="ri-star-fill text-primary-500"></i>
-                    <span className="text-sm font-semibold text-primary-500 uppercase tracking-wider">Featured</span>
+                    <span className="text-sm font-semibold text-primary-500 uppercase tracking-wider">{t("events.featured")}</span>
                   </div>
-                  <h2 className="font-heading text-2xl md:text-3xl text-foreground-900 mb-5">Don't Miss These</h2>
+                  <h2 className="font-heading text-2xl md:text-3xl text-foreground-900 mb-5">{t("events.dontMiss")}</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
                     {featuredEvents.map((event) => (
                       <EventCard
@@ -235,29 +238,29 @@ export default function EventsPage() {
                 {!hasActiveFilters && (
                   <div className="flex items-center gap-2 mb-2">
                     <i className="ri-calendar-check-line text-accent-500"></i>
-                    <span className="text-sm font-semibold text-accent-500 uppercase tracking-wider">All Upcoming</span>
+                    <span className="text-sm font-semibold text-accent-500 uppercase tracking-wider">{t("events.allUpcoming")}</span>
                   </div>
                 )}
                 <h2 className="font-heading text-2xl md:text-3xl text-foreground-900 mb-5">
                   {selectedDate
-                    ? `Events on ${new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", {
+                    ? t("events.onDate", { date: new Date(selectedDate + "T00:00:00").toLocaleDateString(i18n.language, {
                         month: "long",
                         day: "numeric",
-                      })}`
+                      }) })
                     : activeCategory
                       ? activeCategory
                       : showFeatured
-                        ? "Featured Events"
+                        ? t("events.featuredEvents")
                         : showSavedOnly
-                          ? "Your Saved Events"
+                          ? t("events.savedEvents")
                           : searchQuery.trim()
-                            ? `Search results for "${searchQuery.trim()}"`
-                            : "Upcoming Events"}
+                            ? t("events.searchResults", { query: searchQuery.trim() })
+                            : t("events.upcomingEvents")}
                 </h2>
 
                 {fetchError ? (
                   <ErrorState
-                    title="Unable to load events"
+                    title={t("events.loadError")}
                     message={fetchError}
                     onRetry={loadEvents}
                   />
@@ -296,24 +299,24 @@ export default function EventsPage() {
                     </div>
                     <h3 className="font-heading text-lg text-foreground-900 mb-2">
                       {searchQuery.trim()
-                        ? `No events match "${searchQuery.trim()}"`
+                        ? t("events.noMatch", { query: searchQuery.trim() })
                         : showSavedOnly
-                          ? "No saved events yet"
-                          : "No events found"}
+                          ? t("events.noSaved")
+                          : t("events.noEvents")}
                     </h3>
                     <p className="text-foreground-500 text-sm mb-6">
                       {searchQuery.trim()
-                        ? "Try searching with different keywords or clear the search to see all events."
+                        ? t("events.searchHint")
                         : showSavedOnly
-                          ? "Bookmark events you're interested in and they'll show up here. Browse the list and click the bookmark icon to save them."
-                          : "No events match your current filters. Try adjusting or clearing them."}
+                          ? t("events.savedHint")
+                          : t("events.filterHint")}
                     </p>
                     <button
                       onClick={clearAllFilters}
                       className="inline-flex items-center gap-2 px-4 py-2 bg-background-100 text-foreground-700 rounded-full text-sm font-medium hover:bg-background-200 transition-colors cursor-pointer"
                     >
                       <i className="ri-refresh-line"></i>
-                      Reset Filters
+                      {t("public.resetFilters")}
                     </button>
                   </div>
                 )}
@@ -324,17 +327,16 @@ export default function EventsPage() {
           {isAdmin && (
             <div className="mt-16 bg-gradient-to-r from-accent-500 to-accent-600 rounded-2xl p-8 md:p-10 text-center">
               <h2 className="font-heading text-2xl md:text-3xl text-white mb-3">
-                Want to host your own event?
+                {t("events.hostPrompt")}
               </h2>
               <p className="text-white/80 text-sm md:text-base max-w-lg mx-auto mb-6">
-                Whether it is a beach cleanup, hiking trip, or coffee meetup — our community loves
-                showing up. Create your event and we will help spread the word.
+                {t("events.hostDescription")}
               </p>
               <button
                 onClick={() => setShowHostModal(true)}
                 className="inline-flex items-center gap-2 px-6 py-3 bg-white text-accent-600 rounded-full text-sm font-semibold hover:bg-white/95 transition-colors cursor-pointer"
               >
-                Create an Event
+                {t("events.createEvent")}
                 <i className="ri-arrow-right-line"></i>
               </button>
             </div>

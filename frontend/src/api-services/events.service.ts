@@ -19,6 +19,10 @@ export interface ForumEvent {
   isFeatured: boolean;
   slug?: string;
   going_by_me?: boolean;
+  eventDate?: string;
+  hostId?: string | null;
+  createdBy?: string | null;
+  isPublished?: boolean;
 }
 
 export const eventCategories = [
@@ -40,7 +44,6 @@ export interface GetEventsOptions extends RequestOptions {
 
 export interface CreateEventPayload {
   title: string;
-  category?: string;
   categoryId?: string;
   category_id?: string;
   eventDate?: string;
@@ -98,17 +101,6 @@ const MONTH_NAMES = [
   "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
   "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
 ];
-
-function toCategoryIdentifier(category?: string | null): string | null {
-  if (!category) return null;
-  const trimmed = category.trim();
-  if (!trimmed) return null;
-
-  return trimmed
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "") || null;
-}
 
 export function formatEventDateParts(dateStr?: string | null): {
   date: string;
@@ -199,6 +191,10 @@ export function mapBackendEventToForumEvent(event: BackendForumEvent): ForumEven
     isFeatured: !!event.is_featured,
     slug: event.slug,
     going_by_me: !!event.going_by_me,
+    eventDate: event.event_date,
+    hostId: event.host_id || null,
+    createdBy: event.created_by || null,
+    isPublished: event.is_published !== false,
   };
 }
 
@@ -276,12 +272,50 @@ export class EventsService {
       category_id:
         payload.category_id ||
         payload.categoryId ||
-        toCategoryIdentifier(payload.category) ||
         null,
       is_published: payload.is_published ?? true,
     });
 
     return mapBackendEventToForumEvent(response);
+  }
+
+  async getMyEvents(options?: RequestOptions): Promise<ForumEvent[]> {
+    const data = options
+      ? await apiClient.get<BackendForumEvent[]>("/forum/events/mine", options)
+      : await apiClient.get<BackendForumEvent[]>("/forum/events/mine");
+    return Array.isArray(data) ? data.map(mapBackendEventToForumEvent) : [];
+  }
+
+  async updateEvent(
+    eventId: string,
+    payload: Partial<CreateEventPayload>
+  ): Promise<ForumEvent> {
+    const response = await apiClient.put<BackendForumEvent>(
+      `/forum/events/${eventId}`,
+      {
+        ...(payload.title !== undefined ? { title: payload.title } : {}),
+        ...(payload.description !== undefined
+          ? { description: payload.description || null }
+          : {}),
+        ...(payload.location !== undefined
+          ? { location: payload.location || null }
+          : {}),
+        ...(payload.event_date !== undefined
+          ? { event_date: payload.event_date }
+          : {}),
+        ...(payload.image_url !== undefined
+          ? { image_url: payload.image_url || null }
+          : {}),
+        ...(payload.is_published !== undefined
+          ? { is_published: payload.is_published }
+          : {}),
+      }
+    );
+    return mapBackendEventToForumEvent(response);
+  }
+
+  async deleteEvent(eventId: string): Promise<{ success: boolean }> {
+    return apiClient.delete<{ success: boolean }>(`/forum/events/${eventId}`);
   }
 
   /**
@@ -321,6 +355,10 @@ export const getEvents = (options?: GetEventsOptions) => eventsService.getEvents
 export const getEventBySlug = (slug: string, options?: RequestOptions) =>
   eventsService.getEventBySlug(slug, options);
 export const createEvent = (payload: CreateEventPayload) => eventsService.createEvent(payload);
+export const getMyEvents = (options?: RequestOptions) => eventsService.getMyEvents(options);
+export const updateEvent = (eventId: string, payload: Partial<CreateEventPayload>) =>
+  eventsService.updateEvent(eventId, payload);
+export const deleteEvent = (eventId: string) => eventsService.deleteEvent(eventId);
 export const toggleRsvp = (eventId: string, contactPhone?: string) => eventsService.toggleRsvp(eventId, contactPhone);
 export const getAttendees = (eventId: string, options?: RequestOptions) =>
   eventsService.getAttendees(eventId, options);

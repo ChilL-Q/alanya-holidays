@@ -3,7 +3,6 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "@/hooks/useCart";
 import { useAuth } from "@/context/AuthContext";
 import CartDrawer from "@/components/feature/CartDrawer";
-import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import {
   getNotifications,
   markAsRead,
@@ -15,6 +14,9 @@ import {
   type NotificationType,
 } from "@/api-services/notifications.service";
 import { logger } from "@/lib/logger";
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "@/components/common/LanguageSwitcher";
+import "@/i18n";
 
 interface NavDropdown {
   label: string;
@@ -61,6 +63,20 @@ const DARK_HERO_ROUTES = [
   "/checkout",
 ];
 
+const NAV_LABEL_KEYS: Record<string, string> = {
+  Home: "nav.home",
+  Discover: "nav.discover",
+  Explore: "nav.explore",
+  "Travel Guides": "nav.travelGuides",
+  Blog: "nav.blog",
+  Community: "nav.community",
+  "Community Hub": "nav.communityHub",
+  Categories: "nav.categories",
+  Events: "nav.events",
+  Shop: "nav.shop",
+  "Shop Marketplace": "nav.shopMarketplace",
+};
+
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -79,8 +95,14 @@ export default function Navbar() {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const { totalItems } = useCart();
   const { user, profile, signOut, isAuthenticated } = useAuth();
+
+  const navLabel = (label: string) => {
+    const key = NAV_LABEL_KEYS[label];
+    return key ? t(key, label) : label;
+  };
 
   const isDarkHeroPage =
     DARK_HERO_ROUTES.includes(location.pathname) ||
@@ -326,7 +348,7 @@ export default function Navbar() {
           }`}
           onClick={() => setOpenDesktopDropdown(isOpen ? null : label)}
         >
-          {label}
+          {navLabel(label)}
           <i className={`ri-arrow-down-s-line text-xs transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}></i>
         </button>
 
@@ -351,7 +373,7 @@ export default function Navbar() {
                     }`}>
                       <i className={`${item.icon} text-sm ${active ? "text-primary-600" : "text-foreground-500"}`}></i>
                     </span>
-                    {item.label}
+                    {navLabel(item.label)}
                   </Link>
                 );
               })}
@@ -378,7 +400,7 @@ export default function Navbar() {
             isParentActive ? "text-primary-600 font-semibold" : "text-foreground-700"
           }`}
         >
-          <span>{label}</span>
+          <span>{navLabel(label)}</span>
           <i className={`ri-arrow-down-s-line transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}></i>
         </button>
         {isOpen && (
@@ -399,7 +421,7 @@ export default function Navbar() {
                   <i className={`${item.icon} w-4 h-4 flex items-center justify-center text-sm ${
                     active ? "text-primary-500" : "text-foreground-400"
                   }`}></i>
-                  {item.label}
+                  {navLabel(item.label)}
                 </Link>
               );
             })}
@@ -471,7 +493,7 @@ export default function Navbar() {
                         : "text-white/90 hover:text-white"
                   }`}
                 >
-                  {link.label}
+                  {navLabel(link.label)}
                 </Link>
               );
             })}
@@ -479,6 +501,7 @@ export default function Navbar() {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
+            <LanguageSwitcher isSolidNav={isSolidNav} compact />
             <Link
               to="/search"
               className={`w-9 h-9 flex items-center justify-center rounded-full transition-all cursor-pointer ${
@@ -486,8 +509,8 @@ export default function Navbar() {
                   ? "bg-background-100 text-foreground-600 hover:bg-background-200"
                    : "bg-white/25 backdrop-blur-sm text-white hover:bg-white/35"
               }`}
-              aria-label="Search"
-              title="Search"
+              aria-label={t("nav.search", "Search")}
+              title={t("nav.search", "Search")}
             >
               <i className="ri-search-line text-lg"></i>
             </Link>
@@ -507,8 +530,8 @@ export default function Navbar() {
                     ? "bg-background-100 text-foreground-600 hover:bg-background-200"
                     : "bg-white/25 backdrop-blur-sm text-white hover:bg-white/35"
                 }`}
-                aria-label="Notifications"
-                title="Notifications"
+                aria-label={t("nav.notifications", "Notifications")}
+                title={t("nav.notifications", "Notifications")}
               >
                 <i className="ri-notification-3-line text-lg"></i>
                 {unreadCount > 0 && (
@@ -523,10 +546,10 @@ export default function Navbar() {
                   {/* Dropdown Header */}
                   <div className="flex items-center justify-between px-4 py-3 border-b border-background-200/80 bg-background-100/50">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-semibold text-foreground-900">Notifications</h3>
+                      <h3 className="text-sm font-semibold text-foreground-900">{t("nav.notifications", "Notifications")}</h3>
                       {unreadCount > 0 && (
                         <span className="px-1.5 py-0.5 text-[11px] font-semibold rounded-full bg-primary-100 text-primary-700 dark:bg-primary-950 dark:text-primary-300">
-                          {unreadCount} new
+                          {t("nav.newNotifications", { count: unreadCount })}
                         </span>
                       )}
                     </div>
@@ -536,7 +559,7 @@ export default function Navbar() {
                         className="text-xs font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 flex items-center gap-1 cursor-pointer transition-colors"
                       >
                         <i className="ri-check-double-line text-sm"></i>
-                        Mark all as read
+                        {t("nav.markAllRead")}
                       </button>
                     )}
                   </div>
@@ -548,8 +571,8 @@ export default function Navbar() {
                         <div className="w-12 h-12 mx-auto mb-2 flex items-center justify-center rounded-full bg-background-100 text-foreground-400">
                           <i className="ri-notification-off-line text-xl"></i>
                         </div>
-                        <p className="text-sm font-medium text-foreground-700">No notifications yet</p>
-                        <p className="text-xs text-foreground-400 mt-0.5">We'll alert you when important updates happen.</p>
+                        <p className="text-sm font-medium text-foreground-700">{t("nav.noNotifications", "No notifications yet")}</p>
+                        <p className="text-xs text-foreground-400 mt-0.5">{t("nav.notificationsHint", "We'll alert you when important updates happen.")}</p>
                       </div>
                     ) : (
                       notifications.map((notif) => {
@@ -596,8 +619,8 @@ export default function Navbar() {
                               )}
                               <button
                                 onClick={(e) => handleDeleteNotification(e, notif.id)}
-                                aria-label="Dismiss notification"
-                                title="Dismiss"
+                                aria-label={t("nav.dismissNotification", "Dismiss notification")}
+                                title={t("nav.dismissNotification", "Dismiss notification")}
                                 className="opacity-0 group-hover:opacity-100 p-1 text-foreground-400 hover:text-foreground-700 rounded-md transition-opacity"
                               >
                                 <i className="ri-close-line text-sm"></i>
@@ -619,8 +642,8 @@ export default function Navbar() {
                   ? "bg-background-100 text-foreground-600 hover:bg-background-200"
                    : "bg-white/25 backdrop-blur-sm text-white hover:bg-white/35"
               }`}
-              aria-label="Cart"
-              title="Cart"
+              aria-label={t("nav.cart", "Cart")}
+              title={t("nav.cart", "Cart")}
             >
               <i className="ri-shopping-cart-line text-lg"></i>
               {totalItems > 0 && (
@@ -629,9 +652,6 @@ export default function Navbar() {
                 </span>
               )}
             </button>
-
-            {/* Language Switcher */}
-            <LanguageSwitcher isSolidNav={isSolidNav} compact={false} />
 
             <Link
               to="/new-thread"
@@ -642,7 +662,7 @@ export default function Navbar() {
               }`}
             >
               <i className="ri-edit-line"></i>
-              New Thread
+              {t("nav.newThread")}
             </Link>
 
             {isAuthenticated && user ? (
@@ -657,7 +677,7 @@ export default function Navbar() {
                        : "bg-white/25 backdrop-blur-sm text-white border border-white/30 hover:bg-white/35"
                   }`}
                   title={displayName}
-                  aria-label="User menu"
+                  aria-label={t("nav.userMenu", "User menu")}
                 >
                   {avatarUrl ? (
                     <img
@@ -683,7 +703,7 @@ export default function Navbar() {
                         className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground-700 hover:bg-background-100 transition-colors cursor-pointer"
                       >
                         <i className="ri-user-settings-line w-4 h-4 flex items-center justify-center text-foreground-400"></i>
-                        My Profile & Settings
+                        {t("nav.myProfile")}
                       </Link>
                       <Link
                         to="/settings?tab=activity"
@@ -691,7 +711,7 @@ export default function Navbar() {
                         className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground-700 hover:bg-background-100 transition-colors cursor-pointer"
                       >
                         <i className="ri-bookmark-line w-4 h-4 flex items-center justify-center text-foreground-400"></i>
-                        Favorites & Activity
+                        {t("nav.favorites")}
                       </Link>
                       <Link
                         to="/business/dashboard"
@@ -699,15 +719,7 @@ export default function Navbar() {
                         className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground-700 hover:bg-background-100 transition-colors cursor-pointer"
                       >
                         <i className="ri-store-3-line w-4 h-4 flex items-center justify-center text-foreground-400"></i>
-                        Merchant Dashboard
-                      </Link>
-                      <Link
-                        to="/events"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground-700 hover:bg-background-100 transition-colors cursor-pointer"
-                      >
-                        <i className="ri-calendar-event-line w-4 h-4 flex items-center justify-center text-foreground-400"></i>
-                        Events & Activities
+                        {t("nav.merchantDashboard")}
                       </Link>
                       {profile?.role === "admin" && (
                         <Link
@@ -716,7 +728,7 @@ export default function Navbar() {
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground-700 hover:bg-background-100 transition-colors cursor-pointer"
                         >
                           <i className="ri-dashboard-line w-4 h-4 flex items-center justify-center text-foreground-400"></i>
-                          Admin Dashboard
+                          {t("nav.adminDashboard")}
                         </Link>
                       )}
                     </div>
@@ -726,7 +738,7 @@ export default function Navbar() {
                         className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-accent-700 hover:bg-accent-50 transition-colors cursor-pointer"
                       >
                         <i className="ri-logout-box-line w-4 h-4 flex items-center justify-center text-accent-600"></i>
-                        Sign Out
+                        {t("nav.signOut")}
                       </button>
                     </div>
                   </div>
@@ -742,13 +754,13 @@ export default function Navbar() {
                       : "text-white border border-white/30 hover:bg-white/10"
                   }`}
                 >
-                  Sign In
+                  {t("nav.signIn")}
                 </Link>
                 <Link
                   to="/register"
                   className="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap bg-primary-500 text-background-50 hover:bg-primary-600 transition-colors shadow-xs"
                 >
-                  Join Community
+                  {t("nav.joinCommunity")}
                 </Link>
               </>
             )}
@@ -756,13 +768,14 @@ export default function Navbar() {
 
           {/* Mobile Hamburger */}
           <div className="flex md:hidden items-center gap-2">
+            <LanguageSwitcher isSolidNav={isSolidNav} compact />
             <button
               aria-expanded={mobileOpen}
               aria-haspopup="true"
               aria-controls="mobile-navigation"
               className="w-10 h-10 flex items-center justify-center cursor-pointer"
               onClick={() => setMobileOpen(!mobileOpen)}
-              aria-label={mobileOpen ? "Close menu" : "Open menu"}
+              aria-label={mobileOpen ? t("nav.closeMenu") : t("nav.openMenu")}
             >
               <i
                 aria-hidden="true"
@@ -806,7 +819,7 @@ export default function Navbar() {
                   }`}
                   onClick={closeAllMobile}
                 >
-                  {link.label}
+                  {navLabel(link.label)}
                 </Link>
               );
             })}
@@ -817,7 +830,7 @@ export default function Navbar() {
                 onClick={closeAllMobile}
               >
                 <i className="ri-search-line mr-2 text-foreground-400"></i>
-                Search
+                {t("nav.search")}
               </Link>
               <button
                 aria-expanded={mobileNotificationsOpen}
@@ -827,10 +840,10 @@ export default function Navbar() {
               >
                 <div className="flex items-center">
                   <i className="ri-notification-3-line mr-2 text-foreground-400"></i>
-                  Notifications
+                  {t("nav.notifications")}
                   {unreadCount > 0 && (
                     <span className="ml-2 inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-primary-500 text-white text-[11px] font-semibold">
-                      {unreadCount} new
+                      {t("nav.newNotifications", { count: unreadCount })}
                     </span>
                   )}
                 </div>
@@ -845,12 +858,12 @@ export default function Navbar() {
                         className="text-xs font-medium text-primary-600 hover:text-primary-700 flex items-center gap-1 cursor-pointer"
                       >
                         <i className="ri-check-double-line text-xs"></i>
-                        Mark all read
+                        {t("nav.markAllRead")}
                       </button>
                     </div>
                   )}
                   {notifications.length === 0 ? (
-                    <p className="text-xs text-foreground-500 py-2 text-center">No notifications yet</p>
+                    <p className="text-xs text-foreground-500 py-2 text-center">{t("nav.noNotifications")}</p>
                   ) : (
                     notifications.map((notif) => {
                       const style = getNotificationIcon(notif.type);
@@ -884,9 +897,9 @@ export default function Navbar() {
                           </div>
                           <button
                             onClick={(e) => handleDeleteNotification(e, notif.id)}
-                            aria-label="Dismiss notification"
+                            aria-label={t("nav.dismissNotification", "Dismiss notification")}
                             className="p-1 text-foreground-400 hover:text-foreground-700 cursor-pointer shrink-0"
-                            title="Dismiss"
+                            title={t("nav.dismissNotification", "Dismiss notification")}
                           >
                             <i className="ri-close-line text-xs"></i>
                           </button>
@@ -901,21 +914,13 @@ export default function Navbar() {
                 onClick={() => { closeAllMobile(); setCartOpen(true); }}
               >
                 <i className="ri-shopping-cart-line mr-2 text-foreground-400"></i>
-                Cart
+                {t("nav.cart")}
                 {totalItems > 0 && (
                   <span className="ml-2 inline-flex items-center justify-center w-5 h-5 rounded-full bg-accent-500 text-background-50 text-[11px] font-semibold">
                     {totalItems}
                   </span>
                 )}
               </button>
-
-              <div className="py-2.5 flex items-center justify-between border-t border-background-200/40">
-                <span className="text-sm font-medium text-foreground-600 flex items-center">
-                  <i className="ri-global-line mr-2 text-foreground-400"></i>
-                  Language
-                </span>
-                <LanguageSwitcher isSolidNav={true} compact={false} />
-              </div>
             </div>
             <div className="pt-3 border-t border-background-200/50 flex flex-col gap-2">
               <Link
@@ -924,7 +929,7 @@ export default function Navbar() {
                 onClick={closeAllMobile}
               >
                 <i className="ri-edit-line mr-1.5"></i>
-                New Thread
+                {t("nav.newThread")}
               </Link>
 
               {isAuthenticated && user ? (
@@ -952,7 +957,7 @@ export default function Navbar() {
                     onClick={closeAllMobile}
                   >
                     <i className="ri-user-settings-line mr-1.5"></i>
-                    My Profile & Settings
+                    {t("nav.myProfile")}
                   </Link>
                   <Link
                     to="/settings?tab=activity"
@@ -960,7 +965,7 @@ export default function Navbar() {
                     onClick={closeAllMobile}
                   >
                     <i className="ri-bookmark-line mr-1.5"></i>
-                    Favorites & Activity
+                    {t("nav.favorites")}
                   </Link>
                   <Link
                     to="/business/dashboard"
@@ -968,7 +973,7 @@ export default function Navbar() {
                     onClick={closeAllMobile}
                   >
                     <i className="ri-store-3-line mr-1.5"></i>
-                    Merchant Dashboard
+                    {t("nav.merchantDashboard")}
                   </Link>
                   {profile?.role === "admin" && (
                     <Link
@@ -977,7 +982,7 @@ export default function Navbar() {
                       onClick={closeAllMobile}
                     >
                       <i className="ri-dashboard-line mr-1.5"></i>
-                      Admin Dashboard
+                      {t("nav.adminDashboard")}
                     </Link>
                   )}
                   <button
@@ -985,7 +990,7 @@ export default function Navbar() {
                     className="block w-full text-center text-sm font-medium py-2.5 rounded-full bg-accent-100 text-accent-800 cursor-pointer"
                   >
                     <i className="ri-logout-box-line mr-1.5"></i>
-                    Sign Out
+                    {t("nav.signOut")}
                   </button>
                 </>
               ) : (
@@ -995,14 +1000,14 @@ export default function Navbar() {
                     className="block text-center text-sm font-medium text-foreground-700 py-2.5 rounded-full border border-foreground-200"
                     onClick={closeAllMobile}
                   >
-                    Sign In
+                    {t("nav.signIn")}
                   </Link>
                   <Link
                     to="/register"
                     className="block text-center text-sm font-medium py-2.5 rounded-full bg-primary-500 text-background-50"
                     onClick={closeAllMobile}
                   >
-                    Join Community
+                    {t("nav.joinCommunity")}
                   </Link>
                 </>
               )}

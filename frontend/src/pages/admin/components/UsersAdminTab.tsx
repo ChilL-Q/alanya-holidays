@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { adminService, type AdminUserItem } from "@/api-services/admin.service";
 import { logger } from "@/lib/logger";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 const ROLE_FILTERS = ["all", "user", "host", "admin"] as const;
 
@@ -13,6 +15,7 @@ const ROLE_BADGES: Record<string, string> = {
 const PAGE_SIZE = 20;
 
 const UsersAdminTab: React.FC = () => {
+  const { t } = useTranslation();
   const [roleFilter, setRoleFilter] = useState<(typeof ROLE_FILTERS)[number]>("all");
   const [users, setUsers] = useState<AdminUserItem[]>([]);
   const [page, setPage] = useState(1);
@@ -71,10 +74,10 @@ const UsersAdminTab: React.FC = () => {
                 : "bg-white dark:bg-slate-900 text-secondary-600 dark:text-slate-400 border-secondary-200 dark:border-slate-700 hover:border-accent-300"
             }`}
           >
-            {r}
+            {t(`admin.roleFilter.${r}`)}
           </button>
         ))}
-        <span className="ml-auto text-xs text-secondary-400">{totals.total} users</span>
+        <span className="ml-auto text-xs text-secondary-400">{t("admin.userCount", { count: totals.total })}</span>
       </div>
 
       {loading ? (
@@ -87,7 +90,7 @@ const UsersAdminTab: React.FC = () => {
         </div>
       ) : users.length === 0 ? (
         <div className="p-10 text-center rounded-2xl bg-white dark:bg-slate-900 border border-secondary-200/80 dark:border-slate-800 text-sm text-secondary-500 dark:text-slate-400">
-          No users found for this filter.
+          {t("admin.noUsers")}
         </div>
       ) : (
         <div className="space-y-3">
@@ -110,7 +113,7 @@ const UsersAdminTab: React.FC = () => {
                   )}
                   <div className="min-w-0">
                     <h3 className="font-bold text-sm text-secondary-900 dark:text-white truncate">
-                      {user.full_name || "Unnamed User"}
+                      {user.full_name || t("admin.unnamedUser")}
                       {user.company_name && (
                         <span className="ml-2 text-xs font-normal text-secondary-500 dark:text-slate-400">
                           · {user.company_name}
@@ -126,7 +129,7 @@ const UsersAdminTab: React.FC = () => {
                     {role}
                   </span>
                   <label className="flex items-center gap-1.5 text-xs text-secondary-500 dark:text-slate-400">
-                    <span className="sr-only">Change role</span>
+                    <span className="sr-only">{t("admin.changeRole")}</span>
                     <select
                       value={role}
                       disabled={isActing}
@@ -157,10 +160,10 @@ const UsersAdminTab: React.FC = () => {
             onClick={() => setPage((p) => p - 1)}
             className="px-4 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-slate-900 border border-secondary-200 dark:border-slate-700 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed text-secondary-700 dark:text-slate-300"
           >
-            ← Prev
+            {t("admin.previous")}
           </button>
           <span className="text-xs text-secondary-500 dark:text-slate-400">
-            Page {page} of {totals.totalPages}
+            {t("admin.pageOf", { page, total: totals.totalPages })}
           </span>
           <button
             type="button"
@@ -168,7 +171,7 @@ const UsersAdminTab: React.FC = () => {
             onClick={() => setPage((p) => p + 1)}
             className="px-4 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-slate-900 border border-secondary-200 dark:border-slate-700 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed text-secondary-700 dark:text-slate-300"
           >
-            Next →
+            {t("admin.next")}
           </button>
         </div>
       )}

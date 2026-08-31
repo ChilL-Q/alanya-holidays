@@ -8,8 +8,11 @@ import LoadingSpinner from "@/components/base/LoadingSpinner";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
 import PageHeroImage from "@/components/base/PageHeroImage";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export default function CategoriesPage() {
+  const { t } = useTranslation();
   const [categoriesList, setCategoriesList] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,10 +62,10 @@ export default function CategoriesPage() {
                 to="/"
                 className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2"
               >
-                Home
+                {t("nav.home", "Home")}
               </Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <span className="text-white/90 text-sm">Categories</span>
+              <span className="text-white/90 text-sm">{t("public.categories", "Categories")}</span>
             </div>
 
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -72,12 +75,11 @@ export default function CategoriesPage() {
                     <i className="ri-stack-line text-white text-xl md:text-2xl"></i>
                   </div>
                   <h1 className="font-heading text-3xl md:text-4xl text-white">
-                    Explore All Categories
+                    {t("public.exploreCategories", "Explore All Categories")}
                   </h1>
                 </div>
                 <p className="text-white/70 text-sm md:text-base max-w-xl">
-                  From travel planning to local culture — find your community and
-                  start the conversation.
+                  {t("public.categoryDescription", "From travel planning to local culture — find your community and start the conversation.")}
                 </p>
               </div>
 
@@ -87,7 +89,7 @@ export default function CategoriesPage() {
                   <p className="text-white text-lg md:text-xl font-semibold">
                     {categoriesList.length}
                   </p>
-                  <p className="text-white/50 text-xs">Categories</p>
+                  <p className="text-white/50 text-xs">{t("public.categories", "Categories")}</p>
                 </div>
                 <div className="w-px h-8 bg-white/20"></div>
                 <div className="text-center">
@@ -96,7 +98,7 @@ export default function CategoriesPage() {
                       .reduce((sum, c) => sum + c.threadCount, 0)
                       .toLocaleString()}
                   </p>
-                  <p className="text-white/50 text-xs">Discussions</p>
+                  <p className="text-white/50 text-xs">{t("public.discussions", "Discussions")}</p>
                 </div>
                 <div className="w-px h-8 bg-white/20"></div>
                 <div className="text-center">
@@ -105,7 +107,7 @@ export default function CategoriesPage() {
                       .reduce((sum, c) => sum + c.memberCount, 0)
                       .toLocaleString()}
                   </p>
-                  <p className="text-white/50 text-xs">Members</p>
+                  <p className="text-white/50 text-xs">{t("public.members", "Members")}</p>
                 </div>
               </div>
             </div>
@@ -119,15 +121,14 @@ export default function CategoriesPage() {
             <div className="flex items-center gap-2 mb-2">
               <i className="ri-grid-line text-accent-500 text-lg"></i>
               <span className="text-sm font-semibold text-accent-500 uppercase tracking-wider">
-                {categoriesList.length} Categories
+                {categoriesList.length} {t("public.categories", "Categories")}
               </span>
             </div>
             <h2 className="font-heading text-2xl md:text-3xl text-foreground-900 mb-2">
-              Find Your Community
+              {t("public.findCommunity", "Find Your Community")}
             </h2>
             <p className="text-foreground-500 text-sm md:text-base max-w-xl">
-              Each category has dedicated sub-topics, expert local knowledge, and
-              an active community ready to help.
+              {t("public.communityDescription", "Each category has dedicated sub-topics, expert local knowledge, and an active community ready to help.")}
             </p>
           </div>
 

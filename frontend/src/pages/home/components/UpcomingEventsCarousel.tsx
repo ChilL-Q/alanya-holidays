@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { eventsService, type ForumEvent } from "@/api-services/events.service";
-
-const TODAY_WINDOW_START = new Date("2026-06-05");
-const TODAY_WINDOW_END = new Date("2026-06-12");
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export default function UpcomingEventsCarousel() {
+  const { t } = useTranslation();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [allEvents, setAllEvents] = useState<ForumEvent[]>(() => eventsService.getEventsSync());
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -22,10 +22,15 @@ export default function UpcomingEventsCarousel() {
   }, []);
 
   const thisWeekEvents = useMemo(() => {
+    const windowStart = new Date();
+    windowStart.setHours(0, 0, 0, 0);
+    const windowEnd = new Date(windowStart);
+    windowEnd.setDate(windowEnd.getDate() + 7);
+
     return allEvents
       .filter((e) => {
         const eventDate = new Date(e.date + "T00:00:00");
-        return eventDate >= TODAY_WINDOW_START && eventDate < TODAY_WINDOW_END;
+        return eventDate >= windowStart && eventDate < windowEnd;
       })
       .sort((a, b) => new Date(a.date + "T00:00:00").getTime() - new Date(b.date + "T00:00:00").getTime());
   }, [allEvents]);
@@ -81,7 +86,7 @@ export default function UpcomingEventsCarousel() {
         <div className="flex items-center gap-2">
           <i className="ri-calendar-event-line text-white/80 text-lg"></i>
           <h3 className="font-heading text-white text-lg">
-            This Week&apos;s Events
+            {t("home.thisWeeksEvents", "This Week's Events")}
           </h3>
           <span className="text-white/50 text-xs px-2 py-0.5 rounded-full bg-white/10">
             {thisWeekEvents.length}
@@ -91,7 +96,7 @@ export default function UpcomingEventsCarousel() {
           to="/events"
           className="inline-flex items-center gap-1 text-white/70 text-sm hover:text-white transition-colors cursor-pointer whitespace-nowrap"
         >
-          View All
+          {t("home.viewAll", "View All")}
           <i className="ri-arrow-right-line"></i>
         </Link>
       </div>
@@ -103,7 +108,7 @@ export default function UpcomingEventsCarousel() {
           <button
             onClick={() => scroll("left")}
             className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors cursor-pointer backdrop-blur-sm"
-            aria-label="Scroll left"
+            aria-label={t("home.scrollLeft", "Scroll left")}
           >
             <i className="ri-arrow-left-s-line text-lg"></i>
           </button>
@@ -114,7 +119,7 @@ export default function UpcomingEventsCarousel() {
           <button
             onClick={() => scroll("right")}
             className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors cursor-pointer backdrop-blur-sm"
-            aria-label="Scroll right"
+            aria-label={t("home.scrollRight", "Scroll right")}
           >
             <i className="ri-arrow-right-s-line text-lg"></i>
           </button>
@@ -172,13 +177,13 @@ export default function UpcomingEventsCarousel() {
                   <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/10">
                     <span className="flex items-center gap-1 text-[11px] text-white/50">
                       <i className="ri-user-line text-xs"></i>
-                      {event.attendees} going
+                      {event.attendees} {t("home.going", "going")}
                     </span>
                     {event.attendees >= event.maxAttendees ? (
-                      <span className="text-[10px] text-white/40 font-medium">Full</span>
+                      <span className="text-[10px] text-white/40 font-medium">{t("home.full", "Full")}</span>
                     ) : (
                       <span className="text-[10px] text-green-400 font-medium">
-                        {event.maxAttendees - event.attendees} spots
+                        {event.maxAttendees - event.attendees} {t("home.spots", "spots")}
                       </span>
                     )}
                   </div>
@@ -195,9 +200,9 @@ export default function UpcomingEventsCarousel() {
             <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-3 group-hover:bg-white/20 transition-colors">
               <i className="ri-calendar-2-line text-white text-xl"></i>
             </div>
-            <p className="text-white/80 text-sm font-medium mb-1">Browse All Events</p>
+            <p className="text-white/80 text-sm font-medium mb-1">{t("home.browseAllEvents", "Browse All Events")}</p>
             <p className="text-white/40 text-xs">
-              {allEvents.length} upcoming
+              {allEvents.length} {t("home.upcoming", "upcoming")}
             </p>
           </Link>
         </div>

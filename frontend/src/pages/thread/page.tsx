@@ -10,8 +10,11 @@ import ReplyInput from "./components/ReplyInput";
 import AuthorSidebar from "./components/AuthorSidebar";
 import ErrorState from "@/components/base/ErrorState";
 import { logger } from "@/lib/logger";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export default function ThreadPage() {
+  const { t } = useTranslation();
   const { threadId } = useParams<{ threadId: string }>();
 
   const [thread, setThread] = useState<ThreadDetail | null>(null);
@@ -41,11 +44,11 @@ export default function ThreadPage() {
         setThread(null);
       }
     } catch {
-      setFetchError("Unable to load discussion. Please check your connection and try again.");
+      setFetchError(t("public.threadLoadError"));
     } finally {
       setIsLoading(false);
     }
-  }, [threadId]);
+  }, [t, threadId]);
 
   useEffect(() => {
     loadThread();
@@ -73,7 +76,7 @@ export default function ThreadPage() {
         <Navbar />
         <div className="flex-1 flex flex-col items-center justify-center p-8">
           <ErrorState
-            title="Failed to load thread"
+            title={t("public.threadLoadTitle")}
             message={fetchError}
             onRetry={loadThread}
           />
@@ -92,16 +95,16 @@ export default function ThreadPage() {
             <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center bg-background-100 rounded-full">
               <i className="ri-chat-off-line text-2xl text-foreground-300"></i>
             </div>
-            <h2 className="font-heading text-xl text-foreground-900 mb-2">Thread not found</h2>
+            <h2 className="font-heading text-xl text-foreground-900 mb-2">{t("public.threadNotFound")}</h2>
             <p className="text-sm text-foreground-500 mb-6">
-              This discussion might have been moved or deleted.
+              {t("public.threadMissing")}
             </p>
             <Link
               to="/"
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary-500 text-background-50 text-sm font-medium hover:bg-primary-600 transition-colors"
             >
               <i className="ri-arrow-left-line"></i>
-              Back to Home
+              {t("public.backHome")}
             </Link>
           </div>
         </div>

@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useFavorites } from "@/hooks/useFavorites";
 import type { Business } from "@/api-services/directory.service";
 import TrustBadge from "@/components/common/TrustBadge";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export interface BusinessCardProps {
   business: Business;
@@ -30,6 +32,7 @@ export default function BusinessCard({
   maxReached = false,
 }: BusinessCardProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorited = isFavorite(business.id);
 
@@ -212,7 +215,7 @@ export default function BusinessCard({
           </a>
 
           {/* Claim Action Trigger */}
-          {onClaimClick && (
+          {onClaimClick && business.can_claim === true && (
             <button
               type="button"
               onClick={(e) => {
@@ -220,10 +223,10 @@ export default function BusinessCard({
                 onClaimClick(business);
               }}
               className="flex items-center justify-center gap-1 px-3 py-2 rounded-xl border border-accent-200 bg-accent-50 text-accent-700 text-xs sm:text-sm font-medium hover:bg-accent-100 hover:border-accent-300 transition-colors whitespace-nowrap cursor-pointer"
-              title="Claim this listing as owner"
+              title={t("public.claimListingTitle")}
             >
               <i className="ri-shield-user-fill text-sm text-accent-600" />
-              <span>Claim</span>
+              <span>{t("public.claim")}</span>
             </button>
           )}
 

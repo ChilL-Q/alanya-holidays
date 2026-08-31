@@ -8,8 +8,11 @@ import { useToast } from "@/hooks/useToast";
 import { Money } from "@/domain/money.vo";
 import { ordersService } from "@/api-services/orders.service";
 import { checkoutSchema } from "@/lib/validation/checkout.schemas";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export default function CheckoutPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { items, clearCart, totalItems, subtotalMoney } = useCart();
   const { showToast, ToastContainer } = useToast();
@@ -202,10 +205,10 @@ export default function CheckoutPage() {
               Shop
             </Link>
             <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-            <span className="text-white/90 text-sm">Checkout</span>
+            <span className="text-white/90 text-sm">{t("checkout.title")}</span>
           </div>
-          <h1 className="font-heading text-3xl md:text-4xl text-white mb-1">Checkout</h1>
-          <p className="text-white/70 text-sm md:text-base">Review your order and fill in the details to complete your purchase.</p>
+          <h1 className="font-heading text-3xl md:text-4xl text-white mb-1">{t("checkout.title")}</h1>
+          <p className="text-white/70 text-sm md:text-base">{t("checkout.description")}</p>
         </div>
       </section>
 
@@ -218,7 +221,7 @@ export default function CheckoutPage() {
               <div className="w-20 h-20 flex items-center justify-center rounded-full bg-green-100 mx-auto mb-6">
                 <i className="ri-check-line text-green-600 text-3xl"></i>
               </div>
-              <h2 className="font-heading text-2xl md:text-3xl text-foreground-900 mb-3">Order Confirmed!</h2>
+              <h2 className="font-heading text-2xl md:text-3xl text-foreground-900 mb-3">{t("checkout.orderConfirmed")}</h2>
               <p className="text-foreground-500 text-sm md:text-base max-w-md mx-auto mb-2">
                 Your order <strong>#{successOrderId}</strong> has been placed successfully.
               </p>
@@ -252,7 +255,7 @@ export default function CheckoutPage() {
                       <i className="ri-shopping-bag-3-line text-secondary-600 text-lg"></i>
                     </div>
                     <div>
-                      <h3 className="font-heading text-base text-foreground-900">Order Summary</h3>
+                      <h3 className="font-heading text-base text-foreground-900">{t("checkout.orderSummary")}</h3>
                       <p className="text-xs text-foreground-500">{totalItems} {totalItems === 1 ? "item" : "items"}</p>
                     </div>
                   </div>
@@ -289,15 +292,15 @@ export default function CheckoutPage() {
 
                   <div className="border-t border-background-200 pt-4 space-y-2">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-foreground-500">Subtotal</span>
+                      <span className="text-foreground-500">{t("checkout.subtotal")}</span>
                       <span className="text-foreground-900 font-medium">{computedSubtotalMoney.format()}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-foreground-400">Shipping</span>
-                      <span className="text-green-600 font-medium">Free</span>
+                      <span className="text-foreground-400">{t("checkout.shipping")}</span>
+                      <span className="text-green-600 font-medium">{t("checkout.free")}</span>
                     </div>
                     <div className="border-t border-background-200 pt-2 flex items-center justify-between">
-                      <span className="text-base font-semibold text-foreground-900">Total</span>
+                      <span className="text-base font-semibold text-foreground-900">{t("checkout.total")}</span>
                       <span className="text-lg font-bold text-primary-600">{computedSubtotalMoney.format()}</span>
                     </div>
                   </div>
@@ -320,8 +323,8 @@ export default function CheckoutPage() {
                       <i className="ri-gift-line text-accent-600 text-lg"></i>
                     </div>
                     <div>
-                      <h3 className="font-heading text-lg text-foreground-900">Gift Details</h3>
-                      <p className="text-xs text-foreground-500">Tell us who this gift is for and we'll handle the rest.</p>
+                      <h3 className="font-heading text-lg text-foreground-900">{t("checkout.giftDetails")}</h3>
+                      <p className="text-xs text-foreground-500">{t("checkout.giftDetailsDescription")}</p>
                     </div>
                   </div>
 
@@ -351,7 +354,7 @@ export default function CheckoutPage() {
                         <div className="w-7 h-7 flex items-center justify-center rounded-full bg-accent-500 text-background-50 dark:text-foreground-950">
                           <i className="ri-user-heart-line text-xs"></i>
                         </div>
-                        <span className="text-sm font-semibold text-foreground-800">Who is this gift for?</span>
+                        <span className="text-sm font-semibold text-foreground-800">{t("checkout.recipientQuestion")}</span>
                       </div>
 
                       <div className="space-y-4">
@@ -366,7 +369,7 @@ export default function CheckoutPage() {
                             required
                             value={recipientName}
                             onChange={(e) => setRecipientName(e.target.value)}
-                            placeholder="e.g. Ayşe Yılmaz"
+                            placeholder={t("checkout.recipientPlaceholder")}
                             className="w-full px-4 py-2.5 rounded-xl border border-background-300 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-accent-400 focus:ring-2 focus:ring-accent-100 transition-colors"
                           />
                         </div>
@@ -382,10 +385,10 @@ export default function CheckoutPage() {
                             required
                             value={recipientEmail}
                             onChange={(e) => setRecipientEmail(e.target.value)}
-                            placeholder="ayse@example.com"
+                            placeholder={t("checkout.recipientEmailPlaceholder")}
                             className="w-full px-4 py-2.5 rounded-xl border border-background-300 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-accent-400 focus:ring-2 focus:ring-accent-100 transition-colors"
                           />
-                          <p className="text-xs text-foreground-400 mt-1">We'll send the gift card to this email address.</p>
+                          <p className="text-xs text-foreground-400 mt-1">{t("checkout.recipientEmailHelp")}</p>
                         </div>
 
                         <div>
@@ -399,10 +402,10 @@ export default function CheckoutPage() {
                             required
                             value={recipientPhone}
                             onChange={(e) => setRecipientPhone(e.target.value)}
-                            placeholder="+90 555 123 45 67"
+                            placeholder={t("checkout.phonePlaceholder")}
                             className="w-full px-4 py-2.5 rounded-xl border border-background-300 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-accent-400 focus:ring-2 focus:ring-accent-100 transition-colors"
                           />
-                          <p className="text-xs text-foreground-400 mt-1">Used if we need delivery or redemption coordination.</p>
+                          <p className="text-xs text-foreground-400 mt-1">{t("checkout.phoneHelp")}</p>
                         </div>
                       </div>
                     </div>
@@ -413,7 +416,7 @@ export default function CheckoutPage() {
                         <div className="w-7 h-7 flex items-center justify-center rounded-full bg-primary-500 text-background-50">
                           <i className="ri-user-line text-xs"></i>
                         </div>
-                        <span className="text-sm font-semibold text-foreground-800">Your Details</span>
+                        <span className="text-sm font-semibold text-foreground-800">{t("checkout.yourDetails")}</span>
                       </div>
 
                       <div className="space-y-4">
@@ -428,7 +431,7 @@ export default function CheckoutPage() {
                             required
                             value={senderName}
                             onChange={(e) => setSenderName(e.target.value)}
-                            placeholder="Your full name"
+                            placeholder={t("checkout.namePlaceholder")}
                             className="w-full px-4 py-2.5 rounded-xl border border-background-300 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-colors"
                           />
                         </div>
@@ -444,10 +447,10 @@ export default function CheckoutPage() {
                             required
                             value={senderEmail}
                             onChange={(e) => setSenderEmail(e.target.value)}
-                            placeholder="you@example.com"
+                            placeholder={t("auth.emailPlaceholder")}
                             className="w-full px-4 py-2.5 rounded-xl border border-background-300 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-colors"
                           />
-                          <p className="text-xs text-foreground-400 mt-1">We'll send your order confirmation here.</p>
+                          <p className="text-xs text-foreground-400 mt-1">{t("checkout.emailHelp")}</p>
                         </div>
                       </div>
                     </div>
@@ -455,7 +458,7 @@ export default function CheckoutPage() {
                     {/* Gift Message */}
                     <div>
                       <label htmlFor="gift-message" className="block text-sm font-medium text-foreground-700 mb-1.5">
-                        Gift Message <span className="text-foreground-400 font-normal">(optional)</span>
+                        {t("checkout.giftMessage")} <span className="text-foreground-400 font-normal">({t("public.optional")})</span>
                       </label>
                       <textarea
                         id="gift-message"
@@ -464,10 +467,10 @@ export default function CheckoutPage() {
                         maxLength={300}
                         value={giftMessage}
                         onChange={(e) => setGiftMessage(e.target.value)}
-                        placeholder="Happy Birthday! Enjoy your coffee on us..."
+                        placeholder={t("checkout.giftMessagePlaceholder")}
                         className="w-full px-4 py-2.5 rounded-xl border border-background-300 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-colors resize-none"
                       ></textarea>
-                      <p className="text-xs text-foreground-400 mt-1">Max 300 characters. Your message will be included with the gift card.</p>
+                      <p className="text-xs text-foreground-400 mt-1">{t("checkout.giftMessageHelp")}</p>
                     </div>
 
                     {/* Submit */}
@@ -491,8 +494,8 @@ export default function CheckoutPage() {
 
                     <p className="text-xs text-center text-foreground-400">
                       By placing this order you agree to our{" "}
-                      <Link to="/terms" className="underline hover:text-foreground-600">Terms</Link> and{" "}
-                      <Link to="/privacy" className="underline hover:text-foreground-600">Privacy Policy</Link>.
+                      <Link to="/terms" className="underline hover:text-foreground-600">{t("checkout.terms")}</Link> {t("checkout.and")} {" "}
+                      <Link to="/privacy" className="underline hover:text-foreground-600">{t("checkout.privacy")}</Link>.
                     </p>
                   </form>
                 </div>

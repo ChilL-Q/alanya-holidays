@@ -3,8 +3,10 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { loginSchema } from "@/lib/validation/auth.schemas";
 import PageHeroImage from "@/components/base/PageHeroImage";
+import { useTranslation } from "react-i18next";
 
 export default function LoginPage() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -83,14 +85,14 @@ export default function LoginPage() {
         <div className="absolute bottom-0 left-0 right-0 w-full px-4 md:px-8 lg:px-12 pb-8">
           <div className="flex items-center gap-2 mb-3">
             <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">
-              Home
+              {t("nav.home", "Home")}
             </Link>
             <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-            <span className="text-white/90 text-sm">Sign In</span>
+            <span className="text-white/90 text-sm">{t("nav.signIn", "Sign In")}</span>
           </div>
-          <h1 className="font-heading text-3xl md:text-4xl text-white">Welcome Back</h1>
+          <h1 className="font-heading text-3xl md:text-4xl text-white">{t("auth.welcomeBack", "Welcome Back")}</h1>
           <p className="text-white/65 text-sm md:text-base mt-1 max-w-md">
-            Sign in to continue your journey with the Alanya community
+            {t("auth.signInSubtitle", "Sign in to continue your journey with the Alanya community")}
           </p>
         </div>
       </section>
@@ -102,13 +104,13 @@ export default function LoginPage() {
           <div className="flex items-center justify-center mb-8">
             <div className="inline-flex items-center bg-background-100 rounded-full px-1 py-1">
               <span className="px-6 py-2 rounded-full text-sm font-medium bg-background-50 text-foreground-900 cursor-pointer">
-                Sign In
+                {t("nav.signIn", "Sign In")}
               </span>
               <Link
                 to="/register"
                 className="px-6 py-2 rounded-full text-sm font-medium text-foreground-500 hover:text-foreground-700 transition-colors cursor-pointer"
               >
-                Register
+                {t("nav.register", "Register")}
               </Link>
             </div>
           </div>
@@ -124,7 +126,7 @@ export default function LoginPage() {
             {/* Email */}
             <div>
               <label htmlFor="login-email" className="block text-sm font-medium text-foreground-700 mb-1.5">
-                Email address
+                {t("auth.email", "Email address")}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
@@ -136,7 +138,7 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
+                  placeholder={t("auth.emailPlaceholder", "you@example.com")}
                   className="w-full h-11 pl-10 pr-4 rounded-lg bg-background-50 border border-background-200 text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-all"
                 />
               </div>
@@ -146,13 +148,13 @@ export default function LoginPage() {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label htmlFor="login-password" className="block text-sm font-medium text-foreground-700">
-                  Password
+                  {t("auth.password", "Password")}
                 </label>
                 <Link
                   to="/forgot-password"
                   className="text-xs text-primary-500 hover:text-primary-600 transition-colors cursor-pointer"
                 >
-                  Forgot password?
+                  {t("auth.forgotPassword", "Forgot password?")}
                 </Link>
               </div>
               <div className="relative">
@@ -165,14 +167,14 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
+                  placeholder={t("auth.passwordPlaceholder", "Enter your password")}
                   className="w-full h-11 pl-10 pr-11 rounded-lg bg-background-50 border border-background-200 text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-all"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 flex items-center pr-3.5 cursor-pointer"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-label={showPassword ? t("auth.hidePassword", "Hide password") : t("auth.showPassword", "Show password")}
                 >
                   <i
                     className={`text-foreground-400 hover:text-foreground-600 text-sm transition-colors ${
@@ -191,7 +193,7 @@ export default function LoginPage() {
                 onChange={(e) => setRememberMe(e.target.checked)}
                 className="w-4 h-4 rounded border-foreground-300 text-primary-500 focus:ring-primary-300 cursor-pointer"
               />
-              <span className="text-sm text-foreground-600">Remember me</span>
+              <span className="text-sm text-foreground-600">{t("auth.rememberMe", "Remember me")}</span>
             </label>
 
             {/* Submit */}
@@ -203,10 +205,10 @@ export default function LoginPage() {
               {isSubmitting ? (
                 <>
                   <i className="ri-loader-4-line animate-spin text-sm"></i>
-                  Signing in...
+                  {t("auth.signingIn", "Signing in...")}
                 </>
               ) : (
-                "Sign In"
+                t("auth.signInBtn", "Sign In")
               )}
             </button>
           </form>
@@ -214,7 +216,7 @@ export default function LoginPage() {
           {/* Divider */}
           <div className="flex items-center gap-3 my-6">
             <div className="flex-1 h-px bg-background-200"></div>
-            <span className="text-xs text-foreground-400">or continue with</span>
+            <span className="text-xs text-foreground-400">{t("auth.orContinueWith", "or continue with")}</span>
             <div className="flex-1 h-px bg-background-200"></div>
           </div>
 
@@ -242,9 +244,9 @@ export default function LoginPage() {
 
           {/* Register Link */}
           <p className="text-center text-sm text-foreground-500 mt-6">
-            Don&apos;t have an account?{" "}
+            {t("auth.dontHaveAccount", "Don't have an account?")} {" "}
             <Link to="/register" className="text-primary-500 hover:text-primary-600 font-medium transition-colors">
-              Create one
+              {t("auth.createOne", "Create one")}
             </Link>
           </p>
         </div>

@@ -7,8 +7,11 @@ import RelatedExperiences from "@/components/feature/RelatedExperiences";
 import { conciergeService, excursionTypes, type PhotographyExcursion } from "@/api-services/concierge.service";
 import ErrorState from "@/components/base/ErrorState";
 import EmptyState from "@/components/base/EmptyState";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export default function PhotographyExcursionsPage() {
+  const { t } = useTranslation();
   const [photographyExcursions, setPhotographyExcursions] = useState<PhotographyExcursion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -28,11 +31,11 @@ export default function PhotographyExcursionsPage() {
       const data = await conciergeService.getPhotographyExcursions();
       setPhotographyExcursions(data);
     } catch {
-      setFetchError("Failed to load photography excursions. Please check your connection and try again.");
+    setFetchError(t("services.failedLoad", { item: t("services.excursions") }));
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     loadExcursions();
@@ -56,7 +59,7 @@ export default function PhotographyExcursionsPage() {
   }, [activeType, sortBy, photographyExcursions]);
 
   const sortLabelMap: Record<string, string> = {
-    "rating": "Top Rated", "price-low": "Price: Low to High", "price-high": "Price: High to Low", "duration": "Shortest First",
+    "rating": t("services.topRated"), "price-low": t("services.priceLow"), "price-high": t("services.priceHigh"), "duration": t("services.shortestFirst"),
   };
 
   const handleBookingSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -95,10 +98,10 @@ export default function PhotographyExcursionsPage() {
         setFormSuccess(true);
         form.reset();
       } else {
-        setFormError("Something went wrong. Please try again.");
+        setFormError(t("services.form.somethingWrong"));
       }
     } catch {
-      setFormError("Network error. Please check your connection and try again.");
+      setFormError(t("services.form.networkError"));
     } finally {
       setFormSubmitting(false);
     }
@@ -116,15 +119,15 @@ export default function PhotographyExcursionsPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-foreground-950/40 via-foreground-950/15 to-foreground-950/65"></div>
           <div className="absolute bottom-0 left-0 right-0 w-full px-4 md:px-8 lg:px-12 pb-10 md:pb-14">
             <div className="flex items-center gap-2 mb-4">
-              <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Home</Link>
+              <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">{t("services.home")}</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <Link to="/explore" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Explore</Link>
+              <Link to="/explore" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">{t("services.explore")}</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <span className="text-white/90 text-sm">Photography Excursions</span>
+              <span className="text-white/90 text-sm">{t("services.photo.breadcrumb")}</span>
             </div>
-            <h1 className="font-heading text-3xl md:text-5xl text-white mb-2">Photography Excursions</h1>
+            <h1 className="font-heading text-3xl md:text-5xl text-white mb-2">{t("services.photo.title")}</h1>
             <p className="text-white/70 text-sm md:text-base max-w-xl">
-              Guided photo walks with professional photographers through Alanya's most photogenic spots — old town, harbor, mountains, and sunset viewpoints.
+              {t("services.photo.hero")}
             </p>
           </div>
         </section>
@@ -169,7 +172,7 @@ export default function PhotographyExcursionsPage() {
           <div className="max-w-7xl mx-auto">
             {fetchError ? (
               <ErrorState
-                title="Unable to load photography excursions"
+                title={t("services.photo.unable")}
                 message={fetchError}
                 onRetry={loadExcursions}
               />
@@ -189,11 +192,11 @@ export default function PhotographyExcursionsPage() {
               </div>
             ) : filteredExcursions.length === 0 ? (
               <EmptyState
-                title="No photography excursions found"
-                description="Try selecting a different category or clear your filters."
+                title={t("services.photo.none")}
+                description={t("services.photo.noneDesc")}
                 icon="ri-camera-lens-line"
                 action={{
-                  label: "Reset Filters",
+                  label: t("services.resetFilters"),
                   onClick: () => {
                     setActiveType("all");
                     setSortBy("rating");
@@ -208,7 +211,7 @@ export default function PhotographyExcursionsPage() {
                       <img src={excursion.image} alt={excursion.name} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
                       {excursion.featured && (
                         <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
-                          <i className="ri-star-fill text-[10px]"></i>Featured
+                          <i className="ri-star-fill text-[10px]"></i>{t("services.featured")}
                         </div>
                       )}
                       <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
@@ -242,7 +245,7 @@ export default function PhotographyExcursionsPage() {
                         <span className="text-sm text-foreground-500"> / person</span>
                       </div>
                       <button onClick={(e) => { e.stopPropagation(); setSelectedExcursion(excursion); }} className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer">
-                        <i className="ri-camera-lens-line text-sm"></i>View Details
+                        <i className="ri-camera-lens-line text-sm"></i>{t("services.viewDetails")}
                       </button>
                     </div>
                   </div>
@@ -264,7 +267,7 @@ export default function PhotographyExcursionsPage() {
                 <img src={selectedExcursion.image} alt={selectedExcursion.name} className="w-full h-full object-cover object-top" />
                 {selectedExcursion.featured && (
                   <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
-                    <i className="ri-star-fill text-[10px]"></i>Featured
+                    <i className="ri-star-fill text-[10px]"></i>{t("services.featured")}
                   </div>
                 )}
               </div>
@@ -279,52 +282,52 @@ export default function PhotographyExcursionsPage() {
                   <div className="flex items-center gap-1 shrink-0 mt-1">
                     <i className="ri-star-fill text-yellow-400 text-base"></i>
                     <span className="text-base font-semibold text-foreground-900">{selectedExcursion.rating}</span>
-                    <span className="text-sm text-foreground-500">({selectedExcursion.reviewCount} reviews)</span>
+                    <span className="text-sm text-foreground-500">({selectedExcursion.reviewCount} {t("services.service.reviews")})</span>
                   </div>
                 </div>
                 <p className="text-sm text-foreground-600 leading-relaxed mb-6">{selectedExcursion.description}</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-time-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Duration</p>
+                    <p className="text-xs text-foreground-500">{t("services.duration")}</p>
                     <p className="font-semibold text-foreground-900 text-sm">{selectedExcursion.duration}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-group-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Group Size</p>
+                    <p className="text-xs text-foreground-500">{t("services.groupSize")}</p>
                     <p className="font-semibold text-foreground-900 text-sm">{selectedExcursion.groupSize}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-bar-chart-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Skill Level</p>
+                    <p className="text-xs text-foreground-500">{t("services.skillLevel")}</p>
                     <p className="font-semibold text-foreground-900 text-xs">{selectedExcursion.skillLevel}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-user-star-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Guide</p>
+                    <p className="text-xs text-foreground-500">{t("services.guide")}</p>
                     <p className="font-semibold text-foreground-900 text-xs leading-tight">{selectedExcursion.guide}</p>
                   </div>
                 </div>
                 <div className="bg-primary-50 rounded-xl p-5 mb-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-foreground-500 mb-0.5">Per Person</p>
+                      <p className="text-xs text-foreground-500 mb-0.5">{t("services.perPerson")}</p>
                       <p className="text-2xl font-bold text-foreground-900">€{selectedExcursion.pricePerPerson.toLocaleString()}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-foreground-500 mb-0.5">Private</p>
+                      <p className="text-xs text-foreground-500 mb-0.5">{t("services.private")}</p>
                       <p className="text-lg font-semibold text-foreground-700">€{(selectedExcursion.privatePrice ?? 0).toLocaleString()}</p>
                     </div>
                   </div>
                   {selectedExcursion.bestTime && (
                     <div className="flex items-center gap-2 mt-2 text-xs text-foreground-500">
                       <i className="ri-sun-line"></i>
-                      <span>Best time: {selectedExcursion.bestTime}</span>
+                      <span>{t("services.service.bestTime")}: {selectedExcursion.bestTime}</span>
                     </div>
                   )}
                 </div>
                 <div className="mb-4">
-                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">Locations</h4>
+                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">{t("services.locations")}</h4>
                   <div className="flex flex-wrap gap-2">
                     {selectedExcursion.locations.map((loc) => (
                       <span key={loc} className="px-3 py-1.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap flex items-center gap-1">
@@ -334,7 +337,7 @@ export default function PhotographyExcursionsPage() {
                   </div>
                 </div>
                 <div className="mb-6">
-                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">What's Included</h4>
+                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">{t("services.whatsIncluded")}</h4>
                   <div className="flex flex-wrap gap-2">
                     {selectedExcursion.includes.map((inc) => (
                       <span key={inc} className="px-3 py-1.5 rounded-full bg-background-100 border border-background-200 text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
@@ -349,23 +352,23 @@ export default function PhotographyExcursionsPage() {
                       <i className="ri-check-line text-green-600 text-lg shrink-0"></i>
                       <span className="text-sm font-medium text-green-700">
                         {contactMethod === 'whatsapp' ? (
-                          <>Enquiry sent! We'll WhatsApp you soon.</>
+                          <>{t("services.form.sentWhatsapp")}</>
                         ) : contactMethod === 'phone_call' ? (
-                          <>Enquiry sent! We'll call you soon.</>
+                          <>{t("services.form.sentPhone")}</>
                         ) : (
-                          <>Enquiry sent! We'll email you soon.</>
+                          <>{t("services.form.sentEmail")}</>
                         )}
                       </span>
                     </div>
-                    <button onClick={() => setSelectedExcursion(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">Close</button>
+                    <button onClick={() => setSelectedExcursion(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">{t("services.close")}</button>
                   </div>
                 ) : (
                   <form onSubmit={handleBookingSubmit}>
                     <input type="hidden" name="experience_type" value="Photography Excursion" />
                     <input type="hidden" name="excursion_name" value={selectedExcursion.name} />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                      <input name="name" type="text" placeholder="Your full name" required className="w-full px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
-                      <input name="email" type="email" placeholder="Your email address" required className="w-full px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
+                      <input name="name" type="text" placeholder={t("services.fullName")} required className="w-full px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
+                      <input name="email" type="email" placeholder={t("services.emailAddress")} required className="w-full px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
                     </div>
                     <div className="flex gap-2 mb-3">
                       <select name="country_code" defaultValue="+90" className="px-2.5 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 outline-none focus:border-primary-400 transition-colors cursor-pointer appearance-none" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center", paddingRight: "28px" }}>
@@ -390,29 +393,29 @@ export default function PhotographyExcursionsPage() {
                         <option value="+48">🇵🇱 +48</option>
                         <option value="+40">🇷🇴 +40</option>
                       </select>
-                      <input name="phone" type="tel" placeholder="Your phone number (optional)" className="flex-1 px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
+                      <input name="phone" type="tel" placeholder={t("services.phoneOptional")} className="flex-1 px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
                     </div>
                     <div className="mb-3">
-                      <p className="text-xs font-medium text-foreground-700 mb-2">Preferred contact method</p>
+                      <p className="text-xs font-medium text-foreground-700 mb-2">{t("services.form.contactMethod")} *</p>
                       <div className="flex flex-wrap gap-3">
                         <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-background-200 bg-white cursor-pointer hover:border-primary-200 transition-colors">
                           <input type="radio" name="preferred_contact" value="phone_call" className="accent-primary-500" />
                           <i className="ri-phone-line text-foreground-500 text-sm"></i>
-                          <span className="text-sm text-foreground-700">Phone Call</span>
+                          <span className="text-sm text-foreground-700">{t("services.phone")}</span>
                         </label>
                         <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-background-200 bg-white cursor-pointer hover:border-primary-200 transition-colors">
                           <input type="radio" name="preferred_contact" value="whatsapp" className="accent-primary-500" />
                           <i className="ri-whatsapp-line text-foreground-500 text-sm"></i>
-                          <span className="text-sm text-foreground-700">WhatsApp</span>
+                          <span className="text-sm text-foreground-700">{t("services.whatsapp")}</span>
                         </label>
                         <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-background-200 bg-white cursor-pointer hover:border-primary-200 transition-colors">
                           <input type="radio" name="preferred_contact" value="email" defaultChecked className="accent-primary-500" />
                           <i className="ri-mail-line text-foreground-500 text-sm"></i>
-                          <span className="text-sm text-foreground-700">Email</span>
+                          <span className="text-sm text-foreground-700">{t("services.email")}</span>
                         </label>
                       </div>
                     </div>
-                    <textarea name="notes" placeholder="Skill level, gear you use, or any questions? (optional)" maxLength={500} rows={2} className="w-full px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors resize-none mb-3"></textarea>
+                    <textarea name="notes" placeholder={t("services.form.photoNotes")} maxLength={500} rows={2} className="w-full px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors resize-none mb-3"></textarea>
                     <input name="website_alt" type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" readOnly className="booking-offscreen" />
                     {formError && (
                       <p className="text-xs text-red-500 mb-3 flex items-center gap-1">
@@ -425,16 +428,16 @@ export default function PhotographyExcursionsPage() {
                         {formSubmitting ? (
                           <>
                             <i className="ri-loader-4-line animate-spin text-sm"></i>
-                            Sending...
+                            {t("services.form.sending")}
                           </>
                         ) : (
                           <>
                             <i className="ri-calendar-check-line text-sm"></i>
-                            Book Now
+                            {t("services.bookNow")}
                           </>
                         )}
                       </button>
-                      <button type="button" onClick={() => setSelectedExcursion(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">Close</button>
+                      <button type="button" onClick={() => setSelectedExcursion(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">{t("services.close")}</button>
                     </div>
                   </form>
                 )}

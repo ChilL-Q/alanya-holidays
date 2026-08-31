@@ -1,6 +1,8 @@
 # Alanya Holidays 🌴
 
-Alanya Holidays — full-stack travel and booking platform for rentals, local experiences, concierge services, merchant listings, and AI-assisted trip planning in Alanya, Turkey.
+Alanya Holidays is a frontend-led travel and community platform for Alanya, Turkey. The current
+release focuses on discovery, community, commerce, trip planning, curated luxury catalogues, and
+concierge enquiries. Backend modules for future booking and payment updates remain scaffolded.
 
 ## Current architecture
 
@@ -18,15 +20,18 @@ Supporting infrastructure:
 - `docker-compose.prod.yml` — production container stack
 - `docs/` — infrastructure and engineering docs
 
-## Main features
+## Current release features
 
-- Direct property and experience booking
+- Curated stays and luxury catalogues with enquiry confirmation
+- Community forum, members, blog, and events
 - Merchant / business listing management
 - Admin moderation and analytics hub
-- Stripe webhook processing
 - AI local guide and itinerary generation
-- Notifications and messaging
-- Supabase-backed PostgreSQL with RLS and RPC workflows
+- Gift-shop cart and checkout
+
+Direct guest accommodation booking and its Stripe payment flow are intentionally dormant and must
+not be presented as launched functionality. The backend keeps the relevant building blocks for a
+future release.
 
 ## Tech stack
 
@@ -148,7 +153,6 @@ pnpm --filter @alanya-holidays/backend lint
 
 ```bash
 pnpm --filter @alanya-holidays/frontend test
-pnpm --filter @alanya-holidays/frontend test:integration
 pnpm --filter @alanya-holidays/frontend test:e2e
 pnpm --filter @alanya-holidays/frontend type-check
 pnpm --filter @alanya-holidays/frontend lint

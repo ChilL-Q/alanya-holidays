@@ -7,8 +7,11 @@ import PaginationControls from "@/components/base/PaginationControls";
 import { BLOG_CATEGORIES } from "@/pages/blog/blog.constants";
 import { blogService, type BlogPostItem, type BlogTag } from "@/api-services/blog.service";
 import { logger } from "@/lib/logger";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export default function BlogPage() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [posts, setPosts] = useState<BlogPostItem[]>([]);
   const [tags, setTags] = useState<BlogTag[]>([]);
@@ -142,18 +145,18 @@ export default function BlogPage() {
                 to="/"
                 className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2"
               >
-                Home
+                {t("nav.home")}
               </Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <span className="text-white/90 text-sm">Blog</span>
+              <span className="text-white/90 text-sm">{t("public.blog")}</span>
             </div>
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
               <div>
                 <h1 className="font-heading text-3xl md:text-5xl text-white mb-2">
-                  Travel Blog
+                  {t("public.travelBlog")}
                 </h1>
                 <p className="text-white/75 text-sm md:text-base max-w-xl">
-                  Stories, tips, and insights from Alanya — written by locals, expats, and fellow travelers.
+                  {t("public.blogDescription")}
                 </p>
               </div>
 
@@ -162,7 +165,7 @@ export default function BlogPage() {
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-accent-500 hover:bg-accent-600 text-white text-sm font-medium transition-all shadow-md hover:shadow-lg whitespace-nowrap"
               >
                 <i className="ri-quill-pen-line text-base"></i>
-                Submit Post
+                {t("public.submitPost")}
               </Link>
             </div>
           </div>
@@ -182,7 +185,7 @@ export default function BlogPage() {
                       : "bg-white border border-foreground-200 text-foreground-700 hover:border-primary-300 hover:text-primary-600"
                   }`}
                 >
-                  All Categories
+                  {t("public.allCategories")}
                 </button>
                 {BLOG_CATEGORIES.map((blogCategory) => (
                   <button
@@ -205,14 +208,14 @@ export default function BlogPage() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search blog posts..."
+                  placeholder={t("public.blogSearch")}
                   className="w-full pl-9 pr-8 py-2 rounded-full border border-foreground-200 bg-white text-xs md:text-sm text-foreground-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder:text-foreground-400"
                 />
                 {searchQuery && (
                   <button
                     onClick={() => setSearch("")}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground-400 hover:text-foreground-600"
-                    aria-label="Clear search"
+                    aria-label={t("public.clearSearch")}
                   >
                     <i className="ri-close-circle-line text-sm"></i>
                   </button>
@@ -223,7 +226,7 @@ export default function BlogPage() {
             {tags.length > 0 && (
               <div className="mb-10 flex items-center gap-2 overflow-x-auto scrollbar-none">
                 <span className="mr-1 text-xs font-semibold uppercase tracking-wider text-foreground-500">
-                  Tags
+                  {t("public.tags")}
                 </span>
                 <button
                   onClick={() => setTag("All")}
@@ -233,7 +236,7 @@ export default function BlogPage() {
                       : "bg-white border border-foreground-200 text-foreground-600 hover:border-accent-300"
                   }`}
                 >
-                  All Tags
+                  {t("public.allTags")}
                 </button>
                 {tags.map((tag) => (
                   <button
@@ -255,14 +258,14 @@ export default function BlogPage() {
             {isLoading && posts.length === 0 ? (
               <div className="py-20 text-center">
                 <i className="ri-loader-4-line animate-spin text-3xl text-primary-500 mb-3 block mx-auto"></i>
-                <p className="text-foreground-500 text-sm">Loading blog posts...</p>
+                <p className="text-foreground-500 text-sm">{t("public.loadingPosts")}</p>
               </div>
             ) : posts.length === 0 ? (
               <div className="py-20 text-center bg-white rounded-2xl border border-background-200 p-8">
                 <i className="ri-article-line text-5xl text-foreground-300 mb-4 block"></i>
-                <h3 className="font-heading text-lg text-foreground-800 mb-2">No posts found</h3>
+                <h3 className="font-heading text-lg text-foreground-800 mb-2">{t("public.noPosts")}</h3>
                 <p className="text-sm text-foreground-500 max-w-md mx-auto mb-6">
-                  No blog posts matched your filter. Try another category or submit your own post.
+                  {t("public.noPostsDescription")}
                 </p>
                 <button
                   onClick={() => {
@@ -270,7 +273,7 @@ export default function BlogPage() {
                   }}
                   className="px-5 py-2 rounded-full bg-primary-500 text-white text-xs font-medium hover:bg-primary-600 transition-colors cursor-pointer"
                 >
-                  Reset Filters
+                  {t("public.resetBlogFilters")}
                 </button>
               </div>
             ) : (
@@ -308,7 +311,7 @@ export default function BlogPage() {
                             {description}
                           </p>
                           <div className="pt-4 border-t border-background-100 flex items-center justify-between text-xs text-primary-600 font-medium">
-                            <span>Read Post</span>
+                            <span>{t("public.readPost")}</span>
                             <i className="ri-arrow-right-line group-hover:translate-x-1 transition-transform"></i>
                           </div>
                         </div>

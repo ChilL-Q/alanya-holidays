@@ -18,21 +18,43 @@ describe('ListingClaimService verification tokens', () => {
   let repository: Record<string, jest.Mock>;
   let service: ListingClaimService;
   let emailOutbox: { enqueue: jest.Mock };
+  let userRoles: { getRole: jest.Mock };
 
   beforeEach(() => {
     repository = {
+      getDirectoryListingClaimEligibility: jest.fn().mockResolvedValue({
+        creation_source: 'admin',
+        can_claim: true,
+      }),
       insertListingClaim: jest.fn().mockResolvedValue(claim),
       verifyClaimEmail: jest.fn(),
       invokeFunction: jest.fn().mockResolvedValue(undefined),
+      callApproveListingClaimRpc: jest.fn(),
+      getListingClaimById: jest.fn().mockResolvedValue(null),
     };
+    userRoles = { getRole: jest.fn() };
     emailOutbox = {
       enqueue: jest.fn().mockResolvedValue(undefined),
     };
     service = new ListingClaimService(
       repository as unknown as DirectoryRepository,
-      {} as UserRolesRepository,
+      userRoles as unknown as UserRolesRepository,
       emailOutbox as unknown as EmailOutboxRepository,
     );
+  });
+
+  it('rejects forged claims for merchant-created listings before persisting sensitive claimant data', async () => {
+    repository.getDirectoryListingClaimEligibility.mockResolvedValueOnce({
+      creation_source: 'merchant',
+      can_claim: false,
+    });
+
+    await expect(
+      service.submitListingClaim(claim, claim.user_id),
+    ).rejects.toThrow('This listing is not eligible for ownership claims');
+
+    expect(repository.insertListingClaim).not.toHaveBeenCalled();
+    expect(emailOutbox.enqueue).not.toHaveBeenCalled();
   });
 
   it('durably queues the raw token while storing only its SHA-256 hash on the claim', async () => {
@@ -133,5 +155,60 @@ describe('ListingClaimService verification tokens', () => {
     await expect(service.verifyClaimEmail(token)).resolves.toEqual({
       success: false,
     });
+  });
+
+  it('never calls the privileged approval RPC for a forged non-admin caller', async () => {
+    userRoles.getRole.mockResolvedValueOnce('user');
+
+    await expect(
+      service.approveListingClaim('claim-1', claim.user_id),
+    ).rejects.toThrow('Not authorized');
+
+    expect(repository.callApproveListingClaimRpc).not.toHaveBeenCalled();
+  });
+
+  it('uses only the serialized approval RPC for a valid admin claim', async () => {
+    userRoles.getRole.mockResolvedValueOnce('admin');
+    repository.callApproveListingClaimRpc.mockResolvedValueOnce({
+      data: [
+        {
+          success: true,
+          message: 'Claim approved successfully',
+          listing_id: claim.listing_id,
+        },
+      ],
+      error: null,
+    });
+
+    await expect(
+      service.approveListingClaim('claim-1', 'admin-1'),
+    ).resolves.toEqual({ success: true });
+
+    expect(repository.callApproveListingClaimRpc).toHaveBeenCalledWith(
+      'claim-1',
+      'admin-1',
+    );
+    expect(repository.getListingClaimById).toHaveBeenCalledWith('claim-1');
+  });
+
+  it('does not report success when the serialized RPC rejects an ineligible or competing claim', async () => {
+    userRoles.getRole.mockResolvedValueOnce('admin');
+    repository.callApproveListingClaimRpc.mockResolvedValueOnce({
+      data: [
+        {
+          success: false,
+          message: 'Listing is not eligible for ownership claims',
+          listing_id: claim.listing_id,
+        },
+      ],
+      error: null,
+    });
+
+    await expect(
+      service.approveListingClaim('claim-1', 'admin-1'),
+    ).rejects.toThrow('Listing is not eligible for ownership claims');
+
+    expect(repository.getListingClaimById).not.toHaveBeenCalled();
+    expect(repository.invokeFunction).not.toHaveBeenCalled();
   });
 });

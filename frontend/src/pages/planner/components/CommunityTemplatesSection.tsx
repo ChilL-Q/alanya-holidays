@@ -1,5 +1,7 @@
 import React, { useMemo } from "react";
 import type { SharedPlan } from "@/hooks/useSharedPlans";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface CommunityTemplatesSectionProps {
   sharedPlans: SharedPlan[];
@@ -14,6 +16,7 @@ export const CommunityTemplatesSection: React.FC<CommunityTemplatesSectionProps>
   onSortChange,
   onCopyPlan,
 }) => {
+  const { t } = useTranslation();
   const sortedSharedPlans = useMemo(
     () =>
       communitySort === "popular"
@@ -28,8 +31,8 @@ export const CommunityTemplatesSection: React.FC<CommunityTemplatesSectionProps>
     <div className="mb-10">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <div>
-          <h2 className="font-heading text-lg font-semibold text-foreground-900">Community Templates</h2>
-          <p className="text-xs text-foreground-500 mt-0.5">Plans shared by fellow travelers — copy one and make it your own</p>
+          <h2 className="font-heading text-lg font-semibold text-foreground-900">{t("public.communityTemplates")}</h2>
+          <p className="text-xs text-foreground-500 mt-0.5">{t("public.communityTemplatesDescription")}</p>
         </div>
         <div className="flex items-center gap-1.5 bg-white rounded-full border border-background-200 p-1">
           <button
@@ -77,7 +80,7 @@ export const CommunityTemplatesSection: React.FC<CommunityTemplatesSectionProps>
                 )}
               </div>
               <h3 className="font-heading text-sm font-semibold text-foreground-900 mb-1">{sp.name}</h3>
-              <p className="text-xs text-accent-700 font-medium mb-2">By {sp.authorName}</p>
+              <p className="text-xs text-accent-700 font-medium mb-2">{t("public.byAuthor", { name: sp.authorName })}</p>
               {sp.description && (
                 <p className="text-xs text-foreground-500 leading-relaxed line-clamp-2 mb-4 flex-1">
                   {sp.description}

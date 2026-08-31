@@ -5,40 +5,43 @@ import {
   type AuditLogQueryParams,
 } from "@/api-services/admin.service";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface AuditLogTabProps {
   onCountUpdate?: (counts: { total: number }) => void;
 }
 
 const ENTITY_TYPES = [
-  { value: "all", label: "All Entity Types" },
-  { value: "listing", label: "Directory Listing" },
-  { value: "claim", label: "Listing Claim" },
-  { value: "forum_post", label: "Forum Post" },
-  { value: "forum_comment", label: "Forum Comment" },
-  { value: "forum_report", label: "Forum Report" },
-  { value: "blog_submission", label: "Blog Submission" },
-  { value: "blog_post", label: "Blog Post" },
+  { value: "all", label: "adminQueue.allEntityTypes" },
+  { value: "listing", label: "adminQueue.directoryListing" },
+  { value: "claim", label: "adminQueue.listingClaim" },
+  { value: "forum_post", label: "adminQueue.forumPost" },
+  { value: "forum_comment", label: "adminQueue.forumComment" },
+  { value: "forum_report", label: "adminQueue.forumReport" },
+  { value: "blog_submission", label: "adminQueue.blogSubmission" },
+  { value: "blog_post", label: "adminQueue.blogPost" },
 ];
 
 const ACTION_TYPES = [
-  { value: "all", label: "All Actions" },
-  { value: "approve", label: "Approve" },
-  { value: "reject", label: "Reject" },
-  { value: "feature", label: "Feature" },
-  { value: "unfeature", label: "Unfeature" },
-  { value: "verify", label: "Verify" },
-  { value: "unverify", label: "Unverify" },
-  { value: "update_score", label: "Update Score" },
-  { value: "pin", label: "Pin" },
-  { value: "unpin", label: "Unpin" },
-  { value: "remove", label: "Remove" },
-  { value: "restore", label: "Restore" },
-  { value: "resolve", label: "Resolve" },
-  { value: "delete", label: "Delete" },
+  { value: "all", label: "adminQueue.allActions" },
+  { value: "approve", label: "adminQueue.approve" },
+  { value: "reject", label: "adminQueue.reject" },
+  { value: "feature", label: "adminQueue.feature" },
+  { value: "unfeature", label: "adminQueue.unfeature" },
+  { value: "verify", label: "adminQueue.verify" },
+  { value: "unverify", label: "adminQueue.unverify" },
+  { value: "update_score", label: "adminQueue.updateScore" },
+  { value: "pin", label: "adminQueue.pin" },
+  { value: "unpin", label: "adminQueue.unpin" },
+  { value: "remove", label: "adminQueue.remove" },
+  { value: "restore", label: "adminQueue.restore" },
+  { value: "resolve", label: "adminQueue.resolve" },
+  { value: "delete", label: "adminQueue.delete" },
 ];
 
 export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
+  const { t } = useTranslation();
   const onCountUpdateRef = React.useRef(onCountUpdate);
   useEffect(() => {
     onCountUpdateRef.current = onCountUpdate;
@@ -88,12 +91,12 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
         onCountUpdateRef.current({ total: result.total || 0 });
       }
     } catch {
-      setError("Failed to load moderation audit log. Please try again.");
+      setError(t("adminQueue.auditLoadError"));
     } finally {
       setLoading(false);
     }
 
-  }, [currentPage, pageSize, entityType, actionType, searchQuery, startDate, endDate]);
+  }, [currentPage, pageSize, entityType, actionType, searchQuery, startDate, endDate, t]);
 
   useEffect(() => {
     void fetchLogs();
@@ -183,6 +186,12 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
     }
   };
 
+  const getActionLabel = (action: string) => {
+    const key = action === "update_score" ? "updateScore" : action;
+    const translated = t(`adminQueue.${key}`);
+    return translated === `adminQueue.${key}` ? action.replace(/_/g, " ") : translated;
+  };
+
   const formatDateTime = (dateStr: string) => {
     try {
       const d = new Date(dateStr);
@@ -207,10 +216,10 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
         <div>
           <h2 className="text-xl font-bold text-secondary-900 dark:text-white flex items-center gap-2">
             <i className="ri-history-line text-accent-600 dark:text-accent-400" />
-            Universal Moderation Audit Log
+            {t("adminQueue.auditTitle")}
           </h2>
           <p className="text-xs sm:text-sm text-secondary-500 dark:text-slate-400 mt-1">
-            Immutable compliance record of administrative curation, approvals, rejections, and moderation actions.
+            {t("adminQueue.auditDescription")}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -221,10 +230,10 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
             }}
             disabled={loading}
             className="px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-xl bg-secondary-100 dark:bg-slate-800 hover:bg-secondary-200 dark:hover:bg-slate-700 text-secondary-700 dark:text-slate-200 transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-            title="Refresh audit logs"
+            title={t("adminQueue.refreshAudit")}
           >
             <i className={`ri-refresh-line ${loading ? "animate-spin" : ""}`} />
-            <span>Refresh</span>
+            <span>{t("adminQueue.refresh")}</span>
           </button>
         </div>
       </div>
@@ -235,13 +244,13 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
           {/* Search by Entity ID or Reason */}
           <div className="lg:col-span-1">
             <label className="block text-xs font-semibold text-secondary-700 dark:text-slate-300 mb-1.5">
-              Search
+              {t("adminQueue.search")}
             </label>
             <div className="relative">
               <i className="ri-search-line absolute left-3 top-1/2 -translate-y-1/2 text-secondary-400 text-sm" />
               <input
                 type="text"
-                placeholder="Entity ID / Reason..."
+                placeholder={t("adminQueue.entityReasonPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
@@ -255,7 +264,7 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
           {/* Entity Type Selector */}
           <div>
             <label className="block text-xs font-semibold text-secondary-700 dark:text-slate-300 mb-1.5">
-              Entity Type
+              {t("adminQueue.entityType")}
             </label>
             <select
               value={entityType}
@@ -263,12 +272,12 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
                 setEntityType(e.target.value);
                 setCurrentPage(1);
               }}
-              aria-label="Filter by Entity Type"
+              aria-label={t("adminQueue.filterEntity")}
               className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-secondary-200 dark:border-slate-700 bg-secondary-50 dark:bg-slate-800 text-secondary-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-accent-500"
             >
-              {ENTITY_TYPES.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
+              {ENTITY_TYPES.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {t(option.label)}
                 </option>
               ))}
             </select>
@@ -277,7 +286,7 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
           {/* Action Type Selector */}
           <div>
             <label className="block text-xs font-semibold text-secondary-700 dark:text-slate-300 mb-1.5">
-              Action
+              {t("adminQueue.action")}
             </label>
             <select
               value={actionType}
@@ -285,12 +294,12 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
                 setActionType(e.target.value);
                 setCurrentPage(1);
               }}
-              aria-label="Filter by Action"
+              aria-label={t("adminQueue.filterAction")}
               className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-secondary-200 dark:border-slate-700 bg-secondary-50 dark:bg-slate-800 text-secondary-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-accent-500"
             >
               {ACTION_TYPES.map((a) => (
                 <option key={a.value} value={a.value}>
-                  {a.label}
+                  {t(a.label)}
                 </option>
               ))}
             </select>
@@ -299,7 +308,7 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
           {/* Start Date */}
           <div>
             <label className="block text-xs font-semibold text-secondary-700 dark:text-slate-300 mb-1.5">
-              From Date
+              {t("adminQueue.fromDate")}
             </label>
             <input
               type="date"
@@ -315,7 +324,7 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
           {/* End Date */}
           <div>
             <label className="block text-xs font-semibold text-secondary-700 dark:text-slate-300 mb-1.5">
-              To Date
+              {t("adminQueue.toDate")}
             </label>
             <input
               type="date"
@@ -333,7 +342,7 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
         {hasActiveFilters && (
           <div className="flex items-center justify-between pt-2 border-t border-secondary-100 dark:border-slate-800 text-xs">
             <span className="text-secondary-500 dark:text-slate-400">
-              Filters applied &bull; Found {totalCount} matching events
+              {t("adminQueue.filtersApplied", { count: totalCount })}
             </span>
             <button
               type="button"
@@ -341,7 +350,7 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
               className="text-accent-600 dark:text-accent-400 hover:underline font-semibold flex items-center gap-1 cursor-pointer"
             >
               <i className="ri-close-circle-line" />
-              <span>Clear All Filters</span>
+              <span>{t("adminQueue.clearFilters")}</span>
             </button>
           </div>
         )}
@@ -364,7 +373,7 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
             }}
             className="px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-bold hover:bg-rose-700 transition-colors"
           >
-            Retry
+            {t("adminQueue.retry")}
           </button>
         </div>
       )}
@@ -375,12 +384,12 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
           <table className="w-full text-left text-xs sm:text-sm border-collapse">
             <thead>
               <tr className="bg-secondary-50/80 dark:bg-slate-800/60 border-b border-secondary-200 dark:border-slate-800 text-secondary-600 dark:text-slate-400 font-semibold">
-                <th className="py-3.5 px-4">Date & Time</th>
-                <th className="py-3.5 px-4">Admin Actor</th>
-                <th className="py-3.5 px-4">Action</th>
-                <th className="py-3.5 px-4">Target Entity</th>
-                <th className="py-3.5 px-4">Reason / Notes</th>
-                <th className="py-3.5 px-4 text-right">Details</th>
+                <th className="py-3.5 px-4">{t("adminQueue.dateTime")}</th>
+                <th className="py-3.5 px-4">{t("adminQueue.adminActor")}</th>
+                <th className="py-3.5 px-4">{t("adminQueue.action")}</th>
+                <th className="py-3.5 px-4">{t("adminQueue.targetEntity")}</th>
+                <th className="py-3.5 px-4">{t("adminQueue.reasonNotes")}</th>
+                <th className="py-3.5 px-4 text-right">{t("adminQueue.details")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-secondary-100 dark:divide-slate-800">
@@ -414,12 +423,12 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
                     <div className="flex flex-col items-center justify-center space-y-2">
                       <i className="ri-file-search-line text-4xl text-secondary-300 dark:text-slate-600" />
                       <p className="font-semibold text-base text-secondary-700 dark:text-slate-300">
-                        No audit logs found
+                        {t("adminQueue.noAuditLogs")}
                       </p>
                       <p className="text-xs text-secondary-400 dark:text-slate-500 max-w-sm">
                         {hasActiveFilters
-                          ? "No audit records matched your active filter parameters. Try clearing filters."
-                          : "No moderation audit events have been logged on the platform yet."}
+                          ? t("adminQueue.noAuditMatch")
+                          : t("adminQueue.noAuditYet")}
                       </p>
                       {hasActiveFilters && (
                         <button
@@ -427,7 +436,7 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
                           onClick={handleClearFilters}
                           className="mt-2 px-3 py-1.5 text-xs font-semibold rounded-lg bg-accent-50 dark:bg-accent-950/40 text-accent-700 dark:text-accent-300 border border-accent-200 dark:border-accent-800 hover:bg-accent-100"
                         >
-                          Reset Filters
+                          {t("adminQueue.resetFilters")}
                         </button>
                       )}
                     </div>
@@ -455,7 +464,7 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
                         </div>
                         <div className="flex flex-col">
                           <span className="font-semibold text-xs leading-tight">
-                            {item.admin?.full_name || "Admin"}
+                            {item.admin?.full_name || t("adminQueue.admin")}
                           </span>
                           {item.admin?.email && (
                             <span className="text-[10px] text-secondary-400 dark:text-slate-500">
@@ -474,7 +483,7 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
                         )}`}
                       >
                         <i className={getActionIcon(item.action)} />
-                        <span>{item.action.replace(/_/g, " ")}</span>
+                        <span>{getActionLabel(item.action)}</span>
                       </span>
                     </td>
 
@@ -482,7 +491,7 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
                     <td className="py-3.5 px-4 whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
                         <span className="px-2 py-0.5 rounded-md bg-secondary-100 dark:bg-slate-800 text-secondary-700 dark:text-slate-300 font-semibold text-[11px] uppercase tracking-wide border border-secondary-200 dark:border-slate-700">
-                          {item.entity_type.replace(/_/g, " ")}
+                          {t(`adminQueue.${item.entity_type === "listing" ? "directoryListing" : item.entity_type === "claim" ? "listingClaim" : item.entity_type === "forum_post" ? "forumPost" : item.entity_type === "forum_comment" ? "forumComment" : item.entity_type === "forum_report" ? "forumReport" : item.entity_type === "blog_submission" ? "blogSubmission" : item.entity_type === "blog_post" ? "blogPost" : "entityType"}`)}
                         </span>
                         <code
                           className="font-mono text-xs text-secondary-600 dark:text-slate-400 truncate max-w-[120px] sm:max-w-[160px]"
@@ -508,11 +517,11 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
                         type="button"
                         onClick={() => setInspectItem(item)}
                         className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-secondary-100 dark:bg-slate-800 hover:bg-accent-50 hover:text-accent-600 dark:hover:bg-accent-950/50 dark:hover:text-accent-300 border border-secondary-200 dark:border-slate-700 transition-colors inline-flex items-center gap-1 cursor-pointer"
-                        title="View event payload and metadata"
+                        title={t("adminQueue.viewPayload")}
                         data-testid={`inspect-audit-${item.id}`}
                       >
                         <i className="ri-code-s-slash-line" />
-                        <span>Inspect</span>
+                        <span>{t("adminQueue.inspect")}</span>
                       </button>
                     </td>
                   </tr>
@@ -526,11 +535,11 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
         {!loading && totalPages > 1 && (
           <div className="p-4 bg-secondary-50/60 dark:bg-slate-800/40 border-t border-secondary-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-secondary-600 dark:text-slate-400">
             <div>
-              Showing <span className="font-semibold text-secondary-900 dark:text-white">{(currentPage - 1) * pageSize + 1}</span> to{" "}
+              {t("adminQueue.showing")} <span className="font-semibold text-secondary-900 dark:text-white">{(currentPage - 1) * pageSize + 1}</span> {t("adminQueue.to")} {" "}
               <span className="font-semibold text-secondary-900 dark:text-white">
                 {Math.min(currentPage * pageSize, totalCount)}
               </span>{" "}
-              of <span className="font-semibold text-secondary-900 dark:text-white">{totalCount}</span> entries
+              {t("adminQueue.of")} <span className="font-semibold text-secondary-900 dark:text-white">{totalCount}</span> {t("adminQueue.entries")}
             </div>
 
             <div className="flex items-center gap-2">
@@ -540,10 +549,10 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
                 disabled={currentPage === 1}
                 className="px-3 py-1.5 rounded-lg border border-secondary-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-secondary-100 dark:hover:bg-slate-800 transition-colors"
               >
-                Previous
+                {t("adminQueue.previous")}
               </button>
               <span className="px-2 font-bold text-secondary-900 dark:text-white">
-                Page {currentPage} of {totalPages}
+                {t("adminQueue.page")} {currentPage} {t("adminQueue.of")} {totalPages}
               </span>
               <button
                 type="button"
@@ -551,7 +560,7 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
                 disabled={currentPage === totalPages}
                 className="px-3 py-1.5 rounded-lg border border-secondary-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-secondary-100 dark:hover:bg-slate-800 transition-colors"
               >
-                Next
+                {t("adminQueue.next")}
               </button>
             </div>
           </div>
@@ -575,17 +584,17 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
                 </div>
                 <div>
                   <h3 id="audit-inspect-title" className="text-base font-bold text-secondary-900 dark:text-white">
-                    Audit Event Payload
+                    {t("adminQueue.eventPayload")}
                   </h3>
                   <p className="text-xs text-secondary-500 dark:text-slate-400">
-                    Event ID: <span className="font-mono">{inspectItem.id}</span>
+                    {t("adminQueue.eventId")}: <span className="font-mono">{inspectItem.id}</span>
                   </p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setInspectItem(null)}
-                aria-label="Close"
+                aria-label={t("adminQueue.close")}
                 className="w-8 h-8 rounded-xl text-secondary-500 hover:bg-secondary-100 dark:hover:bg-slate-800 flex items-center justify-center text-lg transition-colors cursor-pointer"
               >
                 <i className="ri-close-line" />
@@ -597,7 +606,7 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
               <div className="grid grid-cols-2 gap-3 bg-secondary-50 dark:bg-slate-800/60 p-3.5 rounded-xl border border-secondary-200/60 dark:border-slate-700/60">
                 <div>
                   <span className="text-[11px] font-semibold text-secondary-500 dark:text-slate-400 block">
-                    Action
+                    {t("adminQueue.action")}
                   </span>
                   <span className="font-bold text-secondary-900 dark:text-white capitalize">
                     {inspectItem.action}
@@ -605,7 +614,7 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
                 </div>
                 <div>
                   <span className="text-[11px] font-semibold text-secondary-500 dark:text-slate-400 block">
-                    Entity Type
+                    {t("adminQueue.entityType")}
                   </span>
                   <span className="font-bold text-secondary-900 dark:text-white">
                     {inspectItem.entity_type}
@@ -613,7 +622,7 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
                 </div>
                 <div>
                   <span className="text-[11px] font-semibold text-secondary-500 dark:text-slate-400 block">
-                    Entity ID
+                    {t("adminQueue.entityId")}
                   </span>
                   <span className="font-mono text-xs text-secondary-900 dark:text-white break-all">
                     {inspectItem.entity_id}
@@ -621,7 +630,7 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
                 </div>
                 <div>
                   <span className="text-[11px] font-semibold text-secondary-500 dark:text-slate-400 block">
-                    Timestamp
+                    {t("adminQueue.timestamp")}
                   </span>
                   <span className="text-secondary-900 dark:text-white">
                     {formatDateTime(inspectItem.created_at)}
@@ -630,7 +639,7 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
                 {inspectItem.reason && (
                   <div className="col-span-2">
                     <span className="text-[11px] font-semibold text-secondary-500 dark:text-slate-400 block">
-                      Reason / Notes
+                      {t("adminQueue.reasonNotes")}
                     </span>
                     <span className="text-secondary-900 dark:text-white">
                       {inspectItem.reason}
@@ -642,7 +651,7 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="font-bold text-secondary-800 dark:text-slate-200">
-                    Metadata JSON Payload
+                    {t("adminQueue.metadata")}
                   </span>
                   <button
                     type="button"
@@ -650,7 +659,7 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
                     className="text-xs text-accent-600 dark:text-accent-400 hover:underline flex items-center gap-1 font-semibold cursor-pointer"
                   >
                     <i className={copied ? "ri-check-line" : "ri-file-copy-line"} />
-                    <span>{copied ? "Copied!" : "Copy JSON"}</span>
+                    <span>{copied ? t("adminQueue.copied") : t("adminQueue.copyJson")}</span>
                   </button>
                 </div>
                 <pre className="p-3.5 rounded-xl bg-slate-950 text-emerald-400 font-mono text-xs overflow-x-auto max-h-60 border border-slate-800">
@@ -666,7 +675,7 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
                 onClick={() => setInspectItem(null)}
                 className="px-4 py-2 bg-secondary-200 dark:bg-slate-700 hover:bg-secondary-300 dark:hover:bg-slate-600 text-secondary-800 dark:text-white rounded-xl text-xs sm:text-sm font-bold transition-colors cursor-pointer"
               >
-                Close
+                {t("adminQueue.close")}
               </button>
             </div>
           </div>

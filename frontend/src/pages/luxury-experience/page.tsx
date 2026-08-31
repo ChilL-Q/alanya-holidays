@@ -5,6 +5,8 @@ import Footer from "@/pages/home/components/Footer";
 import PageHeroImage from "@/components/base/PageHeroImage";
 import { conciergeService } from "@/api-services/concierge.service";
 import { createInquiryState } from "@/lib/inquiry-confirmation";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 function formatViews(views: number): string {
   if (views >= 1000) return `${(views / 1000).toFixed(1)}k`;
@@ -12,6 +14,7 @@ function formatViews(views: number): string {
 }
 
 export default function LuxuryExperiencePage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const experiences = conciergeService.getLuxuryExperiences();
   const maxViews = Math.max(...experiences.map((e) => e.weeklyViews));
@@ -80,13 +83,13 @@ export default function LuxuryExperiencePage() {
 
           <div className="absolute bottom-0 left-0 right-0 w-full px-4 md:px-8 lg:px-12 pb-10 md:pb-14">
             <div className="flex items-center gap-2 mb-4">
-              <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Home</Link>
+              <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">{t("nav.home")}</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <span className="text-white/90 text-sm">Luxury Experience</span>
+              <span className="text-white/90 text-sm">{t("public.luxuryExperience")}</span>
             </div>
-            <h1 className="font-heading text-3xl md:text-5xl text-white mb-2">Luxury Experience</h1>
+            <h1 className="font-heading text-3xl md:text-5xl text-white mb-2">{t("public.luxuryExperience")}</h1>
             <p className="text-white/70 text-sm md:text-base max-w-xl">
-              Curated premium experiences along the Turkish Riviera — exclusive, unforgettable, and tailored just for you.
+              {t("public.luxuryDescription")}
             </p>
           </div>
         </section>
@@ -96,11 +99,11 @@ export default function LuxuryExperiencePage() {
             <div className="text-center mb-12">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-foreground-200 bg-white mb-6">
                 <i className="ri-star-line text-accent-500 text-sm"></i>
-                <span className="text-sm font-medium text-foreground-700">Premium Selection</span>
+                <span className="text-sm font-medium text-foreground-700">{t("public.premiumSelection")}</span>
               </div>
-              <h2 className="font-heading text-3xl md:text-4xl text-foreground-900 mb-4">Handpicked Experiences</h2>
+              <h2 className="font-heading text-3xl md:text-4xl text-foreground-900 mb-4">{t("public.handpicked")}</h2>
               <p className="text-foreground-500 text-sm md:text-base max-w-xl mx-auto">
-                The finest things to do in and around Alanya — each experience vetted by our community for quality and authenticity.
+                {t("public.handpickedDescription")}
               </p>
             </div>
 
@@ -117,7 +120,7 @@ export default function LuxuryExperiencePage() {
                     <div className="absolute top-0 right-0">
                       <div className="flex items-center gap-1.5 bg-primary-500 text-background-50 dark:text-foreground-950 rounded-bl-xl rounded-tr-xl px-3.5 py-1.5 text-xs font-semibold whitespace-nowrap shadow-sm">
                         <i className="ri-fire-line text-sm"></i>
-                        Most Popular This Week
+                        {t("public.mostPopular")}
                       </div>
                     </div>
                   )}
@@ -132,11 +135,11 @@ export default function LuxuryExperiencePage() {
                   <p className="text-sm text-foreground-500 leading-relaxed mb-3">{exp.description}</p>
                   <div className="flex items-center gap-1.5 text-xs text-foreground-400">
                     <i className="ri-eye-line"></i>
-                    <span>{formatViews(exp.weeklyViews)} views this week</span>
+                    <span>{formatViews(exp.weeklyViews)} {t("public.viewsThisWeek")}</span>
                     {isTrending && (
                       <span className="flex items-center gap-0.5 text-primary-500 font-medium">
                         <span className="inline-block w-1 h-1 rounded-full bg-primary-400"></span>
-                        Trending #1
+                        {t("public.trendingOne")}
                       </span>
                     )}
                   </div>
@@ -151,16 +154,16 @@ export default function LuxuryExperiencePage() {
           <div className="max-w-2xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-foreground-200 bg-white mb-6">
               <i className="ri-chat-smile-2-line text-primary-500 text-sm"></i>
-              <span className="text-sm font-medium text-foreground-700">Personal Concierge</span>
+              <span className="text-sm font-medium text-foreground-700">{t("public.personalConcierge")}</span>
             </div>
-            <h2 className="font-heading text-2xl md:text-3xl text-foreground-900 mb-4">Looking for something bespoke?</h2>
+            <h2 className="font-heading text-2xl md:text-3xl text-foreground-900 mb-4">{t("public.bespoke")}</h2>
             <p className="text-foreground-500 text-sm md:text-base mb-8">
-              Our community concierge team can arrange custom experiences — surprise proposals, private dinners on the beach, or a tailored itinerary for your entire stay.
+              {t("public.customExperience")}
             </p>
             <form onSubmit={handleConciergeSubmit} className="max-w-md mx-auto">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                  <input name="name" type="text" placeholder="Your full name" required className="w-full px-4 py-3 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
-                  <input name="email" type="email" placeholder="Your email address" required className="w-full px-4 py-3 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
+                  <input name="name" type="text" placeholder={t("public.fullName")} required className="w-full px-4 py-3 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
+                  <input name="email" type="email" placeholder={t("public.conciergeEmail")} required className="w-full px-4 py-3 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
                 </div>
                 <div className="flex gap-2 mb-3">
                   <select name="country_code" defaultValue="+90" className="px-2.5 py-3 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 outline-none focus:border-primary-400 transition-colors cursor-pointer appearance-none" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center", paddingRight: "28px" }}>
@@ -185,29 +188,29 @@ export default function LuxuryExperiencePage() {
                     <option value="+48">🇵🇱 +48</option>
                     <option value="+40">🇷🇴 +40</option>
                   </select>
-                  <input name="phone" type="tel" placeholder="Your phone number (optional)" className="flex-1 px-4 py-3 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
+                  <input name="phone" type="tel" placeholder={t("public.phoneOptional")} className="flex-1 px-4 py-3 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
                 </div>
                 <div className="mb-3">
-                  <p className="text-xs font-medium text-foreground-700 mb-2">Preferred contact method</p>
+                  <p className="text-xs font-medium text-foreground-700 mb-2">{t("public.preferredContact")}</p>
                   <div className="flex flex-wrap gap-3 justify-center">
                     <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-background-200 bg-white cursor-pointer hover:border-primary-200 transition-colors">
                       <input type="radio" name="preferred_contact" value="phone_call" className="accent-primary-500" />
                       <i className="ri-phone-line text-foreground-500 text-sm"></i>
-                      <span className="text-sm text-foreground-700">Phone Call</span>
+                      <span className="text-sm text-foreground-700">{t("public.phoneCall")}</span>
                     </label>
                     <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-background-200 bg-white cursor-pointer hover:border-primary-200 transition-colors">
                       <input type="radio" name="preferred_contact" value="whatsapp" className="accent-primary-500" />
                       <i className="ri-whatsapp-line text-foreground-500 text-sm"></i>
-                      <span className="text-sm text-foreground-700">WhatsApp</span>
+                      <span className="text-sm text-foreground-700">{t("public.whatsapp")}</span>
                     </label>
                     <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-background-200 bg-white cursor-pointer hover:border-primary-200 transition-colors">
                       <input type="radio" name="preferred_contact" value="email" defaultChecked className="accent-primary-500" />
                       <i className="ri-mail-line text-foreground-500 text-sm"></i>
-                      <span className="text-sm text-foreground-700">Email</span>
+                      <span className="text-sm text-foreground-700">{t("public.email")}</span>
                     </label>
                   </div>
                 </div>
-                <textarea name="notes" placeholder="Tell us what you're looking for — custom experience, special occasion, or any questions..." maxLength={500} rows={3} className="w-full px-4 py-3 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors resize-none mb-3"></textarea>
+                <textarea name="notes" placeholder={t("public.conciergeNotes")} maxLength={500} rows={3} className="w-full px-4 py-3 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors resize-none mb-3"></textarea>
                 <input name="website_alt" type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" readOnly className="booking-offscreen" />
                 {formError && (
                   <p className="text-xs text-red-500 mb-3 flex items-center justify-center gap-1">
@@ -219,11 +222,11 @@ export default function LuxuryExperiencePage() {
                   {formSubmitting ? (
                     <>
                       <i className="ri-loader-4-line animate-spin text-sm"></i>
-                      Sending...
+                      {t("public.sending")}
                     </>
                   ) : (
                     <>
-                      Contact Concierge
+                      {t("public.contactConcierge")}
                       <i className="ri-arrow-right-line"></i>
                     </>
                   )}
