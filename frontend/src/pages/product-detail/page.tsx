@@ -133,6 +133,7 @@ export default function ProductDetailPage() {
   }, [product?.product_categories?.name]);
 
   const mediaImages = product?.media?.filter((m) => m.type === "image" && m.url) || [];
+  const activeImageUrl = mediaImages[activeImageIndex]?.url || mediaImages[0]?.url;
 
   // Reset quantity when SKU or product changes
   useEffect(() => {
@@ -149,6 +150,7 @@ export default function ProductDetailPage() {
       price: formatPrice(price),
       icon: getCategoryIcon(),
       variantLabel: label,
+      imageUrl: activeImageUrl,
     });
     showToast(
       t("product.addedToCart"),
@@ -158,7 +160,7 @@ export default function ProductDetailPage() {
       "success"
     );
     setQuantity(1);
-  }, [product, hasVariants, selectedSku, addToCart, formatPrice, getCategoryIcon, showToast, quantity, t]);
+  }, [product, hasVariants, selectedSku, addToCart, formatPrice, getCategoryIcon, activeImageUrl, showToast, quantity, t]);
 
   // Print-to-PDF: open a print-optimized tour map in a new window
   const handlePrintMap = useCallback(() => {

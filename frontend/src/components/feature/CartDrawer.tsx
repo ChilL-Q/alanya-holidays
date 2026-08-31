@@ -122,8 +122,18 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                   key={item.productName}
                   className="flex items-start gap-3 p-4 rounded-xl bg-background-50 border border-background-200/70 shadow-xs"
                 >
-                  <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-secondary-100 dark:bg-secondary-950/50 shrink-0">
+                  <div className="relative w-10 h-10 flex items-center justify-center rounded-lg bg-secondary-100 dark:bg-secondary-950/50 shrink-0 overflow-hidden">
                     <i className={`${item.icon} text-secondary-600 dark:text-secondary-400 text-lg`}></i>
+                    {item.imageUrl && (
+                      <img
+                        src={item.imageUrl}
+                        alt={item.productName}
+                        className="absolute inset-0 w-full h-full object-cover bg-background-100"
+                        onError={(event) => {
+                          event.currentTarget.hidden = true;
+                        }}
+                      />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="text-sm font-medium text-foreground-900 leading-snug mb-1">

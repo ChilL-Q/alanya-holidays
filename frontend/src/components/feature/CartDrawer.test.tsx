@@ -21,6 +21,7 @@ function CartWithItem({ open, onClose }: { open: boolean; onClose: () => void })
       name: "Silk Scarf",
       price: "€45.00",
       icon: "ri-gift-line",
+      imageUrl: "https://example.com/silk-scarf.jpg",
     });
   }, [addToCart]);
 
@@ -30,6 +31,7 @@ function CartWithItem({ open, onClose }: { open: boolean; onClose: () => void })
 describe("CartDrawer Component", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
     document.body.style.overflow = "";
   });
 
@@ -99,6 +101,29 @@ describe("CartDrawer Component", () => {
 
     expect(onClose).toHaveBeenCalled();
     expect(mockedNavigate).toHaveBeenCalledWith("/checkout");
+  });
+
+  it("renders the product image and falls back to the category icon on load error", () => {
+    render(
+      <BrowserRouter>
+        <CartProvider>
+          <CartWithItem open={true} onClose={vi.fn()} />
+        </CartProvider>
+      </BrowserRouter>
+    );
+
+    const image = screen.getByRole("img", { name: "Silk Scarf" });
+    expect(image).toHaveAttribute(
+      "src",
+      "https://example.com/silk-scarf.jpg",
+    );
+
+    fireEvent.error(image);
+
+    expect(
+      screen.queryByRole("img", { name: "Silk Scarf" }),
+    ).not.toBeInTheDocument();
+    expect(document.querySelector(".ri-gift-line")).toBeInTheDocument();
   });
 
   it("closes when backdrop is clicked", () => {

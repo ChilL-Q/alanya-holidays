@@ -5,12 +5,18 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 WORKFLOW_PATH="${PROJECT_ROOT}/.github/workflows/cd.yml"
+NGINX_PATH="${PROJECT_ROOT}/nginx/nginx.prod.conf"
+FRONTEND_INDEX_PATH="${PROJECT_ROOT}/frontend/index.html"
 
-ruby - "${WORKFLOW_PATH}" <<'RUBY'
+ruby - "${WORKFLOW_PATH}" "${NGINX_PATH}" "${FRONTEND_INDEX_PATH}" <<'RUBY'
 require "yaml"
 
 workflow_path = ARGV.fetch(0)
+nginx_path = ARGV.fetch(1)
+frontend_index_path = ARGV.fetch(2)
 workflow = YAML.load_file(workflow_path)
+nginx = File.read(nginx_path)
+frontend_index = File.read(frontend_index_path)
 steps = workflow.fetch("jobs").fetch("deploy").fetch("steps")
 remote_step = steps.find { |step| step["name"] == "Execute Remote Deployment via SSH" }
 script = remote_step&.dig("with", "script")
@@ -55,6 +61,25 @@ check(failures, verify_csp.include?("exec -T nginx"), "CSP verification runs ins
 check(failures, verify_csp.include?("https://127.0.0.1/"), "CSP verification reads a live HTTPS response")
 check(failures, verify_csp.include?("Content-Security-Policy"), "CSP verification selects the response CSP header")
 check(failures, verify_csp.include?("https://plausible.io"), "CSP verification requires Plausible")
+
+csp_headers = nginx.scan(/add_header Content-Security-Policy "(?<policy>[^"]+)" always;/).flatten
+check(failures, csp_headers.length == 2, "nginx keeps exactly two effective CSP header copies")
+frame_sources = csp_headers.map { |policy| policy[/frame-src\s+([^;]+);/, 1] }
+check(
+  failures,
+  frame_sources.length == 2 && frame_sources.all? { |sources| sources&.split&.include?("https://maps.google.com") },
+  "every effective frame-src allows the Google Maps embed origin",
+)
+check(
+  failures,
+  csp_headers.none? { |policy| policy.include?("readdy.ai") },
+  "CSP does not allowlist the dead Readdy widget",
+)
+check(
+  failures,
+  !frontend_index.include?("readdy.ai") && !frontend_index.include?("daab4efb-ebe1-4484-a947-b9b911becc35"),
+  "frontend index does not load the dead Readdy widget",
+)
 
 verify_schema = function_body(script, "verify_schema_readiness", failures)
 check(failures, verify_schema.match?(/exec -T backend\s+node/), "schema readiness runs through the backend container")

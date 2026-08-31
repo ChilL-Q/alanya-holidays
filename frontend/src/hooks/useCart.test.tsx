@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, waitFor } from "@testing-library/react";
 import React from "react";
 import { CartProvider, useCart } from "./useCart";
 import { Money } from "@/domain/money.vo";
@@ -39,6 +39,56 @@ describe("useCart hook", () => {
     expect(result.current.items[0].moneyPrice.cents).toBe(1550);
     expect(result.current.subtotalMoney.amount).toBe(15.5);
     expect(result.current.subtotalMoney.cents).toBe(1550);
+  });
+
+  it("should persist and restore the optional product image URL", async () => {
+    const firstRender = renderHook(() => useCart(), { wrapper });
+
+    act(() => {
+      firstRender.result.current.addToCart({
+        name: "Pink Peshtemal",
+        price: "€30.00",
+        icon: "ri-t-shirt-line",
+        imageUrl: "https://example.com/pink-peshtemal.jpg",
+      });
+    });
+
+    await waitFor(() => {
+      const stored = JSON.parse(localStorage.getItem("alanya_cart") || "[]");
+      expect(stored[0].imageUrl).toBe(
+        "https://example.com/pink-peshtemal.jpg",
+      );
+    });
+
+    firstRender.unmount();
+    const restored = renderHook(() => useCart(), { wrapper });
+
+    expect(restored.result.current.items[0].imageUrl).toBe(
+      "https://example.com/pink-peshtemal.jpg",
+    );
+  });
+
+  it("should keep legacy stored cart entries usable without an image URL", () => {
+    localStorage.setItem(
+      "alanya_cart",
+      JSON.stringify([
+        {
+          productName: "Legacy Gift",
+          price: "€12.00",
+          icon: "ri-gift-line",
+          quantity: 2,
+        },
+      ]),
+    );
+
+    const { result } = renderHook(() => useCart(), { wrapper });
+
+    expect(result.current.items[0]).toMatchObject({
+      productName: "Legacy Gift",
+      quantity: 2,
+    });
+    expect(result.current.items[0].imageUrl).toBeUndefined();
+    expect(result.current.subtotalMoney.cents).toBe(2400);
   });
 
   it("should handle decimal addition without float drift (0.1 + 0.2 === 0.3)", () => {
