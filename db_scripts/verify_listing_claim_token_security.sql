@@ -7,8 +7,8 @@ DECLARE
   v_listing_id UUID := '21000000-0000-4000-8000-000000000001';
   v_claim_id UUID := '31000000-0000-4000-8000-000000000001';
   v_expired_claim_id UUID := '31000000-0000-4000-8000-000000000002';
-  v_token_hash TEXT := encode(digest(repeat('A', 43), 'sha256'), 'hex');
-  v_expired_hash TEXT := encode(digest(repeat('B', 43), 'sha256'), 'hex');
+  v_token_hash TEXT := encode(extensions.digest(repeat('A', 43), 'sha256'), 'hex');
+  v_expired_hash TEXT := encode(extensions.digest(repeat('B', 43), 'sha256'), 'hex');
   v_result RECORD;
   v_count INTEGER;
   v_config TEXT[];

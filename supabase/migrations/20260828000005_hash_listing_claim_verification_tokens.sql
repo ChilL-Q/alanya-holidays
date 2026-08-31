@@ -9,7 +9,7 @@ ALTER TABLE public.listing_claims
   ADD COLUMN verification_token_hash TEXT;
 
 UPDATE public.listing_claims
-SET verification_token_hash = encode(digest(verification_token::text, 'sha256'), 'hex')
+SET verification_token_hash = encode(extensions.digest(verification_token::text, 'sha256'), 'hex')
 WHERE verification_token_hash IS NULL
   AND email_verified = false;
 
