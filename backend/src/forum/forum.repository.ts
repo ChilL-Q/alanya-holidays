@@ -969,7 +969,7 @@ export class ForumRepository {
         ? this.client
             .from('forum_posts')
             .select(
-              'id, title, content, author_id, is_pinned, is_removed, created_at',
+              'id, title, content:body, author_id, is_pinned, is_removed, created_at',
             )
             .in('id', postIds)
         : Promise.resolve({ data: [], error: null }),

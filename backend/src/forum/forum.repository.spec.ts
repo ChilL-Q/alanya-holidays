@@ -519,6 +519,7 @@ describe('ForumRepository', () => {
     });
 
     it('hydrates report targets and marks hard-deleted targets as missing', async () => {
+      let postQuery: ReturnType<typeof createQueryChain> | undefined;
       mockClient.from.mockImplementation((table: string) => {
         if (table === 'forum_reports') {
           return createQueryChain({
@@ -545,7 +546,7 @@ describe('ForumRepository', () => {
           });
         }
         if (table === 'forum_posts') {
-          return createQueryChain({
+          postQuery = createQueryChain({
             data: [
               {
                 id: 'post-live',
@@ -555,6 +556,7 @@ describe('ForumRepository', () => {
               },
             ],
           });
+          return postQuery;
         }
         if (table === 'forum_comments') {
           return createQueryChain({
@@ -574,11 +576,17 @@ describe('ForumRepository', () => {
 
       const reports = await repository.getReports({ includeResolved: true });
 
+      expect(postQuery?.select).toHaveBeenCalledWith(
+        'id, title, content:body, author_id, is_pinned, is_removed, created_at',
+      );
       expect(reports).toEqual([
         expect.objectContaining({
           id: 'rep-live',
           target_missing: false,
-          target_post: expect.objectContaining({ id: 'post-live' }),
+          target_post: expect.objectContaining({
+            id: 'post-live',
+            content: 'Visible moderation target',
+          }),
         }),
         expect.objectContaining({
           id: 'rep-orphan',
