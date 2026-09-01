@@ -51,10 +51,14 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Install Playwright Chromium Browser
+      - name: Install Playwright Browsers
         working-directory: frontend
-        run: pnpm exec playwright install chromium
+        run: pnpm exec playwright install chromium webkit
 
-      - name: Run E2E Smoke Tests
+      - name: Run Legacy E2E Smoke Tests
         working-directory: frontend
-        run: pnpm exec playwright test e2e/home.spec.ts e2e/navigation.spec.ts e2e/auth.spec.ts e2e/checkout.spec.ts e2e/enquiry.spec.ts --config=playwright.config.ts --project=chromium
+        run: pnpm exec playwright test e2e/home.spec.ts e2e/navigation.spec.ts e2e/auth.spec.ts e2e/checkout.spec.ts e2e/enquiry.spec.ts --config=playwright.config.ts --project="Desktop Chrome"
+
+      - name: Run Production Readiness on All Configured Projects
+        working-directory: frontend
+        run: pnpm exec playwright test e2e/production-readiness.spec.ts --config=playwright.config.ts

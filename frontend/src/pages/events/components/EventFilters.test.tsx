@@ -2,6 +2,7 @@ import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import EventFilters from "./EventFilters";
+import i18n from "@/i18n";
 
 function StatefulEventFilters() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -70,5 +71,28 @@ describe("EventFilters", () => {
     expect(onCategoryChange).toHaveBeenCalledWith(null);
     expect(onSavedToggle).toHaveBeenCalledWith(true);
     expect(onFeaturedToggle).toHaveBeenCalledWith(false);
+  });
+
+  it("localizes known category labels without changing the category value", async () => {
+    await i18n.changeLanguage("ru");
+    const onCategoryChange = vi.fn();
+    render(
+      <EventFilters
+        activeCategory={null}
+        onCategoryChange={onCategoryChange}
+        showFeatured={false}
+        onFeaturedToggle={vi.fn()}
+        showSaved={false}
+        onSavedToggle={vi.fn()}
+      />,
+    );
+
+    const beachButton = screen.getByRole("button", {
+      name: "Фильтр мероприятий: Встречи на пляже",
+    });
+    expect(beachButton).toHaveTextContent("Встречи на пляже");
+    fireEvent.click(beachButton);
+    expect(onCategoryChange).toHaveBeenCalledWith("Beach Gatherings");
+    await i18n.changeLanguage("en");
   });
 });

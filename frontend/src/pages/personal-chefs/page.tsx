@@ -7,6 +7,7 @@ import RelatedExperiences from "@/components/feature/RelatedExperiences";
 import { conciergeService, chefStyles, type PersonalChef } from "@/api-services/concierge.service";
 import ErrorState from "@/components/base/ErrorState";
 import EmptyState from "@/components/base/EmptyState";
+import OfferProvenanceNotice from "@/components/feature/OfferProvenanceNotice";
 import { useTranslation } from "react-i18next";
 import "@/i18n";
 
@@ -205,7 +206,7 @@ export default function PersonalChefsPage() {
         <section className="w-full px-4 md:px-8 lg:px-12 py-4 bg-background-50">
           <div className="max-w-7xl mx-auto">
             {!isLoading && !fetchError && (
-              <p className="text-sm text-foreground-500">{filteredChefs.length} {filteredChefs.length === 1 ? "chef" : "chefs"} available</p>
+              <div><p className="text-sm text-foreground-500">{filteredChefs.length} {filteredChefs.length === 1 ? "chef listing" : "chef listings"}</p><OfferProvenanceNotice /></div>
             )}
           </div>
         </section>

@@ -7,6 +7,7 @@ import RelatedExperiences from "@/components/feature/RelatedExperiences";
 import { conciergeService, spaTypes, type HammamSpaExperience as HammamSpa } from "@/api-services/concierge.service";
 import ErrorState from "@/components/base/ErrorState";
 import EmptyState from "@/components/base/EmptyState";
+import OfferProvenanceNotice from "@/components/feature/OfferProvenanceNotice";
 import { useTranslation } from "react-i18next";
 import "@/i18n";
 
@@ -200,7 +201,7 @@ export default function HammamSpaPage() {
         <section className="w-full px-4 md:px-8 lg:px-12 py-4 bg-background-50">
           <div className="max-w-7xl mx-auto">
             {!isLoading && !fetchError && (
-              <p className="text-sm text-foreground-500">{t("services.service.available", { count: filteredSpas.length, item: filteredSpas.length === 1 ? t("services.service.experience") : t("services.service.experiences") })}</p>
+              <div><p className="text-sm text-foreground-500">{filteredSpas.length} {filteredSpas.length === 1 ? "experience listing" : "experience listings"}</p><OfferProvenanceNotice /></div>
             )}
           </div>
         </section>

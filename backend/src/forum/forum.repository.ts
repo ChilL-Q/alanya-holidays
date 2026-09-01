@@ -941,7 +941,92 @@ export class ForumRepository {
 
     const { data, error } = await q;
     if (error) throw new Error(error.message);
-    return (data as unknown as ForumReport[]) || [];
+    const reports = (data as unknown as ForumReport[]) || [];
+
+    const postIds = Array.from(
+      new Set(
+        reports
+          .filter(
+            (report) =>
+              report.target_type === 'post' && Boolean(report.target_id),
+          )
+          .map((report) => report.target_id),
+      ),
+    );
+    const commentIds = Array.from(
+      new Set(
+        reports
+          .filter(
+            (report) =>
+              report.target_type === 'comment' && Boolean(report.target_id),
+          )
+          .map((report) => report.target_id),
+      ),
+    );
+
+    const [postsResult, commentsResult] = await Promise.all([
+      postIds.length > 0
+        ? this.client
+            .from('forum_posts')
+            .select(
+              'id, title, content, author_id, is_pinned, is_removed, created_at',
+            )
+            .in('id', postIds)
+        : Promise.resolve({ data: [], error: null }),
+      commentIds.length > 0
+        ? this.client
+            .from('forum_comments')
+            .select('id, post_id, body, author_id, is_removed, created_at')
+            .in('id', commentIds)
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+
+    if (postsResult.error) throw new Error(postsResult.error.message);
+    if (commentsResult.error) throw new Error(commentsResult.error.message);
+
+    const postsById = new Map(
+      ((postsResult.data ?? []) as ForumReport['target_post'][])
+        .filter((post): post is NonNullable<ForumReport['target_post']> =>
+          Boolean(post?.id),
+        )
+        .map((post) => [post.id, post]),
+    );
+    const commentsById = new Map(
+      ((commentsResult.data ?? []) as ForumReport['target_comment'][])
+        .filter(
+          (comment): comment is NonNullable<ForumReport['target_comment']> =>
+            Boolean(comment?.id),
+        )
+        .map((comment) => [
+          comment.id,
+          {
+            ...comment,
+            user_id: comment.user_id ?? comment.author_id,
+          },
+        ]),
+    );
+
+    return reports.map((report) => {
+      if (report.target_type === 'post') {
+        const target = postsById.get(report.target_id) ?? null;
+        return {
+          ...report,
+          target_post: target,
+          target_comment: null,
+          target_missing: target === null,
+        };
+      }
+      if (report.target_type === 'comment') {
+        const target = commentsById.get(report.target_id) ?? null;
+        return {
+          ...report,
+          target_post: null,
+          target_comment: target,
+          target_missing: target === null,
+        };
+      }
+      return report;
+    });
   }
 
   async updateReportResolved(id: string): Promise<void> {

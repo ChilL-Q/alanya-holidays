@@ -18,7 +18,7 @@ const formatLocalDate = (d: Date) => {
 };
 
 export default function CalendarStrip({ events, selectedDate, onDateSelect }: CalendarStripProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const today = new Date();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const parsedEventDates = events
@@ -46,8 +46,13 @@ export default function CalendarStrip({ events, selectedDate, onDateSelect }: Ca
   }
 
   const eventDates = new Set(events.map((e) => e.date));
-  const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
-  const dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+  const monthFormatter = new Intl.DateTimeFormat(i18n.language, { month: "short" });
+  const dayFormatter = new Intl.DateTimeFormat(i18n.language, { weekday: "short" });
+  const accessibleDateFormatter = new Intl.DateTimeFormat(i18n.language, {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
 
   // Scroll to today on mount
   useEffect(() => {
@@ -115,7 +120,7 @@ export default function CalendarStrip({ events, selectedDate, onDateSelect }: Ca
               const container = document.getElementById("calendar-scroll");
               if (container) container.scrollBy({ left: -200, behavior: "smooth" });
             }}
-            aria-label="Scroll calendar left"
+            aria-label={t("events.scrollCalendarLeft")}
             className="w-8 h-8 flex items-center justify-center rounded-full bg-background-100 hover:bg-background-200 transition-colors shrink-0"
           >
             <i className="ri-arrow-left-s-line text-foreground-600"></i>
@@ -127,7 +132,7 @@ export default function CalendarStrip({ events, selectedDate, onDateSelect }: Ca
             ref={scrollContainerRef}
             className="flex-1 flex gap-1 overflow-x-auto scrollbar-hide py-1 pr-1 scroll-px-1"
             role="listbox"
-            aria-label="Event dates"
+            aria-label={t("events.eventDates")}
           >
             {/* All Dates button */}
             <button
@@ -138,7 +143,7 @@ export default function CalendarStrip({ events, selectedDate, onDateSelect }: Ca
               onClick={() => onDateSelect(null)}
               onKeyDown={(event) => handleOptionKeyDown(event, 0)}
               aria-selected={selectedDate === null}
-              aria-label="Show events for all dates"
+              aria-label={t("events.showAllDates")}
               className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl min-w-[64px] shrink-0 transition-all first:ml-1 ${
                 selectedDate === null
                   ? "bg-primary-500 text-background-50"
@@ -154,7 +159,7 @@ export default function CalendarStrip({ events, selectedDate, onDateSelect }: Ca
               const hasEvent = eventDates.has(dateStr);
               const isSelected = selectedDate === dateStr;
               const isToday = dateStr === formatLocalDate(new Date());
-              const thisMonth = monthNames[d.getMonth()];
+              const thisMonth = monthFormatter.format(d).replace(".", "").toUpperCase();
               const showMonthLabel = thisMonth !== lastMonth;
               lastMonth = thisMonth;
 
@@ -170,7 +175,7 @@ export default function CalendarStrip({ events, selectedDate, onDateSelect }: Ca
                   onKeyDown={(event) => handleOptionKeyDown(event, dateIndex + 1)}
                   aria-selected={isSelected}
                   aria-current={isToday ? "date" : undefined}
-                  aria-label={`${d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}${hasEvent ? ", has events" : ""}${isToday ? ", today" : ""}`}
+                  aria-label={`${accessibleDateFormatter.format(d)}${hasEvent ? `, ${t("events.dateHasEvents")}` : ""}${isToday ? `, ${t("events.dateToday")}` : ""}`}
                   className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl min-w-[56px] shrink-0 transition-all relative last:mr-1 ${
                     isSelected
                       ? "bg-primary-500 text-background-50"
@@ -191,7 +196,7 @@ export default function CalendarStrip({ events, selectedDate, onDateSelect }: Ca
                   >
                     {thisMonth}
                   </span>
-                  <span className="text-xs font-medium">{dayNames[d.getDay()]}</span>
+                  <span className="text-xs font-medium">{dayFormatter.format(d).replace(".", "").toUpperCase()}</span>
                   <span className="text-base font-semibold">{d.getDate()}</span>
                   {hasEvent && !isSelected && (
                     <span className="w-1 h-1 rounded-full bg-accent-500"></span>
@@ -208,7 +213,7 @@ export default function CalendarStrip({ events, selectedDate, onDateSelect }: Ca
               const container = document.getElementById("calendar-scroll");
               if (container) container.scrollBy({ left: 200, behavior: "smooth" });
             }}
-            aria-label="Scroll calendar right"
+            aria-label={t("events.scrollCalendarRight")}
             className="w-8 h-8 flex items-center justify-center rounded-full bg-background-100 hover:bg-background-200 transition-colors shrink-0"
           >
             <i className="ri-arrow-right-s-line text-foreground-600"></i>

@@ -1,6 +1,7 @@
 import { eventCategories } from "@/api-services/events.service";
 import { useTranslation } from "react-i18next";
 import "@/i18n";
+import { eventCategoryLabel } from "../eventCategoryLabels";
 
 interface EventFiltersProps {
   activeCategory: string | null;
@@ -49,13 +50,15 @@ export default function EventFilters({
           {t("events.allEvents", "All Events")}
         </button>
 
-        {eventCategories.map((cat) => (
+        {eventCategories.map((cat) => {
+          const categoryLabel = eventCategoryLabel(t, cat);
+          return (
           <button
             key={cat}
             type="button"
             onClick={() => onCategoryChange(cat === activeCategory ? null : cat)}
             aria-pressed={activeCategory === cat}
-            aria-label={t("events.filterBy", "Filter events by {{category}}", { category: cat })}
+            aria-label={t("events.filterBy", { category: categoryLabel })}
             className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all shrink-0 ${
               activeCategory === cat
                 ? "bg-accent-500 text-background-50"
@@ -63,9 +66,10 @@ export default function EventFilters({
             }`}
           >
             <i className={categoryIcons[cat] || "ri-calendar-event-line"}></i>
-            {cat}
+            {categoryLabel}
           </button>
-        ))}
+          );
+        })}
       </div>
 
       <div className="flex items-center gap-2 ml-auto shrink-0" role="group" aria-label={t("events.quickFilters", "Quick event filters")}>

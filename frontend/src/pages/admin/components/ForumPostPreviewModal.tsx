@@ -7,17 +7,17 @@ interface ForumPostPreviewModalProps {
   report: ForumReportAdminItem | null;
   isOpen: boolean;
   onClose: () => void;
-  onResolve: (reportId: string) => Promise<void>;
+  onResolve: (reportId: string) => Promise<boolean | void>;
   onToggleRemove: (
     targetType: "post" | "comment",
     targetId: string,
     willBeRemoved: boolean
-  ) => Promise<void>;
-  onTogglePin?: (postId: string, willBePinned: boolean) => Promise<void>;
+  ) => Promise<boolean | void>;
+  onTogglePin?: (postId: string, willBePinned: boolean) => Promise<boolean | void>;
   onDelete?: (
     targetType: "post" | "comment",
     targetId: string
-  ) => Promise<void>;
+  ) => Promise<boolean | void>;
 }
 
 export default function ForumPostPreviewModal({
@@ -36,13 +36,16 @@ export default function ForumPostPreviewModal({
   if (!isOpen || !report) return null;
 
   const isPost = report.target_type === "post";
+  const targetMissing = report.target_missing === true;
   const post = report.target_post;
   const comment = report.target_comment;
 
   const contentTitle = isPost ? post?.title : undefined;
-  const contentBody = isPost
-    ? post?.content || t("admin.noPostBody")
-    : comment?.body || t("admin.noCommentText");
+  const contentBody = targetMissing
+    ? `This ${report.target_type} is no longer available. The report is retained for moderation history.`
+    : isPost
+      ? post?.content || t("admin.noPostBody")
+      : comment?.body || t("admin.noCommentText");
 
   const isRemoved = isPost
     ? post?.is_removed === true
@@ -52,8 +55,7 @@ export default function ForumPostPreviewModal({
   const handleResolve = async () => {
     setSubmitting(true);
     try {
-      await onResolve(report.id);
-      onClose();
+      if ((await onResolve(report.id)) !== false) onClose();
     } finally {
       setSubmitting(false);
     }
@@ -86,8 +88,9 @@ export default function ForumPostPreviewModal({
     if (!onDelete) return;
     setSubmitting(true);
     try {
-      await onDelete(report.target_type as "post" | "comment", report.target_id);
-      onClose();
+      if ((await onDelete(report.target_type as "post" | "comment", report.target_id)) !== false) {
+        onClose();
+      }
     } finally {
       setSubmitting(false);
       setConfirmDelete(false);
@@ -172,12 +175,16 @@ export default function ForumPostPreviewModal({
             </span>
             <span
               className={`font-semibold ${
-                isRemoved
+                targetMissing || isRemoved
                   ? "text-rose-600 dark:text-rose-400"
                   : "text-emerald-600 dark:text-emerald-400"
               }`}
             >
-              {isRemoved ? t("admin.softRemoved") : t("admin.publiclyVisible")}
+              {targetMissing
+                ? "Permanently deleted"
+                : isRemoved
+                  ? t("admin.softRemoved")
+                  : t("admin.publiclyVisible")}
             </span>
           </div>
         </div>
@@ -225,7 +232,7 @@ export default function ForumPostPreviewModal({
           <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
             <div className="flex flex-wrap items-center gap-2">
               {/* Soft Remove / Restore */}
-              <button
+              {!targetMissing && <button
                 type="button"
                 disabled={submitting}
                 onClick={handleToggleRemove}
@@ -241,10 +248,10 @@ export default function ForumPostPreviewModal({
                     ? t(isPost ? "admin.restorePost" : "admin.restoreComment")
                     : t(isPost ? "admin.removePost" : "admin.removeComment")}
                 </span>
-              </button>
+              </button>}
 
               {/* Pin / Unpin (Post only) */}
-              {isPost && onTogglePin && (
+              {!targetMissing && isPost && onTogglePin && (
                 <button
                   type="button"
                   disabled={submitting}
@@ -261,7 +268,7 @@ export default function ForumPostPreviewModal({
               )}
 
               {/* Hard Delete Trigger */}
-              {onDelete && (
+              {!targetMissing && onDelete && (
                 <button
                   type="button"
                   onClick={() => setConfirmDelete(true)}

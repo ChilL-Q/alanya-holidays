@@ -110,6 +110,25 @@ export interface ForumReport {
   reason: string;
   resolved: boolean;
   created_at: string;
+  target_missing?: boolean;
+  target_post?: {
+    id: string;
+    title?: string;
+    content?: string;
+    author_id?: string;
+    is_pinned?: boolean;
+    is_removed?: boolean;
+    created_at?: string;
+  } | null;
+  target_comment?: {
+    id: string;
+    post_id?: string;
+    body?: string;
+    author_id?: string;
+    user_id?: string;
+    is_removed?: boolean;
+    created_at?: string;
+  } | null;
 }
 
 export interface ForumPostsFilter {

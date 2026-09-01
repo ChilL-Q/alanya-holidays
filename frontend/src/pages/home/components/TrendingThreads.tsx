@@ -2,28 +2,40 @@ import { useRef, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { forumService, type CategoryThread } from "@/api-services/forum.service";
 import { logger } from "@/lib/logger";
+import { useTranslation } from "react-i18next";
+import ErrorState from "@/components/base/ErrorState";
+import "@/i18n";
 
 export default function TrendingThreads() {
+  const { t } = useTranslation();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [threads, setThreads] = useState<CategoryThread[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadThreads = () => {
+    setError(null);
+    return forumService
+      .getTrendingThreads(8)
+      .then((data) => setThreads(data || []))
+      .catch((err: unknown) => {
+        logger.warn("Failed to load trending threads:", err);
+        setError(err instanceof Error ? err.message : t("home.discussionsUnavailable"));
+      });
+  };
 
   useEffect(() => {
     let isMounted = true;
-    forumService
-      .getTrendingThreads(8)
-      .then((data) => {
-        if (isMounted && data) {
-          setThreads(data);
-        }
-      })
-      .catch((err) => {
-        logger.warn("Failed to load trending threads:", err);
-      });
+    forumService.getTrendingThreads(8).then((data) => {
+      if (isMounted) setThreads(data || []);
+    }).catch((err: unknown) => {
+      logger.warn("Failed to load trending threads:", err);
+      if (isMounted) setError(err instanceof Error ? err.message : t("home.discussionsUnavailable"));
+    });
 
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [t]);
 
   const scroll = (direction: "left" | "right") => {
     if (scrollRef.current) {
@@ -44,19 +56,22 @@ export default function TrendingThreads() {
             <div className="flex items-center gap-2 mb-2">
               <i className="ri-fire-line text-primary-500 text-lg"></i>
               <span className="text-sm font-semibold text-primary-500 uppercase tracking-wider">
-                Trending Now
+                {t("home.trendingNow")}
               </span>
             </div>
             <h2 className="font-heading text-2xl md:text-4xl text-foreground-900">
-              Hot Discussions
+              {t("home.hotDiscussions")}
             </h2>
           </div>
           <p className="hidden md:block text-foreground-500 text-sm max-w-xs text-right">
-            The conversations everyone is talking about right now
+            {t("home.hotDiscussionsDescription")}
           </p>
         </div>
 
-        {/* Cards Container */}
+        {error ? (
+          <ErrorState title={t("home.discussionsUnavailable")} message={error} onRetry={loadThreads} />
+        ) : (
+        /* Cards Container */
         <div className="relative">
           <div
             ref={scrollRef}
@@ -90,7 +105,7 @@ export default function TrendingThreads() {
                     {thread.isHot && (
                       <span className="absolute top-3 left-3 flex items-center gap-1 px-2 py-1 bg-red-500 text-white text-xs rounded-full">
                         <i className="ri-fire-line"></i>
-                        HOT
+                        {t("home.hotBadge")}
                       </span>
                     )}
                   </div>
@@ -150,6 +165,7 @@ export default function TrendingThreads() {
             <i className="ri-arrow-right-s-line text-lg"></i>
           </button>
         </div>
+        )}
       </div>
     </section>
   );

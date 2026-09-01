@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { describe, it, expect } from "vitest";
+import { afterEach, describe, it, expect } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import CalendarStrip from "./CalendarStrip";
 import type { ForumEvent } from "@/api-services/events.service";
+import i18n from "@/i18n";
 
 const events: ForumEvent[] = [
   {
@@ -55,6 +56,10 @@ function StatefulCalendarStrip({ initialDate = null }: { initialDate?: string | 
 }
 
 describe("CalendarStrip", () => {
+  afterEach(async () => {
+    await i18n.changeLanguage("en");
+  });
+
   it("supports arrow key navigation between calendar options", () => {
     render(<StatefulCalendarStrip initialDate="2026-09-10" />);
 
@@ -97,5 +102,15 @@ describe("CalendarStrip", () => {
     expect(options.at(-1)).toHaveAttribute("aria-selected", "true");
     expect(options.at(-1)).toHaveFocus();
     expect(selectedDate).not.toHaveTextContent("ALL");
+  });
+
+  it("localizes calendar controls and date labels in Russian", async () => {
+    await i18n.changeLanguage("ru");
+    render(<StatefulCalendarStrip initialDate="2026-09-10" />);
+
+    expect(screen.getByRole("button", { name: "Прокрутить календарь влево" })).toBeInTheDocument();
+    expect(screen.getByRole("listbox", { name: "Даты мероприятий" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: /четверг, 10 сентября, есть мероприятия/i })).toBeInTheDocument();
+    expect(screen.getAllByText("ЧТ").length).toBeGreaterThan(0);
   });
 });

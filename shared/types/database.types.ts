@@ -634,6 +634,8 @@ export type Database = {
           id: string;
           title: string | null;
           description: string | null;
+          google_rating: number | null;
+          google_review_count: number | null;
           category: string | null;
           tier: 'explorer' | 'voyager' | 'signature' | 'partner' | string | null;
           status: 'draft' | 'pending' | 'approved' | 'rejected' | string | null;
@@ -647,6 +649,8 @@ export type Database = {
           id?: string;
           title?: string | null;
           description?: string | null;
+          google_rating?: number | null;
+          google_review_count?: number | null;
           category?: string | null;
           tier?: 'explorer' | 'voyager' | 'signature' | 'partner' | string | null;
           status?: 'draft' | 'pending' | 'approved' | 'rejected' | string | null;
@@ -660,6 +664,8 @@ export type Database = {
           id?: string;
           title?: string | null;
           description?: string | null;
+          google_rating?: number | null;
+          google_review_count?: number | null;
           category?: string | null;
           tier?: 'explorer' | 'voyager' | 'signature' | 'partner' | string | null;
           status?: 'draft' | 'pending' | 'approved' | 'rejected' | string | null;

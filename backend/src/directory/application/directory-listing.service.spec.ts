@@ -6,7 +6,7 @@ import { RedisService } from '../../common/redis/redis.service';
 import { EmailOutboxRepository } from '../../bookings/email-outbox.repository';
 import { PAYMENT_GATEWAY } from '../../webhooks/domain/payment-gateway.interface';
 import { BillingService } from '../../billing/billing.service';
-import { ForbiddenException } from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 
 describe('DirectoryListingService - Admin Email Outbox Enqueueing (Task 2.4)', () => {
   let service: DirectoryListingService;
@@ -472,6 +472,22 @@ describe('DirectoryListingService - Admin Email Outbox Enqueueing (Task 2.4)', (
 
       expect(mockRedisService.delByPattern).toHaveBeenCalledWith('directory:*');
       expect(mockEmailOutbox.enqueue).not.toHaveBeenCalled();
+    });
+
+    it('does not report a missing listing as successfully moderated', async () => {
+      mockUserRolesRepo.getRole.mockResolvedValue('admin');
+      mockRepository.updateListingStatus.mockResolvedValue(null);
+
+      await expect(
+        service.approveDirectoryListing(validListingId, 'admin-uuid'),
+      ).rejects.toThrow(NotFoundException);
+      await expect(
+        service.rejectDirectoryListing(
+          validListingId,
+          'No longer available',
+          'admin-uuid',
+        ),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 

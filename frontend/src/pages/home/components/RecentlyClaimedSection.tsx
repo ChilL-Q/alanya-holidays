@@ -3,14 +3,33 @@ import { Link } from "react-router-dom";
 import { directoryService, type Business } from "@/api-services/directory.service";
 import TrustBadge from "@/components/common/TrustBadge";
 import { logger } from "@/lib/logger";
+import { useTranslation } from "react-i18next";
+import ErrorState from "@/components/base/ErrorState";
+import "@/i18n";
 
 export interface RecentlyClaimedSectionProps {
   onClaimClick?: (business: Business) => void;
 }
 
 export default function RecentlyClaimedSection({ onClaimClick }: RecentlyClaimedSectionProps) {
+  const { t } = useTranslation();
   const [listings, setListings] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadListings = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await directoryService.getRecentlyClaimedListings(6);
+      setListings(Array.isArray(data) ? data : []);
+    } catch (err: unknown) {
+      logger.warn("Failed to load recently claimed listings:", err);
+      setError(err instanceof Error ? err.message : t("home.recentVerifiedTitle"));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -18,16 +37,11 @@ export default function RecentlyClaimedSection({ onClaimClick }: RecentlyClaimed
       try {
         const data = await directoryService.getRecentlyClaimedListings(6);
         if (isMounted) {
-          if (Array.isArray(data) && data.length > 0) {
-            setListings(data);
-          } else {
-            // Fallback
-            const fallback = await directoryService.getListings({ limit: 6, sortBy: "rating" });
-            setListings(fallback.data);
-          }
+          setListings(Array.isArray(data) ? data : []);
         }
       } catch (err) {
         logger.warn("Failed to load recently claimed listings:", err);
+        if (isMounted) setError(err instanceof Error ? err.message : t("home.recentVerifiedTitle"));
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -37,7 +51,7 @@ export default function RecentlyClaimedSection({ onClaimClick }: RecentlyClaimed
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [t]);
 
   return (
     <section className="w-full px-4 md:px-8 lg:px-12 py-12 md:py-16 bg-background-50 border-t border-background-200/60">
@@ -47,25 +61,33 @@ export default function RecentlyClaimedSection({ onClaimClick }: RecentlyClaimed
           <div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider mb-2.5">
               <i className="ri-shield-check-fill text-emerald-600 text-sm" />
-              Verified Ownership
+              {t("home.recentVerifiedLabel")}
             </div>
             <h2 className="font-heading text-2xl md:text-3xl font-extrabold text-foreground-900 leading-tight">
-              Recently Claimed & Verified Businesses
+              {t("home.recentVerifiedTitle")}
             </h2>
             <p className="text-sm text-foreground-600 mt-1 max-w-2xl">
-              Authentic Alanya establishments actively managed and verified by their local business owners.
+              {t("home.recentVerifiedDescription")}
             </p>
           </div>
           <Link
             to="/explore"
             className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary-600 hover:text-primary-700 transition-colors whitespace-nowrap"
           >
-            Explore All Listings
+            {t("home.exploreAllListings")}
             <i className="ri-arrow-right-line" />
           </Link>
         </div>
 
         {/* Listings Grid */}
+        {error ? (
+          <ErrorState title={t("home.recentVerifiedTitle")} message={error} onRetry={loadListings} />
+        ) : !loading && listings.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-background-300 bg-white px-6 py-10 text-center">
+            <h3 className="font-heading text-lg text-foreground-900">{t("home.noRecentVerified")}</h3>
+            <p className="mt-2 text-sm text-foreground-500">{t("home.noRecentVerifiedHint")}</p>
+          </div>
+        ) : (
         <div
           data-testid="recently-claimed-grid"
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6"
@@ -98,7 +120,7 @@ export default function RecentlyClaimedSection({ onClaimClick }: RecentlyClaimed
                     <div className="absolute bottom-3 left-3 z-10">
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-950/80 backdrop-blur-md text-emerald-300 text-[11px] font-semibold shadow-sm">
                         <i className="ri-checkbox-circle-fill text-xs" />
-                        Verified Owner
+                        {t("home.verifiedOwner")}
                       </span>
                     </div>
 
@@ -145,14 +167,14 @@ export default function RecentlyClaimedSection({ onClaimClick }: RecentlyClaimed
                             onClick={() => onClaimClick(biz)}
                             className="text-xs font-semibold text-accent-600 hover:text-accent-700 cursor-pointer"
                           >
-                            Claim Info
+                            {t("home.claimInfo")}
                           </button>
                         )}
                         <Link
                           to={`/business/${biz.id}`}
                           className="px-3 py-1.5 rounded-lg bg-primary-50 text-primary-700 hover:bg-primary-100 text-xs font-semibold transition-colors"
                         >
-                          View Details
+                          {t("home.viewDetails")}
                         </Link>
                       </div>
                     </div>
@@ -160,6 +182,7 @@ export default function RecentlyClaimedSection({ onClaimClick }: RecentlyClaimed
                 </div>
               ))}
         </div>
+        )}
       </div>
     </section>
   );

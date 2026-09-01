@@ -192,41 +192,45 @@ describe("ConciergeService", () => {
 
   describe("Category Convenience Getters", () => {
     it.each([
-      ["private jets", getPrivateJets, "jet-001"],
-      ["helicopter tours", getHelicopterTours, "helitour-001"],
-      ["wine tastings", getWineTastings, "wine-001"],
-      ["hammam experiences", getHammamSpaExperiences, "spa-001"],
-      ["photography excursions", getPhotographyExcursions, "photo-001"],
-      ["golf vacations", getGolfVacations, "golf-001"],
-      ["personal chefs", getPersonalChefs, "chef-001"],
-      ["personal drivers", getPersonalDrivers, "driver-001"],
-      ["personal shoppers", getPersonalShoppers, "shopper-001"],
-    ])("returns curated %s when the parked services backend is empty", async (_name, getter, firstId) => {
+      ["private jets", getPrivateJets],
+      ["helicopter tours", getHelicopterTours],
+      ["wine tastings", getWineTastings],
+      ["hammam experiences", getHammamSpaExperiences],
+      ["photography excursions", getPhotographyExcursions],
+      ["golf vacations", getGolfVacations],
+      ["personal chefs", getPersonalChefs],
+      ["personal drivers", getPersonalDrivers],
+      ["personal shoppers", getPersonalShoppers],
+    ])("does not publish curated %s as live when the services backend is empty", async (_name, getter) => {
       vi.spyOn(apiClient, "get").mockResolvedValueOnce([]);
 
       const items = await getter();
 
-      expect(items[0]?.id).toBe(firstId);
+      expect(items).toEqual([]);
     });
 
     it.each([
-      ["private jets", getPrivateJets, "jet-001"],
-      ["helicopter tours", getHelicopterTours, "helitour-001"],
-      ["wine tastings", getWineTastings, "wine-001"],
-      ["hammam experiences", getHammamSpaExperiences, "spa-001"],
-      ["photography excursions", getPhotographyExcursions, "photo-001"],
-      ["golf vacations", getGolfVacations, "golf-001"],
-      ["personal chefs", getPersonalChefs, "chef-001"],
-      ["personal drivers", getPersonalDrivers, "driver-001"],
-      ["personal shoppers", getPersonalShoppers, "shopper-001"],
-    ])("returns curated %s when the parked services backend is unavailable", async (_name, getter, firstId) => {
+      ["private jets", getPrivateJets],
+      ["helicopter tours", getHelicopterTours],
+      ["wine tastings", getWineTastings],
+      ["hammam experiences", getHammamSpaExperiences],
+      ["photography excursions", getPhotographyExcursions],
+      ["golf vacations", getGolfVacations],
+      ["personal chefs", getPersonalChefs],
+      ["personal drivers", getPersonalDrivers],
+      ["personal shoppers", getPersonalShoppers],
+    ])("surfaces an unavailable %s backend instead of publishing curated offers", async (_name, getter) => {
       vi.spyOn(apiClient, "get").mockRejectedValueOnce(
         new ApiError("Service unavailable", 503, "Service Unavailable")
       );
 
-      const items = await getter();
+      await expect(getter()).rejects.toThrow("Service unavailable");
+    });
 
-      expect(items[0]?.id).toBe(firstId);
+    it("does not publish curated yachts when the live backend is empty", async () => {
+      vi.spyOn(apiClient, "get").mockResolvedValueOnce([]);
+
+      await expect(getYachts()).resolves.toEqual([]);
     });
 
     it("getYachts should call API for yachts and filter by type if provided", async () => {

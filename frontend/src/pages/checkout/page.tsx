@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback, useMemo, type FormEvent, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useRef, useCallback, useMemo, type FormEvent } from "react";
+import { Link } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
 import PageHeroImage from "@/components/base/PageHeroImage";
@@ -13,7 +13,6 @@ import "@/i18n";
 
 export default function CheckoutPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { items, clearCart, totalItems, subtotalMoney } = useCart();
   const { showToast, ToastContainer } = useToast();
 
@@ -44,13 +43,6 @@ export default function CheckoutPage() {
   }, [items, subtotalMoney]);
 
   const subtotal = computedSubtotalMoney.toDatabaseDecimal();
-
-  // Redirect if cart is empty (unless success state is showing)
-  useEffect(() => {
-    if (!success && items.length === 0) {
-      navigate("/shop", { replace: true });
-    }
-  }, [items, success, navigate]);
 
   const handleSubmit = useCallback(
     async (e: FormEvent<HTMLFormElement>) => {
@@ -101,7 +93,7 @@ export default function CheckoutPage() {
       });
 
       if (!validationResult.success) {
-        const firstError = validationResult.error.issues[0]?.message || "Please check your form details.";
+        const firstError = validationResult.error.issues[0]?.message || t("checkout.formInvalid");
         setCheckoutError(firstError);
         return;
       }
@@ -142,17 +134,17 @@ export default function CheckoutPage() {
           setCheckoutError(null);
           clearCart();
           showToast(
-            "Order placed!",
-            `Your gift will be sent to ${recName}. We'll email ${sndEmail} with confirmation.`,
+            t("checkout.orderSuccessToast"),
+            t("checkout.orderSuccessMessage", { recipient: recName, senderEmail: sndEmail }),
             "success",
           );
         } else {
-          throw new Error("Failed to place order. Please try again.");
+          throw new Error(t("checkout.placeOrderFailed"));
         }
       } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+        const msg = err instanceof Error ? err.message : t("checkout.genericError");
         setCheckoutError(msg);
-        showToast("Order failed", msg, "error");
+        showToast(t("checkout.orderFailed"), msg, "error");
       } finally {
         setSubmitting(false);
       }
@@ -170,12 +162,9 @@ export default function CheckoutPage() {
       senderEmail,
       giftMessage,
       companyAlt,
+      t,
     ],
   );
-
-  if (items.length === 0 && !success) {
-    return null; // will redirect
-  }
 
   return (
     <div className="min-h-screen bg-background-50">
@@ -185,7 +174,7 @@ export default function CheckoutPage() {
       <section className="relative w-full h-[220px] md:h-[280px] overflow-hidden">
         <PageHeroImage
           page="checkout"
-          alt="Checkout"
+          alt={t("checkout.title")}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-foreground-950/50 via-foreground-950/25 to-foreground-950/70"></div>
 
@@ -195,14 +184,14 @@ export default function CheckoutPage() {
               to="/"
               className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2"
             >
-              Home
+              {t("checkout.home")}
             </Link>
             <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
             <Link
               to="/shop"
               className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2"
             >
-              Shop
+              {t("checkout.shop")}
             </Link>
             <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
             <span className="text-white/90 text-sm">{t("checkout.title")}</span>
@@ -223,10 +212,10 @@ export default function CheckoutPage() {
               </div>
               <h2 className="font-heading text-2xl md:text-3xl text-foreground-900 mb-3">{t("checkout.orderConfirmed")}</h2>
               <p className="text-foreground-500 text-sm md:text-base max-w-md mx-auto mb-2">
-                Your order <strong>#{successOrderId}</strong> has been placed successfully.
+                {t("checkout.orderPlaced", { orderId: successOrderId })}
               </p>
               <p className="text-foreground-400 text-sm mb-8">
-                We'll send confirmation and delivery details to your email shortly.
+                {t("checkout.confirmationEmail")}
               </p>
               <div className="flex items-center justify-center gap-3 flex-wrap">
                 <Link
@@ -234,16 +223,35 @@ export default function CheckoutPage() {
                   className="inline-flex items-center gap-2 px-6 py-3 bg-primary-500 text-background-50 rounded-full text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer"
                 >
                   <i className="ri-store-2-line"></i>
-                  Continue Shopping
+                  {t("checkout.continueShopping")}
                 </Link>
                 <Link
                   to="/"
                   className="inline-flex items-center gap-2 px-6 py-3 border border-foreground-200 text-foreground-700 rounded-full text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer"
                 >
                   <i className="ri-home-line"></i>
-                  Back to Home
+                  {t("checkout.backHome")}
                 </Link>
               </div>
+            </div>
+          ) : items.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-background-200/70 p-8 md:p-12 text-center">
+              <div className="w-20 h-20 flex items-center justify-center rounded-full bg-secondary-100 mx-auto mb-6">
+                <i className="ri-shopping-bag-3-line text-secondary-600 text-3xl"></i>
+              </div>
+              <h2 className="font-heading text-2xl md:text-3xl text-foreground-900 mb-3">
+                {t("checkout.emptyTitle")}
+              </h2>
+              <p className="text-foreground-500 text-sm md:text-base max-w-md mx-auto mb-8">
+                {t("checkout.emptyDescription")}
+              </p>
+              <Link
+                to="/shop"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-primary-500 text-background-50 rounded-full text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer"
+              >
+                <i className="ri-store-2-line"></i>
+                {t("checkout.browseShop")}
+              </Link>
             </div>
           ) : (
             <div className="flex flex-col lg:flex-row gap-8">
@@ -256,7 +264,7 @@ export default function CheckoutPage() {
                     </div>
                     <div>
                       <h3 className="font-heading text-base text-foreground-900">{t("checkout.orderSummary")}</h3>
-                      <p className="text-xs text-foreground-500">{totalItems} {totalItems === 1 ? "item" : "items"}</p>
+                      <p className="text-xs text-foreground-500">{t("checkout.itemCount", { count: totalItems })}</p>
                     </div>
                   </div>
 
@@ -320,7 +328,7 @@ export default function CheckoutPage() {
                     className="mt-5 inline-flex items-center gap-1.5 text-sm text-foreground-500 hover:text-foreground-700 transition-colors"
                   >
                     <i className="ri-arrow-left-line text-xs"></i>
-                    Back to Shop
+                    {t("checkout.backShop")}
                   </Link>
                 </div>
               </div>
@@ -370,7 +378,7 @@ export default function CheckoutPage() {
                       <div className="space-y-4">
                         <div>
                           <label htmlFor="recipient-name" className="block text-sm font-medium text-foreground-700 mb-1.5">
-                            Recipient Name *
+                            {t("checkout.recipientName")} *
                           </label>
                           <input
                             id="recipient-name"
@@ -386,7 +394,7 @@ export default function CheckoutPage() {
 
                         <div>
                           <label htmlFor="recipient-email" className="block text-sm font-medium text-foreground-700 mb-1.5">
-                            Recipient Email *
+                            {t("checkout.recipientEmail")} *
                           </label>
                           <input
                             id="recipient-email"
@@ -403,7 +411,7 @@ export default function CheckoutPage() {
 
                         <div>
                           <label htmlFor="recipient-phone" className="block text-sm font-medium text-foreground-700 mb-1.5">
-                            Recipient Phone *
+                            {t("checkout.recipientPhone")} *
                           </label>
                           <input
                             id="recipient-phone"
@@ -432,7 +440,7 @@ export default function CheckoutPage() {
                       <div className="space-y-4">
                         <div>
                           <label htmlFor="sender-name" className="block text-sm font-medium text-foreground-700 mb-1.5">
-                            Your Name *
+                            {t("checkout.senderName")} *
                           </label>
                           <input
                             id="sender-name"
@@ -448,7 +456,7 @@ export default function CheckoutPage() {
 
                         <div>
                           <label htmlFor="sender-email" className="block text-sm font-medium text-foreground-700 mb-1.5">
-                            Your Email *
+                            {t("checkout.senderEmail")} *
                           </label>
                           <input
                             id="sender-email"
@@ -492,18 +500,18 @@ export default function CheckoutPage() {
                       {submitting ? (
                         <>
                           <div className="w-5 h-5 border-2 border-background-50/40 border-t-background-50 rounded-full animate-spin"></div>
-                          Placing order...
+                          {t("checkout.placingOrder")}
                         </>
                       ) : (
                         <>
                           <i className="ri-gift-line"></i>
-                          Send Gift — {computedSubtotalMoney.format()}
+                          {t("checkout.sendGift", { total: computedSubtotalMoney.format() })}
                         </>
                       )}
                     </button>
 
                     <p className="text-xs text-center text-foreground-400">
-                      By placing this order you agree to our{" "}
+                      {t("checkout.agreementPrefix")}{" "}
                       <Link to="/terms" className="underline hover:text-foreground-600">{t("checkout.terms")}</Link> {t("checkout.and")} {" "}
                       <Link to="/privacy" className="underline hover:text-foreground-600">{t("checkout.privacy")}</Link>.
                     </p>

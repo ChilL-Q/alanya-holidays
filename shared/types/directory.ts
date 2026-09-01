@@ -54,6 +54,8 @@ export interface DirectoryListingRecord {
   can_claim?: boolean;
   subscription_id?: string | null;
   listing_locations?: unknown;
+  google_rating?: number | null;
+  google_review_count?: number | null;
   reviews_average?: number | null;
   reviews_count?: number;
   net_votes?: number;

@@ -7,6 +7,7 @@ import RelatedExperiences from "@/components/feature/RelatedExperiences";
 import { conciergeService, tastingStyles, type WineTasting } from "@/api-services/concierge.service";
 import ErrorState from "@/components/base/ErrorState";
 import EmptyState from "@/components/base/EmptyState";
+import OfferProvenanceNotice from "@/components/feature/OfferProvenanceNotice";
 import { useTranslation } from "react-i18next";
 import "@/i18n";
 
@@ -201,7 +202,7 @@ export default function WineTastingsPage() {
         <section className="w-full px-4 md:px-8 lg:px-12 py-4 bg-background-50">
           <div className="max-w-7xl mx-auto">
             {!isLoading && !fetchError && (
-              <p className="text-sm text-foreground-500">{filteredTastings.length} {filteredTastings.length === 1 ? "tasting" : "tastings"} available</p>
+              <div><p className="text-sm text-foreground-500">{filteredTastings.length} {filteredTastings.length === 1 ? "tasting listing" : "tasting listings"}</p><OfferProvenanceNotice /></div>
             )}
           </div>
         </section>

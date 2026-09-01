@@ -10,6 +10,10 @@ export interface Business {
   phone: string;
   email: string;
   website: string;
+  /** Rating imported from Google. Kept distinct from Alanya Holidays reviews. */
+  googleRating?: number | null;
+  /** Review count reported by Google, not an Alanya Holidays review count. */
+  googleReviewCount?: number | null;
   rating: number;
   reviewCount: number;
   image: string;

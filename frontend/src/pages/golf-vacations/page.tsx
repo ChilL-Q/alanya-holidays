@@ -8,6 +8,7 @@ import { conciergeService, golfStyles, type GolfVacation } from "@/api-services/
 import { formatAmenity } from "@/utils/format-amenity";
 import ErrorState from "@/components/base/ErrorState";
 import EmptyState from "@/components/base/EmptyState";
+import OfferProvenanceNotice from "@/components/feature/OfferProvenanceNotice";
 import { useTranslation } from "react-i18next";
 import "@/i18n";
 
@@ -210,7 +211,7 @@ export default function GolfVacationsPage() {
         <section className="w-full px-4 md:px-8 lg:px-12 py-4 bg-background-50">
           <div className="max-w-7xl mx-auto">
             {!isLoading && !fetchError && (
-              <p className="text-sm text-foreground-500">{t("services.service.available", { count: filteredVacations.length, item: filteredVacations.length === 1 ? t("services.service.package") : t("services.service.packages") })}</p>
+              <div><p className="text-sm text-foreground-500">{filteredVacations.length} {filteredVacations.length === 1 ? "package listing" : "package listings"}</p><OfferProvenanceNotice /></div>
             )}
           </div>
         </section>

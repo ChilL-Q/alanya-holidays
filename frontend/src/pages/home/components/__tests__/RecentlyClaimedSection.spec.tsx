@@ -1,9 +1,10 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { BrowserRouter } from "react-router-dom";
 import RecentlyClaimedSection from "../RecentlyClaimedSection";
 import { directoryService } from "@/api-services/directory.service";
 import type { Business } from "@/mocks/businesses";
+import i18n from "@/i18n";
 
 const mockRecentlyClaimed: Business[] = [
   {
@@ -53,8 +54,9 @@ const mockRecentlyClaimed: Business[] = [
 ];
 
 describe("RecentlyClaimedSection Component (Milestone M5 / R5)", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    await i18n.changeLanguage("en");
   });
 
   it("fetches and renders recently claimed business cards", async () => {
@@ -76,8 +78,9 @@ describe("RecentlyClaimedSection Component (Milestone M5 / R5)", () => {
     expect(screen.getAllByText(/verified owner/i).length).toBeGreaterThan(0);
   });
 
-  it("handles empty API response by rendering graceful curated fallback", async () => {
+  it("shows an honest empty state without substituting unrelated top-rated listings", async () => {
     vi.spyOn(directoryService, "getRecentlyClaimedListings").mockResolvedValue([]);
+    const fallbackSpy = vi.spyOn(directoryService, "getListings");
 
     render(
       <BrowserRouter>
@@ -85,10 +88,37 @@ describe("RecentlyClaimedSection Component (Milestone M5 / R5)", () => {
       </BrowserRouter>
     );
 
-    // Curated fallback should render without crashing
-    expect(screen.getByText(/recently claimed/i)).toBeInTheDocument();
-    await waitFor(() => {
-      expect(screen.queryByTestId("recently-claimed-grid")).toBeInTheDocument();
-    });
+    expect(await screen.findByText("No recently verified businesses yet")).toBeInTheDocument();
+    expect(fallbackSpy).not.toHaveBeenCalled();
+  });
+
+  it("localizes the section chrome in Russian while preserving company names", async () => {
+    await i18n.changeLanguage("ru");
+    vi.spyOn(directoryService, "getRecentlyClaimedListings").mockResolvedValue(mockRecentlyClaimed);
+
+    render(
+      <BrowserRouter>
+        <RecentlyClaimedSection />
+      </BrowserRouter>
+    );
+
+    expect(await screen.findByRole("heading", { name: "Недавно подтверждённые компании" })).toBeInTheDocument();
+    expect(screen.getAllByText("Подтверждённый владелец")).toHaveLength(2);
+    expect(screen.getAllByRole("link", { name: "Подробнее" })).toHaveLength(2);
+    expect(screen.getByText("Cleopatra Blue Seafood")).toBeInTheDocument();
+  });
+
+  it("surfaces API errors rather than collapsing into an empty section", async () => {
+    vi.spyOn(directoryService, "getRecentlyClaimedListings").mockRejectedValue(
+      new Error("Directory API unavailable"),
+    );
+
+    render(
+      <BrowserRouter>
+        <RecentlyClaimedSection />
+      </BrowserRouter>
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Directory API unavailable");
   });
 });

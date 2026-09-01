@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { eventsService, type ForumEvent } from "@/api-services/events.service";
 import { forumService } from "@/api-services/forum.service";
 import CommunityPulse from "./CommunityPulse";
+import i18n from "@/i18n";
 
 const event: ForumEvent = {
   id: "event-1",
@@ -25,7 +26,8 @@ const event: ForumEvent = {
 };
 
 describe("CommunityPulse", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await i18n.changeLanguage("en");
     vi.spyOn(eventsService, "getEvents").mockResolvedValue([event]);
     vi.spyOn(forumService, "getForumStats").mockResolvedValue({
       totalDiscussions: 10,
@@ -35,8 +37,9 @@ describe("CommunityPulse", () => {
     });
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     vi.restoreAllMocks();
+    await i18n.changeLanguage("en");
   });
 
   it("requests only the next three upcoming events", async () => {
@@ -73,5 +76,30 @@ describe("CommunityPulse", () => {
 
     expect(await screen.findByText(/Join the conversations, attend meetups/i)).toBeInTheDocument();
     expect(screen.queryByText(/1,240 members/i)).not.toBeInTheDocument();
+  });
+
+  it("localizes the section copy and count sentence in Russian", async () => {
+    await i18n.changeLanguage("ru");
+    render(
+      <MemoryRouter>
+        <CommunityPulse />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole("heading", { name: "Пульс сообщества" })).toBeInTheDocument();
+    expect(await screen.findByText(/25 участников общаются в сообществе/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Все мероприятия" })).toHaveAttribute("href", "/events");
+  });
+
+  it("surfaces the events API failure instead of presenting it as an honest empty schedule", async () => {
+    vi.mocked(eventsService.getEvents).mockRejectedValueOnce(new Error("Events API unavailable"));
+    render(
+      <MemoryRouter>
+        <CommunityPulse />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Events API unavailable");
+    expect(screen.queryByText("More events are coming soon")).not.toBeInTheDocument();
   });
 });

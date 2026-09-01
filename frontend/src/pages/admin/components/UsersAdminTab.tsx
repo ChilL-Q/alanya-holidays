@@ -22,9 +22,12 @@ const UsersAdminTab: React.FC = () => {
   const [totals, setTotals] = useState({ total: 0, totalPages: 1 });
   const [loading, setLoading] = useState(true);
   const [actingId, setActingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const loadUsers = useCallback(async (role: string, targetPage: number) => {
     setLoading(true);
+    setLoadError(null);
     try {
       const res = await adminService.getUsers({
         role: role === "all" ? undefined : role,
@@ -35,6 +38,9 @@ const UsersAdminTab: React.FC = () => {
       setTotals({ total: res.pagination.total, totalPages: res.pagination.totalPages });
     } catch (err) {
       logger.error("Failed to load users:", err);
+      setUsers([]);
+      setTotals({ total: 0, totalPages: 1 });
+      setLoadError("Failed to load users. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -47,10 +53,16 @@ const UsersAdminTab: React.FC = () => {
   const handleRoleChange = async (user: AdminUserItem, role: string) => {
     if (role === (user.role || "user")) return;
     setActingId(user.id);
+    setError(null);
     try {
       if (await adminService.updateUserProfile(user.id, { role })) {
         setUsers((prev) => prev.map((u) => (u.id === user.id ? { ...u, role } : u)));
+      } else {
+        setError("User role update failed. Please try again.");
       }
+    } catch (err) {
+      logger.error("Failed to update user role:", err);
+      setError("User role update failed. Please try again.");
     } finally {
       setActingId(null);
     }
@@ -80,6 +92,12 @@ const UsersAdminTab: React.FC = () => {
         <span className="ml-auto text-xs text-secondary-400">{t("admin.userCount", { count: totals.total })}</span>
       </div>
 
+      {error && (
+        <div role="alert" className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-sm text-rose-800 dark:text-rose-300">
+          {error}
+        </div>
+      )}
+
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
@@ -87,6 +105,20 @@ const UsersAdminTab: React.FC = () => {
               <div className="h-4 bg-secondary-200 dark:bg-slate-800 rounded w-1/2" />
             </div>
           ))}
+        </div>
+      ) : loadError ? (
+        <div
+          role="alert"
+          className="p-5 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-sm text-rose-800 dark:text-rose-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+        >
+          <span>{loadError}</span>
+          <button
+            type="button"
+            onClick={() => void loadUsers(roleFilter, page)}
+            className="self-start sm:self-auto px-4 py-2 rounded-xl bg-rose-700 text-white text-xs font-semibold hover:bg-rose-800 cursor-pointer"
+          >
+            {t("admin.retry")}
+          </button>
         </div>
       ) : users.length === 0 ? (
         <div className="p-10 text-center rounded-2xl bg-white dark:bg-slate-900 border border-secondary-200/80 dark:border-slate-800 text-sm text-secondary-500 dark:text-slate-400">

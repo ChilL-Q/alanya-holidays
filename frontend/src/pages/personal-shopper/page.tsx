@@ -7,6 +7,7 @@ import RelatedExperiences from "@/components/feature/RelatedExperiences";
 import { conciergeService, shopperStyles, type PersonalShopper } from "@/api-services/concierge.service";
 import ErrorState from "@/components/base/ErrorState";
 import EmptyState from "@/components/base/EmptyState";
+import OfferProvenanceNotice from "@/components/feature/OfferProvenanceNotice";
 import { useTranslation } from "react-i18next";
 import "@/i18n";
 
@@ -204,7 +205,7 @@ export default function PersonalShopperPage() {
         <section className="w-full px-4 md:px-8 lg:px-12 py-4 bg-background-50">
           <div className="max-w-7xl mx-auto">
             {!isLoading && !fetchError && (
-              <p className="text-sm text-foreground-500">{filteredShoppers.length} {filteredShoppers.length === 1 ? "shopper" : "shoppers"} available</p>
+              <div><p className="text-sm text-foreground-500">{filteredShoppers.length} {filteredShoppers.length === 1 ? "shopper listing" : "shopper listings"}</p><OfferProvenanceNotice /></div>
             )}
           </div>
         </section>

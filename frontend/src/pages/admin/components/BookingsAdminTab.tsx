@@ -61,8 +61,16 @@ const BookingsAdminTab: React.FC<{ onCountUpdate?: (c: { total: number; pending:
 
   const act = async (id: string, action: () => Promise<boolean>) => {
     setActingId(id);
+    setError(null);
     try {
-      if (await action()) await loadBookings(statusFilter);
+      if (await action()) {
+        await loadBookings(statusFilter);
+      } else {
+        setError("Booking update failed. Please try again.");
+      }
+    } catch (err) {
+      logger.error("Failed to update booking:", err);
+      setError("Booking update failed. Please try again.");
     } finally {
       setActingId(null);
     }
@@ -70,12 +78,18 @@ const BookingsAdminTab: React.FC<{ onCountUpdate?: (c: { total: number; pending:
 
   const handlePayoutChange = async (id: string, payoutStatus: string) => {
     setActingId(id);
+    setError(null);
     try {
       if (await adminService.updatePayoutStatus(id, payoutStatus)) {
         setBookings((prev) =>
           prev.map((b) => (b.id === id ? { ...b, payout_status: payoutStatus } : b))
         );
+      } else {
+        setError("Booking payout update failed. Please try again.");
       }
+    } catch (err) {
+      logger.error("Failed to update booking payout:", err);
+      setError("Booking payout update failed. Please try again.");
     } finally {
       setActingId(null);
     }
@@ -105,7 +119,7 @@ const BookingsAdminTab: React.FC<{ onCountUpdate?: (c: { total: number; pending:
       </div>
 
       {error && (
-        <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-sm text-rose-800 dark:text-rose-300">
+        <div role="alert" className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-sm text-rose-800 dark:text-rose-300">
           {error}
         </div>
       )}

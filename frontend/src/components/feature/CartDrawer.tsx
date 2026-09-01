@@ -66,6 +66,8 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
       <div
         role="dialog"
         aria-modal="true"
+        aria-hidden={!open}
+        data-floating-ui-obstruction={open ? "true" : undefined}
         aria-label={t("public.shoppingCart")}
         className={`fixed inset-y-0 right-0 h-dvh w-full max-w-md bg-background-50 z-[100] shadow-2xl transform transition-transform duration-300 ease-out flex flex-col ${
           open ? "translate-x-0" : "translate-x-full pointer-events-none"

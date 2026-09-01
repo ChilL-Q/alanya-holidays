@@ -58,8 +58,16 @@ const ReviewsModerationTab: React.FC<{ onCountUpdate?: (c: { total: number; pend
 
   const act = async (id: string, action: () => Promise<boolean>) => {
     setActingId(id);
+    setError(null);
     try {
-      if (await action()) await loadReviews(statusTab, page);
+      if (await action()) {
+        await loadReviews(statusTab, page);
+      } else {
+        setError("Review update failed. Please try again.");
+      }
+    } catch (err) {
+      logger.error("Failed to update review:", err);
+      setError("Review update failed. Please try again.");
     } finally {
       setActingId(null);
     }
@@ -92,7 +100,7 @@ const ReviewsModerationTab: React.FC<{ onCountUpdate?: (c: { total: number; pend
       </div>
 
       {error && (
-        <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-sm text-rose-800 dark:text-rose-300">
+        <div role="alert" className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-sm text-rose-800 dark:text-rose-300">
           {error}
         </div>
       )}

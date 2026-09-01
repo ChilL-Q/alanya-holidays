@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import MapView from "./MapView";
 import type { ForumEvent } from "@/api-services/events.service";
+import i18n from "@/i18n";
 
 const loaderState = vi.hoisted(() => ({
   isLoaded: false,
@@ -112,7 +113,8 @@ const unmappedEvent: ForumEvent = {
 };
 
 describe("MapView", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await i18n.changeLanguage("en");
     loaderState.isLoaded = false;
     loaderState.loadError = undefined;
     fakeMap.panTo.mockReset();
@@ -122,9 +124,10 @@ describe("MapView", () => {
     (window as Window & { google?: unknown }).google = undefined;
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     vi.unstubAllEnvs();
     (window as Window & { google?: unknown }).google = undefined;
+    await i18n.changeLanguage("en");
   });
 
   it("shows fallback message when VITE_GOOGLE_MAPS_API_KEY is missing", () => {
@@ -139,7 +142,7 @@ describe("MapView", () => {
       />
     );
 
-    expect(screen.getByText(/Set VITE_GOOGLE_MAPS_API_KEY to enable the interactive map/i)).toBeInTheDocument();
+    expect(screen.getByText("The interactive event map is not available, but event locations are listed below.")).toBeInTheDocument();
     expect(screen.getByText("Cleopatra Beach")).toBeInTheDocument();
   });
 
@@ -215,5 +218,23 @@ describe("MapView", () => {
     expect(infoWindow).toBeInTheDocument();
     expect(within(infoWindow).getByText("Harbor Networking Night")).toBeInTheDocument();
     expect(within(infoWindow).getByRole("button", { name: "Cancel RSVP for Harbor Networking Night" })).toBeInTheDocument();
+  });
+
+  it("localizes map fallback and coverage copy in Russian", async () => {
+    await i18n.changeLanguage("ru");
+    vi.stubEnv("VITE_GOOGLE_MAPS_API_KEY", "test-key");
+
+    render(
+      <MapView
+        events={[unmappedEvent]}
+        rsvpdEvents={new Set()}
+        onRsvp={vi.fn()}
+        onCancelRsvp={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("Для отфильтрованных мероприятий пока нет координат на карте.")).toBeInTheDocument();
+    expect(screen.getByText(/1 место показано в списке ниже/)).toBeInTheDocument();
+    expect(screen.getByText("Без метки")).toBeInTheDocument();
   });
 });

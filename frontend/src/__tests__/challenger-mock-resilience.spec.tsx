@@ -70,14 +70,14 @@ describe("Challenger 2 Empirical Verification: Mock Elimination & Error Resilien
       await expect(conciergeService.getOfferingsByCategory("private-jet")).rejects.toThrow(ApiError);
     });
 
-    it("conciergeService.getPrivateJets keeps the parked public catalogue available", async () => {
+    it("conciergeService.getPrivateJets propagates a 504 without publishing demo inventory", async () => {
       vi.spyOn(apiClient, "get").mockRejectedValue(
         new ApiError("Gateway Timeout", 504, "Gateway Timeout")
       );
 
-      const jets = await conciergeService.getPrivateJets();
-
-      expect(jets[0]?.id).toBe("jet-001");
+      await expect(conciergeService.getPrivateJets()).rejects.toSatisfy((err: unknown) => {
+        return err instanceof ApiError && err.status === 504;
+      });
     });
 
     it("forumService.getForumStats throws ApiError on 500 without returning fake stats", async () => {

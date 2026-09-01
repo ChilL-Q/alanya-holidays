@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import SubmitContentModal from "./SubmitContentModal";
 import { useTranslation } from "react-i18next";
 import "@/i18n";
+import { useFloatingWidgetVisibility } from "./useFloatingWidgetVisibility";
 
 export default function CreatorUgcFloatingWidget() {
   const { t } = useTranslation();
@@ -10,10 +11,15 @@ export default function CreatorUgcFloatingWidget() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { pathname } = useLocation();
   const useCompactTrigger = pathname.startsWith("/events");
+  const isVisible = useFloatingWidgetVisibility();
 
   return (
     <>
-      <div className="fixed bottom-6 left-6 z-40 max-w-[calc(100vw-3rem)]">
+      {isVisible && (
+      <div
+        data-floating-widget="community"
+        className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] left-[calc(1rem+env(safe-area-inset-left))] z-40 max-w-[calc(100vw-2rem)] sm:bottom-[calc(1.5rem+env(safe-area-inset-bottom))] sm:left-[calc(1.5rem+env(safe-area-inset-left))] sm:max-w-[calc(100vw-3rem)]"
+      >
         {!isExpanded ? (
           /* Collapsed Trigger Pill */
           <button
@@ -108,6 +114,7 @@ export default function CreatorUgcFloatingWidget() {
           </div>
         )}
       </div>
+      )}
 
       {/* Submission Modal */}
       <SubmitContentModal

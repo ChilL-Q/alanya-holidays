@@ -7,6 +7,7 @@ import RelatedExperiences from "@/components/feature/RelatedExperiences";
 import { conciergeService, excursionTypes, type PhotographyExcursion } from "@/api-services/concierge.service";
 import ErrorState from "@/components/base/ErrorState";
 import EmptyState from "@/components/base/EmptyState";
+import OfferProvenanceNotice from "@/components/feature/OfferProvenanceNotice";
 import { useTranslation } from "react-i18next";
 import "@/i18n";
 
@@ -163,7 +164,7 @@ export default function PhotographyExcursionsPage() {
         <section className="w-full px-4 md:px-8 lg:px-12 py-4 bg-background-50">
           <div className="max-w-7xl mx-auto">
             {!isLoading && !fetchError && (
-              <p className="text-sm text-foreground-500">{filteredExcursions.length} {filteredExcursions.length === 1 ? "excursion" : "excursions"} available</p>
+              <div><p className="text-sm text-foreground-500">{filteredExcursions.length} {filteredExcursions.length === 1 ? "excursion listing" : "excursion listings"}</p><OfferProvenanceNotice /></div>
             )}
           </div>
         </section>

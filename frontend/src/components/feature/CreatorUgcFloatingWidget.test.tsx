@@ -57,6 +57,24 @@ describe("CreatorUgcFloatingWidget", () => {
     expect(screen.queryByText(/Post a tip, story, or question/i)).not.toBeInTheDocument();
   });
 
+  it.each(["/login", "/register", "/checkout", "/admin"])(
+    "does not render its trigger on the protected form surface %s",
+    (path) => {
+      renderWidget([path]);
+      expect(
+        screen.queryByRole("button", { name: /open community post widget/i }),
+      ).not.toBeInTheDocument();
+    },
+  );
+
+  it("uses safe-area-aware offsets", () => {
+    const { container } = renderWidget();
+    expect(container.querySelector('[data-floating-widget="community"]')).toHaveClass(
+      "bottom-[calc(1rem+env(safe-area-inset-bottom))]",
+      "left-[calc(1rem+env(safe-area-inset-left))]",
+    );
+  });
+
   it("expands to the floating card when clicked", () => {
     renderWidget();
     fireEvent.click(

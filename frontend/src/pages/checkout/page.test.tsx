@@ -5,6 +5,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import CheckoutPage from "./page";
 import { ordersService } from "@/api-services/orders.service";
+import i18n from "@/i18n";
 
 vi.mock("@/api-services/orders.service", () => ({
   ordersService: {
@@ -70,7 +71,8 @@ vi.mock("react-router-dom", async () => {
 });
 
 describe("CheckoutPage Component", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await i18n.changeLanguage("en");
     vi.clearAllMocks();
     mockClearCart.mockClear();
     mockNavigate.mockClear();
@@ -85,8 +87,9 @@ describe("CheckoutPage Component", () => {
     ];
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     vi.clearAllMocks();
+    await i18n.changeLanguage("en");
   });
 
   it("should render order summary and form fields when cart has items", () => {
@@ -120,7 +123,7 @@ describe("CheckoutPage Component", () => {
     ).toHaveAttribute("src", "https://example.com/yacht-voucher.jpg");
   });
 
-  it("should redirect to /shop if cart is empty and not completed", () => {
+  it("shows an actionable empty-cart state instead of silently redirecting", () => {
     mockCartItems = [];
     render(
       <MemoryRouter>
@@ -128,7 +131,25 @@ describe("CheckoutPage Component", () => {
       </MemoryRouter>
     );
 
-    expect(mockNavigate).toHaveBeenCalledWith("/shop", { replace: true });
+    expect(mockNavigate).not.toHaveBeenCalled();
+    expect(screen.getByRole("heading", { name: "Your cart is empty" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Browse the shop" })).toHaveAttribute("href", "/shop");
+  });
+
+  it("localizes checkout labels and actions in Russian", async () => {
+    await i18n.changeLanguage("ru");
+
+    render(
+      <MemoryRouter>
+        <CheckoutPage />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByLabelText("Имя получателя *")).toBeInTheDocument();
+    expect(screen.getByLabelText("Email получателя *")).toBeInTheDocument();
+    expect(screen.getByLabelText("Телефон получателя *")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Отправить подарок — 350.00 EUR" })).toBeInTheDocument();
+    expect(screen.queryByText("Back to Shop")).not.toBeInTheDocument();
   });
 
   it("should submit order via ordersService.createOrder and show order confirmation", async () => {
@@ -190,7 +211,7 @@ describe("CheckoutPage Component", () => {
     await waitFor(() => {
       expect(mockClearCart).toHaveBeenCalled();
       expect(screen.getByText("Order Confirmed!")).toBeInTheDocument();
-      expect(screen.getByText("#98765")).toBeInTheDocument();
+      expect(screen.getByText("Your order #98765 has been placed successfully.")).toBeInTheDocument();
     });
   });
 

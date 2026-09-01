@@ -69,6 +69,7 @@ export default function ForumModerationTab({
 
   // Actions
   const handleResolveReport = async (reportId: string) => {
+    setError(null);
     const success = await adminService.resolveForumReport(reportId);
     if (success) {
       setReports((prev) =>
@@ -77,7 +78,10 @@ export default function ForumModerationTab({
       if (selectedReport?.id === reportId) {
         setSelectedReport((prev) => (prev ? { ...prev, resolved: true } : null));
       }
+      return true;
     }
+    setError(t("adminQueue.forumError"));
+    return false;
   };
 
   const handleToggleRemove = async (
@@ -85,6 +89,7 @@ export default function ForumModerationTab({
     targetId: string,
     willBeRemoved: boolean
   ) => {
+    setError(null);
     if (targetType === "post") {
       const success = await adminService.setForumPostRemoved(targetId, willBeRemoved);
       if (success) {
@@ -113,6 +118,7 @@ export default function ForumModerationTab({
               : null
           );
         }
+        return true;
       }
     } else {
       const success = await adminService.setForumCommentRemoved(targetId, willBeRemoved);
@@ -147,11 +153,15 @@ export default function ForumModerationTab({
             ? prev
             : prev.filter((c) => c.id !== targetId)
         );
+        return true;
       }
     }
+    setError(t("adminQueue.forumError"));
+    return false;
   };
 
   const handleTogglePin = async (postId: string, willBePinned: boolean) => {
+    setError(null);
     const success = await adminService.setForumPostPinned(postId, willBePinned);
     if (success) {
       setReports((prev) =>
@@ -173,29 +183,45 @@ export default function ForumModerationTab({
                 ...prev,
                 target_post: { ...currentPost, is_pinned: willBePinned },
               }
-            : null
+          : null
         );
       }
+      return true;
     }
+    setError(t("adminQueue.forumError"));
+    return false;
   };
 
   const handleDelete = async (targetType: "post" | "comment", targetId: string) => {
+    setError(null);
     if (targetType === "post") {
       const success = await adminService.deleteForumPost(targetId);
       if (success) {
         setReports((prev) =>
-          prev.filter((r) => !(r.target_type === "post" && r.target_id === targetId))
+          prev.map((report) =>
+            report.target_type === "post" && report.target_id === targetId
+              ? { ...report, target_missing: true, target_post: null }
+              : report
+          )
         );
+        return true;
       }
     } else {
       const success = await adminService.deleteForumComment(targetId);
       if (success) {
         setReports((prev) =>
-          prev.filter((r) => !(r.target_type === "comment" && r.target_id === targetId))
+          prev.map((report) =>
+            report.target_type === "comment" && report.target_id === targetId
+              ? { ...report, target_missing: true, target_comment: null }
+              : report
+          )
         );
         setRemovedComments((prev) => prev.filter((c) => c.id !== targetId));
+        return true;
       }
     }
+    setError(t("adminQueue.forumError"));
+    return false;
   };
 
   return (
@@ -245,7 +271,10 @@ export default function ForumModerationTab({
       </div>
 
       {error && (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300">
+        <div
+          role="alert"
+          className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300"
+        >
           {error}
         </div>
       )}

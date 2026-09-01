@@ -159,6 +159,22 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
+    if (!mobileOpen) return;
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [mobileOpen]);
+
+  useEffect(() => {
+    setMobileOpen(false);
+    setOpenMobileDropdown(null);
+    setMobileNotificationsOpen(false);
+  }, [location.pathname, location.search]);
+
+  useEffect(() => {
     let isMounted = true;
     if (!user?.id) {
       setNotifications([]);
@@ -451,11 +467,11 @@ export default function Navbar() {
           : "bg-transparent"
       }`}
     >
-      <div className="w-full px-4 md:px-8 lg:px-12">
+      <div className="w-full min-w-0 px-3 sm:px-4 xl:px-6 2xl:px-10">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 shrink-0">
-            <div className="h-10 w-10 md:h-12 md:w-12 overflow-hidden rounded-xl">
+          <Link to="/" className="flex min-w-0 shrink items-center gap-1.5 sm:gap-2">
+            <div className="h-10 w-10 shrink-0 overflow-hidden rounded-xl 2xl:h-11 2xl:w-11">
               <img
                 src="/images/alanya-holidays-brand-mark-transparent.png"
                 alt=""
@@ -464,7 +480,7 @@ export default function Navbar() {
               />
             </div>
             <span
-              className={`font-heading text-xl md:text-2xl font-bold transition-colors ${
+              className={`hidden truncate font-heading text-lg font-bold transition-colors sm:block sm:text-xl 2xl:text-2xl ${
                 isSolidNav ? "text-foreground-900" : "text-white"
               }`}
             >
@@ -473,7 +489,7 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-8" ref={desktopDropdownRef}>
+          <div className="hidden xl:flex items-center gap-4 2xl:gap-6" ref={desktopDropdownRef}>
             {mainLinks.map((link) => {
               if (link.children) {
                 const parentActive =
@@ -510,7 +526,7 @@ export default function Navbar() {
           </div>
 
           {/* Desktop Actions */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden xl:flex items-center gap-2 2xl:gap-3">
             <LanguageSwitcher isSolidNav={isSolidNav} compact />
             <Link
               to="/search"
@@ -778,7 +794,7 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Hamburger */}
-          <div className="flex md:hidden items-center gap-2">
+          <div className="flex xl:hidden shrink-0 items-center gap-1 sm:gap-2">
             <LanguageSwitcher isSolidNav={isSolidNav} compact />
             <button
               aria-expanded={mobileOpen}
@@ -803,7 +819,7 @@ export default function Navbar() {
       {mobileOpen && (
         <div
           id="mobile-navigation"
-          className="md:hidden bg-background-50/95 backdrop-blur-md border-t border-background-200/50"
+          className="max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain border-t border-background-200/50 bg-background-50/95 backdrop-blur-md md:max-h-[calc(100dvh-5rem)] xl:hidden"
         >
           <div className="px-4 py-4 space-y-1">
             {mainLinks.map((link) => {
