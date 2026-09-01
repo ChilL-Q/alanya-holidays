@@ -65,10 +65,24 @@ check(failures, verify_csp.include?("https://plausible.io"), "CSP verification r
 csp_headers = nginx.scan(/add_header Content-Security-Policy "(?<policy>[^"]+)" always;/).flatten
 check(failures, csp_headers.length == 2, "nginx keeps exactly two effective CSP header copies")
 frame_sources = csp_headers.map { |policy| policy[/frame-src\s+([^;]+);/, 1] }
+maps_frame_origins = %w[https://maps.google.com https://www.google.com]
 check(
   failures,
-  frame_sources.length == 2 && frame_sources.all? { |sources| sources&.split&.include?("https://maps.google.com") },
-  "every effective frame-src allows the Google Maps embed origin",
+  frame_sources.length == 2 && frame_sources.all? do |sources|
+    source_list = sources&.split || []
+    maps_frame_origins.all? { |origin| source_list.include?(origin) }
+  end,
+  "every effective frame-src allows the Google Maps request and redirect origins",
+)
+policies_without_frame_src = csp_headers.map do |policy|
+  policy.sub(/frame-src\s+[^;]+;/, "")
+end
+check(
+  failures,
+  policies_without_frame_src.all? do |policy|
+    maps_frame_origins.none? { |origin| policy.split.include?(origin) }
+  end,
+  "Google Maps frame origins are scoped only to frame-src",
 )
 check(
   failures,
