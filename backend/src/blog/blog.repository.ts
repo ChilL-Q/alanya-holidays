@@ -1,24 +1,33 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
+import {
+  BlogComment,
+  BlogPost,
+  BlogPostSummary,
+  BlogSubmission,
+  BlogTag,
+  GetBlogPostsFilter,
+  GetBlogSubmissionsFilter,
+  InsertBlogCommentPayload,
+  InsertBlogPostPayload,
+  InsertBlogPostTagRow,
+  InsertBlogSubmissionPayload,
+  RawBlogPostRow,
+  UpdateBlogPostPayload,
+  UpdateBlogSubmissionPayload,
+} from './types/blog.types';
 
 @Injectable()
 export class BlogRepository {
+  private readonly logger = new Logger(BlogRepository.name);
+
   constructor(private readonly supabaseService: SupabaseService) {}
 
   get client() {
     return this.supabaseService.getClient();
   }
 
-  async getUserRole(userId: string) {
-    const { data } = await this.client
-      .from('profiles')
-      .select('role')
-      .eq('id', userId)
-      .single();
-    return data?.role;
-  }
-
-  async getSlugs(seed: string) {
+  async getSlugs(seed: string): Promise<string[]> {
     const escapePostgREST = (value: string) =>
       value
         .replace(/%/g, '\\%')
@@ -31,27 +40,51 @@ export class BlogRepository {
       .eq('slug', seed)
       .or(`slug.like.${escapePostgREST(seed)}-%`);
     if (error) throw new Error(error.message);
-    return data.map((r) => r.slug);
+    return ((data as unknown as Array<{ slug: string }>) || []).map(
+      (r) => r.slug,
+    );
   }
 
-  async getBlogPosts(filters: any, limit: number, offset: number, userRole: string, requestUserId?: string) {
+  async getBlogPosts(
+    filters: GetBlogPostsFilter,
+    limit: number,
+    offset: number,
+    userRole: string,
+    requestUserId?: string,
+  ): Promise<{ data: RawBlogPostRow[]; count: number }> {
+    const tagsRelation = filters.tag
+      ? 'tags:blog_post_tags!inner(tag_id, tag:blog_tags(id, name, slug))'
+      : 'tags:blog_post_tags(tag:blog_tags(id, name, slug))';
+
     let query = this.client
       .from('blog_posts')
       .select(
-        `*, author:profiles!blog_posts_author_id_fkey(full_name, avatar_url), tags:blog_post_tags(tag:blog_tags(id, name, slug))`,
+        `*, author:profiles!blog_posts_author_id_fkey(full_name, avatar_url), ${tagsRelation}`,
         { count: 'exact' },
       );
 
-    if (filters.status) {
-      query = query.eq('status', filters.status);
-    } else if (
-      userRole !== 'admin' &&
-      !(requestUserId && filters.authorId === requestUserId)
+    if (
+      userRole === 'admin' ||
+      (requestUserId && filters.authorId === requestUserId)
     ) {
+      if (filters.status) {
+        query = query.eq('status', filters.status);
+      }
+    } else {
       query = query.eq('status', 'published');
     }
 
-    if (filters.category) query = query.eq('category', filters.category);
+    if (filters.category === 'Guides') {
+      query = query.or('category.eq.Guides,category.is.null');
+    } else if (filters.category) {
+      query = query.eq('category', filters.category);
+    }
+    if (filters.content_type) {
+      query = query.eq('content_type', filters.content_type);
+    } else if (userRole !== 'admin') {
+      query = query.eq('content_type', 'blog');
+    }
+    if (filters.tag) query = query.eq('tags.tag_id', filters.tag);
     if (filters.is_featured === 'true') query = query.eq('is_featured', true);
     if (filters.authorId) query = query.eq('author_id', filters.authorId);
     if (filters.search) {
@@ -69,10 +102,13 @@ export class BlogRepository {
       .range(offset, offset + limit - 1);
 
     if (error) throw new Error(error.message);
-    return { data: data || [], count: count || 0 };
+    return {
+      data: (data as unknown as RawBlogPostRow[]) ?? [],
+      count: count ?? 0,
+    };
   }
 
-  async getFeaturedBlogPosts(limit: number) {
+  async getFeaturedBlogPosts(limit: number): Promise<BlogPostSummary[]> {
     const { data, error } = await this.client
       .from('blog_posts')
       .select(
@@ -80,13 +116,14 @@ export class BlogRepository {
       )
       .eq('is_featured', true)
       .eq('status', 'published')
+      .eq('content_type', 'blog')
       .order('published_at', { ascending: false, nullsFirst: false })
       .limit(limit);
     if (error) throw new Error(error.message);
-    return data || [];
+    return (data as unknown as BlogPostSummary[]) || [];
   }
 
-  async getBlogPostBySlug(slug: string) {
+  async getBlogPostBySlug(slug: string): Promise<RawBlogPostRow | null> {
     const { data, error } = await this.client
       .from('blog_posts')
       .select(
@@ -96,29 +133,92 @@ export class BlogRepository {
       .single();
 
     if (error) {
-        if (error.code === 'PGRST116') return null;
-        throw new Error(error.message);
+      if (error.code === 'PGRST116') return null;
+      throw new Error(error.message);
     }
-    return data;
+    return (data as unknown as RawBlogPostRow) || null;
   }
 
-  async incrementBlogViews(postId: string) {
+  async incrementBlogViews(postId: string): Promise<void> {
     try {
       await this.client.rpc('increment_blog_views', { p_post_id: postId });
-    } catch (e) {}
+    } catch (error) {
+      this.logger.error(
+        `Failed to increment blog views: ${postId}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+    }
   }
 
-  async getRelatedPosts(postId: string, category: string, limit: number) {
-    const { data, error } = await this.client.rpc('get_related_posts', {
-      p_post_id: postId,
-      p_category: category,
-      p_limit: limit,
-    });
-    if (error) throw new Error(error.message);
-    return data;
+  async getRelatedPosts(
+    postId: string,
+    category: string | null,
+    limit: number,
+  ): Promise<BlogPostSummary[]> {
+    const cleanCategory =
+      category && category.trim() !== '' ? category.trim() : null;
+    const isUuid =
+      typeof postId === 'string' &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        postId,
+      );
+
+    if (isUuid) {
+      try {
+        const result = await this.client.rpc('get_related_posts', {
+          p_post_id: postId,
+          p_category: cleanCategory,
+          p_limit: limit,
+        });
+        if (!result.error && result.data) {
+          return result.data as BlogPostSummary[];
+        }
+        if (result.error) {
+          this.logger.warn(
+            `get_related_posts RPC warning: ${result.error.message}`,
+          );
+        }
+      } catch (error: unknown) {
+        this.logger.warn(
+          `get_related_posts RPC failed, using fallback queries: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      }
+    }
+
+    const fetchPosts = async (categoryFilter?: string, fetchLimit = limit) => {
+      let query = this.client
+        .from('blog_posts')
+        .select(
+          'id, title, slug, excerpt, cover_image_url, category, published_at, author:profiles!blog_posts_author_id_fkey(full_name, avatar_url)',
+        )
+        .eq('status', 'published')
+        .eq('content_type', 'blog');
+      if (isUuid) query = query.neq('id', postId);
+      if (categoryFilter) query = query.eq('category', categoryFilter);
+      const { data } = await query
+        .order('published_at', { ascending: false, nullsFirst: false })
+        .limit(fetchLimit);
+      return (data as unknown as BlogPostSummary[]) || [];
+    };
+
+    const categoryPosts = cleanCategory
+      ? await fetchPosts(cleanCategory, limit)
+      : [];
+    if (categoryPosts.length >= limit) return categoryPosts.slice(0, limit);
+
+    const recentPosts = await fetchPosts(
+      undefined,
+      limit + categoryPosts.length,
+    );
+    const seenIds = new Set(categoryPosts.map((post) => post.id));
+    const fill = recentPosts.filter((post) => !seenIds.has(post.id));
+
+    return [...categoryPosts, ...fill].slice(0, limit);
   }
 
-  async insertBlogPost(postData: any) {
+  async insertBlogPost(postData: InsertBlogPostPayload): Promise<BlogPost> {
     const { data, error } = await this.client
       .from('blog_posts')
       .insert([postData])
@@ -126,24 +226,35 @@ export class BlogRepository {
       .single();
 
     if (error) throw new Error(error.message);
-    return data;
+    return data as unknown as BlogPost;
   }
 
-  async insertBlogPostTags(rows: any[]) {
+  async insertBlogPostTags(rows: InsertBlogPostTagRow[]): Promise<void> {
     const { error } = await this.client.from('blog_post_tags').insert(rows);
     if (error) throw new Error(error.message);
   }
 
-  async getBlogPostById(id: string) {
+  async getBlogPostById(
+    id: string,
+  ): Promise<{ author_id: string; status: string; slug: string } | null> {
     const { data } = await this.client
       .from('blog_posts')
       .select('author_id, status, slug')
       .eq('id', id)
       .single();
-    return data;
+    return (
+      (data as unknown as {
+        author_id: string;
+        status: string;
+        slug: string;
+      } | null) || null
+    );
   }
 
-  async updateBlogPost(id: string, updates: any) {
+  async updateBlogPost(
+    id: string,
+    updates: UpdateBlogPostPayload,
+  ): Promise<BlogPost> {
     const { data, error } = await this.client
       .from('blog_posts')
       .update({ ...updates, updated_at: new Date().toISOString() })
@@ -152,50 +263,56 @@ export class BlogRepository {
       .single();
 
     if (error) throw new Error(error.message);
-    return data;
+    return data as unknown as BlogPost;
   }
 
-  async deleteBlogPostTags(postId: string) {
+  async deleteBlogPostTags(postId: string): Promise<void> {
     await this.client.from('blog_post_tags').delete().eq('post_id', postId);
   }
 
-  async deleteBlogPost(id: string) {
-    const { error } = await this.client.from('blog_posts').delete().eq('id', id);
+  async deleteBlogPost(id: string): Promise<void> {
+    const { error } = await this.client
+      .from('blog_posts')
+      .delete()
+      .eq('id', id);
     if (error) throw new Error(error.message);
   }
 
-  async getBlogTags() {
+  async getBlogTags(): Promise<BlogTag[]> {
     const { data, error } = await this.client
       .from('blog_tags')
       .select('*')
       .order('name', { ascending: true });
     if (error) throw new Error(error.message);
-    return data || [];
+    return (data as unknown as BlogTag[]) || [];
   }
 
-  async insertBlogTag(tagData: any) {
+  async insertBlogTag(tagData: {
+    name: string;
+    slug: string;
+  }): Promise<BlogTag> {
     const { data, error } = await this.client
       .from('blog_tags')
       .insert([tagData])
       .select()
       .single();
     if (error) throw new Error(error.message);
-    return data;
+    return data as unknown as BlogTag;
   }
 
-  async deleteBlogTag(id: string) {
+  async deleteBlogTag(id: string): Promise<void> {
     const { error } = await this.client.from('blog_tags').delete().eq('id', id);
     if (error) throw new Error(error.message);
   }
 
-  async insertSingleBlogPostTag(postId: string, tagId: string) {
+  async insertSingleBlogPostTag(postId: string, tagId: string): Promise<void> {
     const { error } = await this.client
       .from('blog_post_tags')
       .insert([{ post_id: postId, tag_id: tagId }]);
     if (error) throw new Error(error.message);
   }
 
-  async deleteSingleBlogPostTag(postId: string, tagId: string) {
+  async deleteSingleBlogPostTag(postId: string, tagId: string): Promise<void> {
     const { error } = await this.client
       .from('blog_post_tags')
       .delete()
@@ -204,16 +321,21 @@ export class BlogRepository {
     if (error) throw new Error(error.message);
   }
 
-  async checkBlogSubmissionLimit(userId: string, limit: number) {
-    const { data, error } = await this.client.rpc(
-      'check_blog_submission_limit',
-      { p_user_id: userId, p_limit: limit },
-    );
-    if (error) throw new Error(error.message);
-    return data;
+  async checkBlogSubmissionLimit(
+    userId: string,
+    limit: number,
+  ): Promise<boolean | null> {
+    const res = await this.client.rpc('check_blog_submission_limit', {
+      p_user_id: userId,
+      p_limit: limit,
+    });
+    if (res.error) throw new Error(res.error.message);
+    return res.data as boolean | null;
   }
 
-  async insertBlogSubmission(submissionData: any) {
+  async insertBlogSubmission(
+    submissionData: InsertBlogSubmissionPayload,
+  ): Promise<BlogSubmission> {
     const { data, error } = await this.client
       .from('blog_submissions')
       .insert([submissionData])
@@ -221,68 +343,198 @@ export class BlogRepository {
       .single();
 
     if (error) throw new Error(error.message);
-    return data;
+    return data as unknown as BlogSubmission;
   }
 
-  async getBlogSubmissions(filters: any) {
+  async getBlogSubmissions(
+    filters: GetBlogSubmissionsFilter,
+    limit: number,
+    offset: number,
+  ): Promise<BlogSubmission[]> {
     let query = this.client
       .from('blog_submissions')
-      .select(`*, user:profiles!blog_submissions_user_id_fkey(full_name, email)`)
+      .select(
+        `*, user:profiles!blog_submissions_user_id_fkey(full_name, email)`,
+      )
       .order('created_at', { ascending: false });
-    if (filters?.status) query = query.eq('status', filters.status);
-    if (filters?.userId) query = query.eq('user_id', filters.userId);
-    const { data, error } = await query;
+    if (filters.status) query = query.eq('status', filters.status);
+    if (filters.userId) query = query.eq('user_id', filters.userId);
+    const { data, error } = await query.range(offset, offset + limit - 1);
     if (error) throw new Error(error.message);
-    return data || [];
+    return (data as unknown as BlogSubmission[]) || [];
   }
 
-  async getUserBlogSubmissions(userId: string) {
+  async getUserBlogSubmissions(
+    userId: string,
+    limit: number,
+    offset: number,
+  ): Promise<BlogSubmission[]> {
     const { data, error } = await this.client
       .from('blog_submissions')
       .select('*')
       .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
     if (error) throw new Error(error.message);
-    return data || [];
+    return (data as unknown as BlogSubmission[]) || [];
   }
 
-  async getBlogSubmissionById(id: string) {
+  async getBlogSubmissionById(id: string): Promise<BlogSubmission | null> {
     const { data } = await this.client
       .from('blog_submissions')
       .select('*')
       .eq('id', id)
       .single();
-    return data;
+    return (data as unknown as BlogSubmission) || null;
   }
 
-  async updateBlogSubmissionStatus(id: string, status: string, currentStatus: string, extraUpdates: any = {}) {
+  async updateBlogSubmission(
+    id: string,
+    updates: UpdateBlogSubmissionPayload,
+    userId: string,
+  ): Promise<BlogSubmission | null> {
     const { data, error } = await this.client
       .from('blog_submissions')
-      .update({ status, ...extraUpdates })
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .eq('user_id', userId)
+      .in('status', ['pending_review', 'rejected'])
+      .select('*')
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return data as BlogSubmission | null;
+  }
+
+  async updateBlogSubmissionStatus(
+    id: string,
+    status: string,
+    currentStatus: string,
+    extraUpdates: Record<string, unknown> = {},
+  ): Promise<Array<{ id: string }> | null> {
+    const { data, error } = await this.client
+      .from('blog_submissions')
+      .update({ ...extraUpdates, status })
       .eq('id', id)
       .eq('status', currentStatus)
       .select('id');
 
     if (error) throw new Error(error.message);
-    return data;
+    return data || null;
   }
 
-  async getProfileForNotification(userId: string) {
+  async getProfileForNotification(
+    userId: string,
+  ): Promise<{ email: string | null; full_name: string | null } | null> {
     const { data } = await this.client
       .from('profiles')
       .select('email, full_name')
       .eq('id', userId)
       .single();
+    return data || null;
+  }
+
+  // ── Blog Comments ────────────────────────────────────────────
+
+  async getBlogComments(
+    postId: string,
+    limit: number,
+    offset: number,
+    userId?: string,
+  ): Promise<BlogComment[]> {
+    const { data, error } = await this.client
+      .from('blog_comments')
+      .select(
+        '*, author:profiles!blog_comments_user_id_fkey(full_name, avatar_url)',
+      )
+      .eq('post_id', postId)
+      .order('created_at', { ascending: true })
+      .range(offset, offset + limit - 1);
+    if (error) throw new Error(error.message);
+    const comments = (data as unknown as BlogComment[]) || [];
+
+    if (!userId || comments.length === 0) {
+      return comments.map((c) => ({ ...c, isLiked: false }));
+    }
+
+    const commentIds = comments.map((c) => c.id);
+    const { data: userLikes } = await this.client
+      .from('blog_comment_likes')
+      .select('comment_id')
+      .eq('user_id', userId)
+      .in('comment_id', commentIds);
+
+    const likedCommentIds = new Set(
+      ((userLikes as Array<{ comment_id: string }>) || []).map(
+        (l) => l.comment_id,
+      ),
+    );
+
+    return comments.map((c) => ({
+      ...c,
+      isLiked: likedCommentIds.has(c.id),
+    }));
+  }
+
+  async insertBlogComment(
+    payload: InsertBlogCommentPayload,
+  ): Promise<BlogComment> {
+    const { data, error } = await this.client
+      .from('blog_comments')
+      .insert(payload)
+      .select(
+        '*, author:profiles!blog_comments_user_id_fkey(full_name, avatar_url)',
+      )
+      .single();
+    if (error) throw new Error(error.message);
+    return data as unknown as BlogComment;
+  }
+
+  async updateBlogComment(id: string, body: string): Promise<BlogComment> {
+    const { data, error } = await this.client
+      .from('blog_comments')
+      .update({ body })
+      .eq('id', id)
+      .select(
+        '*, author:profiles!blog_comments_user_id_fkey(full_name, avatar_url)',
+      )
+      .single();
+    if (error) throw new Error(error.message);
+    return data as unknown as BlogComment;
+  }
+
+  async deleteBlogComment(id: string): Promise<void> {
+    const { error } = await this.client
+      .from('blog_comments')
+      .delete()
+      .eq('id', id);
+    if (error) throw new Error(error.message);
+  }
+
+  async toggleBlogCommentLike(
+    commentId: string,
+    userId: string,
+  ): Promise<boolean> {
+    const { data, error } = (await this.client.rpc('toggle_blog_comment_like', {
+      p_comment_id: commentId,
+      p_user_id: userId,
+    })) as {
+      data: boolean | null;
+      error: { message: string } | null;
+    };
+    if (error) throw new Error(error.message);
+    if (typeof data !== 'boolean') {
+      throw new Error('toggle_blog_comment_like returned no state');
+    }
     return data;
   }
 
-  async insertNotification(notificationData: any) {
-    try {
-      await this.client.from('notifications').insert(notificationData);
-    } catch (e) {}
-  }
-
-  async invokeEmailFunction(payload: any) {
-    await this.client.functions.invoke('send-email', { body: payload }).catch(console.error);
+  async getBlogCommentById(id: string): Promise<BlogComment | null> {
+    const { data, error } = await this.client
+      .from('blog_comments')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return (data as unknown as BlogComment) || null;
   }
 }

@@ -1,4 +1,4 @@
-
+-- ⚠️ DANGER: HISTORICAL ARCHIVE ONLY. DO NOT EXECUTE IN PRODUCTION OR CI ENVIRONMENTS.
 -- Delete bookings with suspicious total_price (e.g. over 100,000)
 -- CAUTION: This deletes data!
 

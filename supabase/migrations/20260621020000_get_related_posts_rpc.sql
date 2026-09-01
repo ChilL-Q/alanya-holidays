@@ -36,6 +36,7 @@ BEGIN
         LEFT JOIN public.profiles pr ON bp.author_id = pr.id
         WHERE bp.status = 'published'
           AND p_category IS NOT NULL
+          AND p_category <> ''
           AND bp.category = p_category
           AND bp.id <> p_post_id
         ORDER BY bp.published_at DESC

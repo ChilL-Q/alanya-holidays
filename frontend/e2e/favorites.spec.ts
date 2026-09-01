@@ -1,29 +1,29 @@
 import { test, expect } from '@playwright/test';
-import { seedAuthSession, mockSupabaseRest, mockPropertyData, mockFavoritesData } from './utils/mock-utils';
+import { seedAuthSession, mockSupabaseRest, mockFavoritesData, mockAllSupabaseRequests } from './utils/mock-utils';
 
 test.describe('Favorites Flow', () => {
-  test('should show empty state in /favorites when no items saved', async ({ page }) => {
+  test('shows the empty favorites state in the settings activity hub', async ({ page }) => {
+    await mockAllSupabaseRequests(page);
     await seedAuthSession(page);
     await mockSupabaseRest(page);
     await mockFavoritesData(page);
-    await mockPropertyData(page);
 
-    await page.goto('/favorites');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/settings?tab=activity');
+    await page.getByRole('tab', { name: 'My Favorites' }).click();
 
-    // Page renders the empty state message
-    await expect(page.locator('body')).toContainText(/no favorites|no items|favorite/i);
+    await expect(page.getByText(/No saved favorites yet/i)).toBeVisible();
   });
 
-  test('should render favorites page without errors when authenticated', async ({ page }) => {
+  test('keeps authenticated users on the canonical settings route', async ({ page }) => {
+    await mockAllSupabaseRequests(page);
     await seedAuthSession(page);
     await mockSupabaseRest(page);
     await mockFavoritesData(page);
 
-    await page.goto('/favorites');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/settings?tab=activity');
+    await page.getByRole('tab', { name: 'My Favorites' }).click();
 
-    // Page loaded successfully (not redirected away)
-    await expect(page).toHaveURL('/favorites');
+    await expect(page).toHaveURL('/settings?tab=activity');
+    await expect(page.getByRole('tab', { name: 'My Favorites' })).toHaveAttribute('aria-selected', 'true');
   });
 });

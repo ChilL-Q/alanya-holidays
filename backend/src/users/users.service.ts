@@ -2,15 +2,21 @@ import {
   Injectable,
   UnauthorizedException,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import { UsersRepository } from './users.repository';
+import { UserRolesRepository } from '../common/auth/user-roles.repository';
+import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly usersRepository: UsersRepository) {}
+  constructor(
+    private readonly usersRepository: UsersRepository,
+    @Optional() private readonly userRolesRepo?: UserRolesRepository,
+  ) {}
 
   async getAllUsers(page = 1, limit = 20, requestUserId: string) {
-    const role = await this.usersRepository.getUserRole(requestUserId);
+    const role = await this.userRolesRepo?.getRole(requestUserId);
     if (role !== 'admin') throw new UnauthorizedException('Not authorized');
 
     const { data, count } = await this.usersRepository.getAllUsers(page, limit);
@@ -32,14 +38,18 @@ export class UsersService {
     return data;
   }
 
-  async updateUserProfile(id: string, updates: any, requestUserId: string) {
-    const role = await this.usersRepository.getUserRole(requestUserId);
+  async updateUserProfile(
+    id: string,
+    updates: UpdateUserProfileDto,
+    requestUserId: string,
+  ) {
+    const role = await this.userRolesRepo?.getRole(requestUserId);
 
     if (requestUserId !== id && role !== 'admin') {
       throw new UnauthorizedException('Not authorized');
     }
 
-    const safeUpdates = { ...updates };
+    const safeUpdates: Partial<UpdateUserProfileDto> = { ...updates };
     if (role !== 'admin') {
       delete safeUpdates.role;
     }
@@ -54,10 +64,14 @@ export class UsersService {
     limit = 20,
     requestUserId: string,
   ) {
-    const role = await this.usersRepository.getUserRole(requestUserId);
+    const role = await this.userRolesRepo?.getRole(requestUserId);
     if (role !== 'admin') throw new UnauthorizedException('Not authorized');
 
-    const { data, count } = await this.usersRepository.getUsersByRole(targetRole, page, limit);
+    const { data, count } = await this.usersRepository.getUsersByRole(
+      targetRole,
+      page,
+      limit,
+    );
 
     return {
       data,
@@ -70,16 +84,22 @@ export class UsersService {
     };
   }
 
-  async getForumMembers(limit?: number, onlineOnly?: boolean) {
+  async getForumMembers(
+    limit?: number,
+    onlineOnly?: boolean,
+  ): Promise<Record<string, unknown>[]> {
     const [data, postData] = await Promise.all([
       this.usersRepository.getForumMembers(limit),
-      this.usersRepository.getForumPostsAuthors()
+      this.usersRepository.getForumPostsAuthors(),
     ]);
 
     const counts = new Map<string, number>();
     for (const row of postData as { author_id: string | null }[]) {
       if (row.author_id)
-        counts.set(row.author_id, (counts.get(row.author_id) || 0) + 1);
+        counts.set(
+          String(row.author_id),
+          (counts.get(String(row.author_id)) || 0) + 1,
+        );
     }
 
     const ONLINE_WINDOW_MS = 5 * 60 * 1000;
@@ -88,14 +108,28 @@ export class UsersService {
         ? Date.now() - new Date(lastSeen).getTime() < ONLINE_WINDOW_MS
         : false;
 
-    let members = (data || []).map((m: any) => ({
+    let members = ((data as Record<string, unknown>[]) || []).map((m) => ({
       ...m,
-      post_count: counts.get(m.id) || 0,
-      is_online: isOnline(m.last_seen_at),
+      post_count: counts.get(String(m.id)) || 0,
+      is_online: isOnline(m.last_seen_at as string | null),
     }));
 
-    if (onlineOnly) members = members.filter((m: any) => m.is_online);
+    if (onlineOnly) members = members.filter((m) => m.is_online);
     return members;
+  }
+
+  async getForumMemberById(id: string): Promise<Record<string, unknown>> {
+    const member = await this.usersRepository.getForumMemberById(id);
+    if (!member) throw new NotFoundException('User not found');
+
+    const ONLINE_WINDOW_MS = 5 * 60 * 1000;
+    const lastSeen = member.last_seen_at as string | null;
+    return {
+      ...member,
+      is_online: lastSeen
+        ? Date.now() - new Date(lastSeen).getTime() < ONLINE_WINDOW_MS
+        : false,
+    };
   }
 
   async getOnlineCount() {

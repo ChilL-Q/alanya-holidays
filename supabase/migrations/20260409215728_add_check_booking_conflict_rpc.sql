@@ -4,7 +4,7 @@
 
 CREATE OR REPLACE FUNCTION public.check_booking_conflict(
     p_item_id UUID,
-    p_item_type TEXT DEFAULT 'property',
+    p_item_type TEXT,
     p_check_in DATE,
     p_check_out DATE
 ) RETURNS JSONB AS $$

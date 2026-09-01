@@ -2,6 +2,7 @@
 -- Without this, Supabase JS serializes NUMERIC as strings, causing
 -- runtime type mismatches with TypeScript `number` fields.
 
+DROP FUNCTION IF EXISTS public.get_category_analytics_average(TEXT, INT);
 CREATE OR REPLACE FUNCTION public.get_category_analytics_average(
     p_category_id TEXT,
     p_days INT DEFAULT 30

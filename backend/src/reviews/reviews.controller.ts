@@ -2,17 +2,25 @@ import {
   Controller,
   Get,
   Post,
-  Put,
   Delete,
   Param,
   Body,
   Query,
   UseGuards,
-  Req,
   Patch,
 } from '@nestjs/common';
 import { ReviewsService } from './reviews.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { RequireRole } from '../auth/decorators/require-role.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { AuthUser } from '../auth/types/auth-user.interface';
+import { SubmitReviewDto } from './dto/submit-review.dto';
+import {
+  PaginatedReviewsResponse,
+  ReviewOperationResult,
+} from './types/review.types';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Controller('reviews')
 export class ReviewsController {
@@ -21,82 +29,89 @@ export class ReviewsController {
   @Get('listing/:id')
   async getListingReviews(
     @Param('id') id: string,
-    @Query('page') page: string,
-    @Query('limit') limit: string,
-  ) {
-    return this.reviewsService.getListingReviews(
-      id,
-      page ? parseInt(page) : 1,
-      limit ? parseInt(limit) : 20,
-    );
+    @Query() pagination?: PaginationDto,
+  ): Promise<PaginatedReviewsResponse> {
+    const page = pagination?.page ?? 1;
+    const limit = pagination?.limit ?? 20;
+    return this.reviewsService.getListingReviews(id, page, limit);
   }
 
   @Post('listing/:id')
   @UseGuards(AuthGuard)
   async submitListingReview(
     @Param('id') id: string,
-    @Body() body: { rating: number; comment: string },
-    @Req() req: any,
-  ) {
+    @Body() body: SubmitReviewDto,
+    @CurrentUser() user: AuthUser,
+  ): Promise<Record<string, unknown>> {
     return this.reviewsService.submitListingReview(
       id,
       body.rating,
       body.comment,
-      req.user.id,
+      user.id,
     );
   }
 
   @Get('user/listing/:id')
   @UseGuards(AuthGuard)
-  async getUserReviewForListing(@Param('id') id: string, @Req() req: any) {
-    return this.reviewsService.getUserReviewForListing(id, req.user.id);
+  async getUserReviewForListing(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthUser,
+  ): Promise<Record<string, unknown> | null> {
+    return this.reviewsService.getUserReviewForListing(id, user.id);
   }
 
   @Get('admin/pending')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRole('admin')
   async getPendingReviews(
-    @Query('page') page: string,
-    @Query('limit') limit: string,
-    @Req() req: any,
-  ) {
-    return this.reviewsService.getPendingReviews(
-      page ? parseInt(page) : 1,
-      limit ? parseInt(limit) : 50,
-      req.user.id,
-    );
+    @CurrentUser() user: AuthUser,
+    @Query() pagination?: PaginationDto,
+  ): Promise<PaginatedReviewsResponse> {
+    const page = pagination?.page ?? 1;
+    const limit = pagination?.limit ?? 50;
+    return this.reviewsService.getPendingReviews(page, limit, user.id);
   }
 
   @Get('admin/status/:status')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRole('admin')
   async getReviewsByStatus(
     @Param('status') status: string,
-    @Query('page') page: string,
-    @Query('limit') limit: string,
-    @Req() req: any,
-  ) {
-    return this.reviewsService.getReviewsByStatus(
-      status,
-      page ? parseInt(page) : 1,
-      limit ? parseInt(limit) : 50,
-      req.user.id,
-    );
+    @CurrentUser() user: AuthUser,
+    @Query() pagination?: PaginationDto,
+  ): Promise<PaginatedReviewsResponse> {
+    const page = pagination?.page ?? 1;
+    const limit = pagination?.limit ?? 50;
+    return this.reviewsService.getReviewsByStatus(status, page, limit, user.id);
   }
 
   @Patch(':id/approve')
-  @UseGuards(AuthGuard)
-  async approveReview(@Param('id') id: string, @Req() req: any) {
-    return this.reviewsService.approveReview(id, req.user.id);
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRole('admin')
+  async approveReview(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthUser,
+  ): Promise<ReviewOperationResult> {
+    return this.reviewsService.approveReview(id, user.id);
   }
 
   @Patch(':id/reject')
-  @UseGuards(AuthGuard)
-  async rejectReview(@Param('id') id: string, @Req() req: any) {
-    return this.reviewsService.rejectReview(id, req.user.id);
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRole('admin')
+  async rejectReview(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthUser,
+  ): Promise<ReviewOperationResult> {
+    return this.reviewsService.rejectReview(id, user.id);
   }
 
   @Delete(':id')
-  @UseGuards(AuthGuard)
-  async deleteReview(@Param('id') id: string, @Req() req: any) {
-    return this.reviewsService.deleteReview(id, req.user.id);
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRole('admin')
+  async deleteReview(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthUser,
+  ): Promise<ReviewOperationResult> {
+    return this.reviewsService.deleteReview(id, user.id);
   }
 }

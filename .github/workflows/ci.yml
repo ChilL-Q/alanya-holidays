@@ -2,9 +2,10 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "dev", "feat/**", "fix/**" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "dev" ]
+  workflow_dispatch:
 
 # Cancel previous runs on the same branch when new commits are pushed
 concurrency:
@@ -28,44 +29,153 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v4
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
 
     - name: Setup Node.js
-      uses: actions/setup-node@v6
+      uses: actions/setup-node@v4
       with:
-        node-version: '24'
-        cache: 'npm'
-
-    - name: Setup Deno
-      uses: denoland/setup-deno@v2
+        node-version: '22'
+        cache: 'pnpm'
 
     - name: Install Dependencies
-      run: npm ci
+      run: pnpm install --frozen-lockfile
 
-    - name: Security Audit
-      run: npm audit --audit-level=high
-      continue-on-error: true
+    - name: Turborepo Cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          .turbo
+          node_modules/.cache/turbo
+        key: ${{ runner.os }}-turbo-${{ github.ref_name }}-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-turbo-${{ github.ref_name }}-
+          ${{ runner.os }}-turbo-
 
-    - name: Lint Code
-      run: npm run lint
+    - name: Monorepo Type Check
+      run: pnpm type-check
 
-    - name: Type Check
-      run: npm run type-check
+    - name: Monorepo Lint
+      run: pnpm lint
 
-    - name: Run Tests
-      run: npm run test -- --run
+    - name: Frontend Tests
+      run: pnpm --filter @alanya-holidays/frontend test --run
 
-    - name: Run Coverage
-      run: npm run test:coverage
+    - name: Backend Tests
+      run: pnpm --filter @alanya-holidays/backend test
 
-    - name: Supabase Functions Lint
-      run: npm run supabase:lint
+    - name: Monorepo Build
+      run: pnpm build
 
-    - name: Supabase Functions Type Check
-      run: npm run supabase:type-check
-      continue-on-error: true
+  docker-and-compose-validation:
+    name: Docker Builds & Compose Linting
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
 
-    - name: Verify Build
-      run: npm run build
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Lint Docker Compose Configurations
+      run: |
+        cp .env.example .env
+        cp .env.example .env.production
+        docker compose -f docker-compose.yml config > /dev/null
+        docker compose --env-file .env.example -f docker-compose.prod.yml config > /dev/null
+        echo "✓ Docker Compose configurations valid."
+
+    - name: Verify Backend Docker Build
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        file: backend/Dockerfile
+        push: false
+        tags: alanya-holidays-backend:ci-check
+
+    - name: Verify Frontend Production Docker Build
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        file: frontend/Dockerfile.prod
+        push: false
+        build-args: |
+          VITE_SUPABASE_URL=https://mock-supabase-url.supabase.co
+          VITE_SUPABASE_ANON_KEY=mock-supabase-anon-key
+          VITE_GOOGLE_MAPS_API_KEY=mock-google-maps-api-key
+          VITE_APP_URL=https://alanyaholidays.com
+          VITE_SENTRY_DSN=mock-sentry-dsn
+        tags: alanya-holidays-frontend:ci-check
+
+  db-schema-and-rls-verification:
+    name: Database Migrations & RLS Verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgrespassword
+          POSTGRES_DB: alanya_holidays
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Initialize PostgreSQL Mock Schema & Extensions
       env:
-        CI: true
+        PGPASSWORD: postgrespassword
+      run: |
+        psql -h localhost -U postgres -d alanya_holidays -v ON_ERROR_STOP=1 -f test/fixtures/init_test_db.sql
+
+    - name: Run Supabase SQL Migrations
+      env:
+        PGPASSWORD: postgrespassword
+      run: |
+        for migration in $(ls -1 supabase/migrations/*.sql | sort); do
+          echo "Applying migration: $migration"
+          psql -h localhost -U postgres -d alanya_holidays -v ON_ERROR_STOP=1 -f "$migration" || exit 1
+        done
+        echo "✓ All migrations successfully applied."
+
+    - name: Execute RLS Security Verification
+      env:
+        PGPASSWORD: postgrespassword
+      run: |
+        psql -h localhost -U postgres -d alanya_holidays -v ON_ERROR_STOP=1 -f db_scripts/verify_rls_security.sql
+
+    - name: Verify Listing Claim Approval Integrity
+      env:
+        PGPASSWORD: postgrespassword
+      run: |
+        psql -h localhost -U postgres -d alanya_holidays -v ON_ERROR_STOP=1 -f db_scripts/verify_listing_claim_approval.sql
+
+    - name: Verify Listing Claim Token Security
+      env:
+        PGPASSWORD: postgrespassword
+      run: |
+        psql -h localhost -U postgres -d alanya_holidays -v ON_ERROR_STOP=1 -f db_scripts/verify_listing_claim_token_security.sql
+
+    - name: Verify Atomic Blog Comment Likes
+      env:
+        PGPASSWORD: postgrespassword
+      run: |
+        psql -h localhost -U postgres -d alanya_holidays -v ON_ERROR_STOP=1 -f db_scripts/verify_atomic_blog_comment_likes.sql
+
+    - name: Verify Business Account Registration Foundation
+      env:
+        PGPASSWORD: postgrespassword
+      run: |
+        psql -h localhost -U postgres -d alanya_holidays -v ON_ERROR_STOP=1 -f db_scripts/verify_business_account_registration.sql

@@ -8,6 +8,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+.pnpm-store/
 dist
 dist-ssr
 *.local
@@ -21,8 +22,8 @@ dist-ssr
 .env.production
 
 # Editor directories and files
-.vscode/*
-!.vscode/extensions.json
+.vscode/
+scratch/
 .idea
 .DS_Store
 *.suo
@@ -68,6 +69,7 @@ conductor/
 .claude
 .qwen
 .geminiignore
+.mcp.json
 
 .playwright-mcp
 playwright-report/
@@ -78,3 +80,33 @@ test_sprite.txt
 dock
 .superpowers
 .qwen
+
+# Root debug screenshots
+/*.png
+
+.agent-shared-context.md
+
+# Archives
+*.zip
+
+# Build artifacts
+*.tsbuildinfo
+.turbo/
+.vite/
+shared/types/*.js
+shared/types/*.d.ts
+
+# Agent customization and knowledge graph artifacts
+.agents/
+.codex/
+graphify-out/
+
+# Database backup archives & manifests
+/backups/
+/tmp/pg_backups/
+*.sql.gz
+*.dump
+*.dump.enc
+*.sql.gz.sha256
+*.sql.gz.meta.json
+*.sql.gz.enc

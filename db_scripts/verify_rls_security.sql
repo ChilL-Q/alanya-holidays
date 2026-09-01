@@ -166,8 +166,71 @@ BEGIN
 END $$;
 
 -- ============================================================================
--- 10. FINAL SUMMARY
+-- 10. VERIFY LISTING CLAIMS CANNOT BYPASS THE BACKEND
 -- ============================================================================
+DO $$
+BEGIN
+  IF has_table_privilege('anon', 'public.listing_claims', 'INSERT')
+     OR has_table_privilege('authenticated', 'public.listing_claims', 'INSERT') THEN
+    RAISE EXCEPTION 'Direct listing_claims INSERT remains granted to a public API role';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'listing_claims'
+      AND cmd = 'INSERT'
+      AND (
+        roles @> ARRAY['anon']::name[]
+        OR roles @> ARRAY['authenticated']::name[]
+        OR roles @> ARRAY['public']::name[]
+      )
+  ) THEN
+    RAISE EXCEPTION 'Direct listing_claims INSERT policy remains available to a public API role';
+  END IF;
+
+  IF NOT has_table_privilege('service_role', 'public.listing_claims', 'INSERT') THEN
+    RAISE EXCEPTION 'Backend service_role lost listing_claims INSERT access';
+  END IF;
+
+  RAISE NOTICE '✓ Listing claims can only be inserted through the backend service role';
+END $$;
+
+-- ============================================================================
+-- 11. FINAL SUMMARY
+-- ============================================================================
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'concierge_enquiries'
+      AND policyname = 'concierge_enquiries_public_select'
+  ) THEN
+    RAISE EXCEPTION 'Public SELECT policy still exposes concierge enquiries';
+  END IF;
+
+  IF has_table_privilege('anon', 'public.concierge_enquiries', 'SELECT')
+     OR has_table_privilege('authenticated', 'public.concierge_enquiries', 'SELECT') THEN
+    RAISE EXCEPTION 'Public roles still have SELECT privilege on concierge enquiries';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'concierge_enquiries'
+      AND policyname = 'concierge_enquiries_public_insert'
+      AND cmd = 'INSERT'
+  ) THEN
+    RAISE EXCEPTION 'Public enquiry submission policy is missing';
+  END IF;
+
+  RAISE NOTICE '✓ Concierge enquiries allow public submission without public reads';
+END $$;
+
 SELECT 
   'RLS Security Verification' as check_name,
   CASE 

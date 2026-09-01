@@ -1,15 +1,16 @@
 import eslint from 'vite-plugin-eslint';
-
 import path from 'path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import tailwindcss from '@tailwindcss/vite';
 import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig(() => {
   const isAnalyze = process.env.ANALYZE === 'true';
+  const base = process.env.BASE_PATH || '/';
+  const isPreview = process.env.IS_PREVIEW ? true : false;
 
   return {
+    base,
     server: {
       port: 3000,
       host: '0.0.0.0',
@@ -22,6 +23,10 @@ export default defineConfig(() => {
             const id = idMatch ? idMatch[1] : '';
             return `?id=${id}`;
           }
+        },
+        '^/api/': {
+          target: 'http://localhost:4000',
+          changeOrigin: true,
         }
       }
     },
@@ -32,7 +37,6 @@ export default defineConfig(() => {
     plugins: [
       react(),
       eslint(),
-      tailwindcss(),
       ...(isAnalyze ? [visualizer({
         filename: 'dist/bundle-analysis.html',
         open: false,
@@ -47,32 +51,38 @@ export default defineConfig(() => {
         output: {
           manualChunks: (id) => {
             if (id.includes('node_modules')) {
-              if (id.includes('@react-google-maps')) return 'vendor-maps';
-              if (id.includes('recharts')) return 'vendor-charts';
+              if (id.includes('@react-google-maps') || id.includes('@googlemaps')) return 'vendor-maps';
+              if (id.includes('recharts') || id.includes('d3-') || id.includes('/d3/')) return 'vendor-charts';
               if (id.includes('@supabase')) return 'vendor-supabase';
+              if (id.includes('@dnd-kit')) return 'vendor-dnd';
+              if (id.includes('i18next') || id.includes('react-i18next')) return 'vendor-i18n';
               if (id.includes('lucide-react')) return 'vendor-icons';
-              if (id.includes('react-datepicker')) return 'vendor-datepicker';
               if (id.includes('date-fns')) return 'vendor-date-fns';
-              if (id.includes('react-imask')) return 'vendor-imask';
               if (id.includes('zod')) return 'vendor-validation';
-              if (id.includes('react-router-dom')) return 'vendor-router';
-              if (id.includes('@headlessui/react')) return 'vendor-headlessui';
               if (id.includes('react-hot-toast')) return 'vendor-toast';
-              if (id.includes('@sentry/react')) return 'vendor-sentry';
+              if (id.includes('@sentry/react') || id.includes('@sentry/')) return 'vendor-sentry';
+              if (
+                id.includes('react') ||
+                id.includes('scheduler') ||
+                id.includes('@remix-run')
+              ) {
+                return 'vendor-react';
+              }
             }
-            // Split large internal modules
-            if (id.includes('pages/AiPlanner')) return 'pages-aiplanner';
-            if (id.includes('components/charts')) return 'components-charts';
           }
         }
       }
     },
     define: {
-      // GEMINI_API_KEY is now server-side only (ai-proxy Edge Function)
+      __BASE_PATH__: JSON.stringify(base),
+      __IS_PREVIEW__: JSON.stringify(isPreview),
+      __READDY_PROJECT_ID__: JSON.stringify(process.env.PROJECT_ID || ''),
+      __READDY_VERSION_ID__: JSON.stringify(process.env.VERSION_ID || ''),
+      __READDY_AI_DOMAIN__: JSON.stringify(process.env.READDY_AI_DOMAIN || ''),
     },
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve(__dirname, './src'),
       }
     }
   };

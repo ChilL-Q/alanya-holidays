@@ -1,4 +1,4 @@
-
+-- ⚠️ DANGER: HISTORICAL ARCHIVE ONLY. DO NOT EXECUTE IN PRODUCTION OR CI ENVIRONMENTS.
 -- ⚠️ WARNING: This will delete ALL bookings and reviews from the database.
 -- Use this to clean up after running the seed_stress_test.ts script.
 

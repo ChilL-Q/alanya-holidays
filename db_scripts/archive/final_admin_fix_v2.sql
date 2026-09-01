@@ -1,3 +1,4 @@
+-- ⚠️ DANGER: HISTORICAL ARCHIVE ONLY. DO NOT EXECUTE IN PRODUCTION OR CI ENVIRONMENTS.
 -- FINAL ADMIN FIX V2 (The "Nuclear Option")
 -- Этот скрипт чинит ВСЁ: RLS, отсутствие профиля и метаданные.
 -- This script fixes EVERYTHING: RLS, missing profile, and metadata.

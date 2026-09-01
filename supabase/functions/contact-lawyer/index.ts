@@ -5,17 +5,12 @@ import { z } from "npm:zod@3"
 
 // @ts-ignore: jsr: specifiers are resolved by Deno, not tsc
 import "jsr:@supabase/functions-js@^2/edge-runtime.d.ts"
+import { getCorsHeaders } from "../_shared/cors.ts"
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const LAWYER_ADMIN_EMAIL = Deno.env.get('LAWYER_ADMIN_EMAIL')!
-const SITE_URL = Deno.env.get('SITE_URL') || 'https://alanyaholidays.com'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': SITE_URL,
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
 
 // --- Input Validation ---
 const contactSchema = z.object({
@@ -36,6 +31,8 @@ function escapeHtml(value: unknown): string {
 }
 
 Deno.serve(async (req: Request) => {
+  const corsHeaders = getCorsHeaders(req)
+
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }

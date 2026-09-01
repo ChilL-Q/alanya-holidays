@@ -1,5 +1,22 @@
 {
   "nodeModulesDir": "auto",
+  "imports": {
+    "@shared/": "./shared/types/",
+    "@alanya-holidays/shared": "./shared/types/index.ts",
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@2",
+    "@anthropic-ai/sdk": "npm:@anthropic-ai/sdk@^0.22.0",
+    "vitest": "npm:vitest@^4.0.0"
+  },
+  "exclude": [
+    "backend/",
+    "frontend/",
+    "shared/",
+    "dist/",
+    "node_modules/",
+    ".next/",
+    "dock/",
+    "db_scripts/"
+  ],
   "tasks": {
     "lint": "deno lint",
     "check": "deno check"
@@ -12,10 +29,10 @@
         "no-explicit-any"
       ]
     },
-    "exclude": ["dist/", "node_modules/", ".next/"]
+    "exclude": ["backend/", "frontend/", "shared/", "dist/", "node_modules/", ".next/"]
   },
   "fmt": {
-    "exclude": ["dist/", "node_modules/", ".next/"],
+    "exclude": ["backend/", "frontend/", "shared/", "dist/", "node_modules/", ".next/"],
     "lineWidth": 100,
     "indentWidth": 2,
     "semiColons": true,

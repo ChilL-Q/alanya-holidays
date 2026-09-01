@@ -5,11 +5,11 @@ import { z } from "npm:zod@3"
 
 // @ts-ignore: jsr: specifiers are resolved by Deno, not tsc
 import "jsr:@supabase/functions-js@^2/edge-runtime.d.ts"
+import { getCorsHeaders } from "../_shared/cors.ts"
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-const ALLOWED_ORIGIN = Deno.env.get('SITE_URL') || 'https://alanyaholidays.com'
 
 // Bank transfer details for paid listing fees (T17). Set these as Supabase
 // secrets; if LISTING_BANK_IBAN is unset, the email falls back to a generic
@@ -19,11 +19,6 @@ const BANK_NAME = Deno.env.get('LISTING_BANK_NAME') || ''
 const BANK_IBAN = Deno.env.get('LISTING_BANK_IBAN') || ''
 const BANK_SWIFT = Deno.env.get('LISTING_BANK_SWIFT') || ''
 const BANK_CONFIGURED = Boolean(BANK_IBAN)
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
 
 // --- Zod schemas per email type ---
 
@@ -63,6 +58,13 @@ const emailDataSchemas = {
   subscription_restored: z.object({ name: sOpt, link: sOpt }),
   listing_claim_verification: z.object({ claimantEmail: s, businessName: s, verificationToken: s }),
   admin_claim_notification: z.object({ businessName: s, claimantEmail: s, listingId: s }),
+  admin_listing_notification: z.object({
+    listingId: s,
+    listingTitle: s,
+    ownerEmail: s,
+    category: s,
+    tier: sOpt,
+  }),
   listing_claim_approved: z.object({ claimantEmail: s, businessName: s }),
   listing_claim_rejected: z.object({ claimantEmail: s, businessName: s, rejectionReason: s }),
   listing_payment_instructions: z.object({ businessName: s, tier: s, link: sOpt }),
@@ -80,6 +82,8 @@ interface EmailPayload {
 }
 
 Deno.serve(async (req: Request) => {
+  const corsHeaders = getCorsHeaders(req)
+
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -284,6 +288,11 @@ const getHtmlTemplate = (title: string, content: string, actionLink?: string, ac
 `;
 
 // ponytail: data-driven claim email templates instead of 4 case statements
+const claimSiteUrl =
+  (typeof Deno !== 'undefined' ? Deno.env.get('SITE_URL') : undefined) ||
+  (typeof process !== 'undefined' ? process.env.SITE_URL : undefined) ||
+  'https://alanyaholidays.com';
+
 const claimEmailTemplates = {
   listing_claim_verification: {
     subject: '✅ Verify Your Listing Claim',
@@ -294,7 +303,7 @@ const claimEmailTemplates = {
       <p>To complete the verification, click the button below to confirm your email address:</p>
       <p style="text-align: center; color: #64748b; font-size: 14px; margin-top: 24px;">Once verified, our team will review your claim and contact you within 24 hours.</p>
     `,
-    link: (d: any) => `${process.env.SITE_URL || 'https://alanyaholidays.com'}/verify-claim?token=${escapeHtml(d.verificationToken)}`,
+    link: (d: any) => `${claimSiteUrl}/verify-claim#token=${encodeURIComponent(d.verificationToken)}`,
     buttonText: 'Verify Email',
   },
   admin_claim_notification: {
@@ -309,7 +318,7 @@ const claimEmailTemplates = {
       </div>
       <p style="text-align: center; color: #64748b; font-size: 14px;">Log in to the admin panel to review and approve or reject this claim.</p>
     `,
-    link: (_d: any) => `${process.env.SITE_URL || 'https://alanyaholidays.com'}/admin/directory`,
+    link: (_d: any) => `${claimSiteUrl}/admin/directory`,
     buttonText: 'Review Claim',
   },
   listing_claim_approved: {
@@ -323,7 +332,7 @@ const claimEmailTemplates = {
       </div>
       <p style="text-align: center; color: #64748b; font-size: 14px;">Log in to your account to view and update your listing.</p>
     `,
-    link: (_d: any) => `${process.env.SITE_URL || 'https://alanyaholidays.com'}/directory`,
+    link: (_d: any) => `${claimSiteUrl}/directory`,
     buttonText: 'View Your Listing',
   },
   listing_claim_rejected: {
@@ -337,7 +346,7 @@ const claimEmailTemplates = {
       </div>
       <p style="text-align: center; color: #64748b; font-size: 14px;">If you believe this is a mistake, please contact us for more information.</p>
     `,
-    link: (_d: any) => `${process.env.SITE_URL || 'https://alanyaholidays.com'}/contact`,
+    link: (_d: any) => `${claimSiteUrl}/contact`,
     buttonText: 'Contact Support',
   },
 } as const;
@@ -739,6 +748,37 @@ function generateEmailContent(type: string, data: any): { subject: string, html:
             };
 
         // --- Admin/System ---
+        case 'admin_listing_notification': {
+            const siteUrl = (typeof Deno !== 'undefined' ? Deno.env.get('SITE_URL') : undefined) || (typeof process !== 'undefined' ? process.env.SITE_URL : undefined) || 'https://alanyaholidays.com';
+            const adminLink = `${siteUrl}/admin?tab=listings&id=${encodeURIComponent(data.listingId)}`;
+            const submissionDate = new Date().toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+            });
+            return {
+                subject: `[Alanya Holidays Admin] New Pending Listing Submitted: ${escapeHtml(data.listingTitle)}`,
+                html: getHtmlTemplate(
+                    'New Pending Listing',
+                    `
+                    <p style="font-size: 16px;">A new merchant listing has been submitted and is awaiting administrative review.</p>
+                    <div class="card">
+                        <div class="info-row"><span class="label">Listing Title</span><span class="value"><strong>${escapeHtml(data.listingTitle)}</strong></span></div>
+                        <div class="info-row"><span class="label">Category</span><span class="value">${escapeHtml(data.category)}</span></div>
+                        <div class="info-row"><span class="label">Owner Email</span><span class="value">${escapeHtml(data.ownerEmail)}</span></div>
+                        ${data.tier ? `<div class="info-row"><span class="label">Tier</span><span class="value">${escapeHtml(data.tier)}</span></div>` : ''}
+                        <div class="info-row"><span class="label">Submission Date</span><span class="value">${submissionDate}</span></div>
+                        <div class="info-row"><span class="label">Listing ID</span><span class="value" style="font-family: monospace; font-size: 13px;">${escapeHtml(data.listingId)}</span></div>
+                    </div>
+                    <p style="text-align: center; color: #64748b; font-size: 14px; margin-top: 24px;">Please review the listing details and approve or reject the submission in the admin hub.</p>
+                    `,
+                    adminLink,
+                    'Review Listing in Admin Panel',
+                    false
+                )
+            };
+        }
+
         case 'admin_contact_message':
             return {
                 subject: `📩 New Contact Message: ${escapeHtml(data.subject)}`,

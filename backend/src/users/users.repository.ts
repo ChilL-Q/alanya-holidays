@@ -1,39 +1,40 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 
 @Injectable()
 export class UsersRepository {
+  private readonly logger = new Logger(UsersRepository.name);
+
   constructor(private readonly supabaseService: SupabaseService) {}
 
   get client() {
     return this.supabaseService.getClient();
   }
 
-  async getUserRole(userId: string) {
-    const { data } = await this.client
-      .from('profiles')
-      .select('role')
-      .eq('id', userId)
-      .single();
-    return data?.role;
-  }
-
   async getAllUsers(page = 1, limit = 20) {
-    const from = (page - 1) * limit;
+    const safePage = Number.isInteger(page) && page > 0 ? page : 1;
+    const safeLimit =
+      Number.isInteger(limit) && limit > 0 ? Math.min(limit, 100) : 20;
+    const from = (safePage - 1) * safeLimit;
     const { data, error, count } = await this.client
       .from('profiles')
       .select('*', { count: 'exact' })
       .order('created_at', { ascending: false })
-      .range(from, from + limit - 1);
+      .order('id', { ascending: true })
+      .range(from, from + safeLimit - 1);
 
     if (error) throw new Error(error.message);
-    return { data: data || [], count: count || 0 };
+    return { data: data ?? [], count: count ?? 0 };
   }
 
   async getUserProfile(id: string) {
+    // Explicit projection: profiles carry banking PII (iban, bank_name,
+    // crypto_wallet) that must never leave the server through this API.
     const { data, error } = await this.client
       .from('profiles')
-      .select('*')
+      .select(
+        'id, full_name, email, phone, avatar_url, bio, company_name, social_links, role, created_at',
+      )
       .eq('id', id)
       .single();
     if (error) {
@@ -43,7 +44,7 @@ export class UsersRepository {
     return data;
   }
 
-  async updateUserProfile(id: string, updates: any) {
+  async updateUserProfile(id: string, updates: Record<string, unknown>) {
     const { error } = await this.client
       .from('profiles')
       .update(updates)
@@ -52,16 +53,20 @@ export class UsersRepository {
   }
 
   async getUsersByRole(targetRole: string, page = 1, limit = 20) {
-    const from = (page - 1) * limit;
+    const safePage = Number.isInteger(page) && page > 0 ? page : 1;
+    const safeLimit =
+      Number.isInteger(limit) && limit > 0 ? Math.min(limit, 100) : 20;
+    const from = (safePage - 1) * safeLimit;
     const { data, error, count } = await this.client
       .from('profiles')
       .select('*', { count: 'exact' })
       .eq('role', targetRole)
       .order('created_at', { ascending: false })
-      .range(from, from + limit - 1);
+      .order('id', { ascending: true })
+      .range(from, from + safeLimit - 1);
 
     if (error) throw new Error(error.message);
-    return { data: data || [], count: count || 0 };
+    return { data: data ?? [], count: count ?? 0 };
   }
 
   async getForumMembers(limit?: number) {
@@ -80,6 +85,26 @@ export class UsersRepository {
     return data || [];
   }
 
+  async getForumMemberById(id: string) {
+    const { data, error } = await this.client
+      .from('profiles')
+      .select(
+        'id, full_name, avatar_url, role, bio, created_at, last_seen_at, social_links',
+      )
+      .eq('id', id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!data) return null;
+
+    const { count } = await this.client
+      .from('forum_posts')
+      .select('id', { count: 'exact', head: true })
+      .eq('author_id', id)
+      .eq('is_removed', false);
+
+    return { ...data, post_count: count ?? 0 };
+  }
+
   async getForumPostsAuthors() {
     const { data, error } = await this.client
       .from('forum_posts')
@@ -96,8 +121,14 @@ export class UsersRepository {
       .select('id', { count: 'exact', head: true })
       .gte('last_seen_at', since);
 
-    if (error) return 0;
-    return count || 0;
+    if (error) {
+      this.logger.error(
+        'getOnlineCount error:',
+        error instanceof Error ? error.stack : JSON.stringify(error),
+      );
+      return 0;
+    }
+    return count ?? 0;
   }
 
   async updatePresence(userId: string) {
@@ -105,6 +136,11 @@ export class UsersRepository {
       .from('profiles')
       .update({ last_seen_at: new Date().toISOString() })
       .eq('id', userId);
-    if (error) console.error('Failed to update presence:', error);
+    if (error) {
+      this.logger.error(
+        'Failed to update presence:',
+        error instanceof Error ? error.stack : JSON.stringify(error),
+      );
+    }
   }
 }

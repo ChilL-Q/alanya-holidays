@@ -54,7 +54,6 @@ DROP INDEX IF EXISTS public.idx_audit_logs_user_id;
 DROP INDEX IF EXISTS public.idx_listing_votes_user;
 
 -- ===== forum =====
-DROP INDEX IF EXISTS public.idx_forum_posts_slug;
 DROP INDEX IF EXISTS public.idx_forum_posts_author;
 DROP INDEX IF EXISTS public.idx_forum_posts_created;
 DROP INDEX IF EXISTS public.idx_forum_post_likes_user_id;

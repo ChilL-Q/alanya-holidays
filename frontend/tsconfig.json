@@ -11,6 +11,8 @@
     ],
     "skipLibCheck": true,
     "types": [
+      "react",
+      "react-dom",
       "node",
       "vite/client"
     ],
@@ -21,12 +23,26 @@
     "jsx": "react-jsx",
     "paths": {
       "@/*": [
-        "./*"
+        "./src/*"
+      ],
+      "@shared/*": [
+        "../shared/*"
+      ],
+      "@alanya-holidays/shared": [
+        "../shared/types/index.ts"
+      ],
+      "@alanya-holidays/shared/*": [
+        "../shared/*"
       ]
     },
     "allowImportingTsExtensions": true,
+    "strict": true,
     "noEmit": true
   },
+  "include": [
+    "src",
+    "vite-env.d.ts"
+  ],
   "exclude": [
     "supabase",
     "external_skills"

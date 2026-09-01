@@ -6,10 +6,15 @@ import {
   Body,
   Query,
   UseGuards,
-  Req,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { RequireRole } from '../auth/decorators/require-role.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { AuthUser } from '../auth/types/auth-user.interface';
+import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
+import { PaginationDto, LimitQueryDto } from '../common/dto/pagination.dto';
 
 @Controller('users')
 export class UsersController {
@@ -17,11 +22,11 @@ export class UsersController {
 
   @Get('forum/members')
   async getForumMembers(
-    @Query('limit') limit?: string,
+    @Query() query?: LimitQueryDto,
     @Query('onlineOnly') onlineOnly?: string,
   ) {
     return this.usersService.getForumMembers(
-      limit ? parseInt(limit) : undefined,
+      query?.limit,
       onlineOnly === 'true',
     );
   }
@@ -33,52 +38,51 @@ export class UsersController {
 
   @Put('presence/touch')
   @UseGuards(AuthGuard)
-  async touchPresence(@Req() req: any) {
-    return this.usersService.touchPresence(req.user.id);
+  async touchPresence(@CurrentUser() user: AuthUser) {
+    return this.usersService.touchPresence(user.id);
   }
 
   @Get()
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRole('admin')
   async getAllUsers(
-    @Query('page') page: string,
-    @Query('limit') limit: string,
-    @Req() req: any,
+    @Query() pagination: PaginationDto,
+    @CurrentUser() user?: AuthUser,
   ) {
     return this.usersService.getAllUsers(
-      page ? parseInt(page) : 1,
-      limit ? parseInt(limit) : 20,
-      req.user.id,
+      pagination.page ?? 1,
+      pagination.limit ?? 20,
+      user?.id ?? '',
     );
   }
 
   @Get('role/:role')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRole('admin')
   async getUsersByRole(
     @Param('role') role: string,
-    @Query('page') page: string,
-    @Query('limit') limit: string,
-    @Req() req: any,
+    @Query() pagination: PaginationDto,
+    @CurrentUser() user?: AuthUser,
   ) {
     return this.usersService.getUsersByRole(
       role,
-      page ? parseInt(page) : 1,
-      limit ? parseInt(limit) : 20,
-      req.user.id,
+      pagination.page ?? 1,
+      pagination.limit ?? 20,
+      user?.id ?? '',
     );
   }
 
-  @Get(':id')
-  async getUserProfile(@Param('id') id: string) {
-    return this.usersService.getUserProfile(id);
-  }
+  // Note: no public GET :id — profile reads are admin-only
+  // (UsersAdminController) or self-scoped via the guarded PUT below.
+  // A public variant previously leaked contact/banking PII via select('*').
 
   @Put(':id')
   @UseGuards(AuthGuard)
   async updateUserProfile(
     @Param('id') id: string,
-    @Body() updates: any,
-    @Req() req: any,
+    @Body() updates: UpdateUserProfileDto,
+    @CurrentUser() user: AuthUser,
   ) {
-    return this.usersService.updateUserProfile(id, updates, req.user.id);
+    return this.usersService.updateUserProfile(id, updates, user.id);
   }
 }

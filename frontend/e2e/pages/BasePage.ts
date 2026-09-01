@@ -3,12 +3,10 @@ import { Page, Locator, expect } from '@playwright/test';
 export class BasePage {
   readonly page: Page;
   readonly cookieAcceptButton: Locator;
-  readonly profileButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
     this.cookieAcceptButton = page.getByRole('button', { name: /Accept|Принять/i });
-    this.profileButton = page.getByTestId('profile-button');
   }
 
   /** Navigate to a specific path */
@@ -30,12 +28,11 @@ export class BasePage {
     }
   }
 
-  /** Open login modal from navbar */
+  /** Open login page from navbar */
   async openLoginModal() {
-    await this.profileButton.click();
-    await this.page.getByText(/Log in|Войти/i).first().click();
-    // Wait for modal heading to appear (supports multiple languages)
-    await expect(this.page.locator('h3:has-text("Welcome back"), h3:has-text("С возвращением"), h3:has-text("Hoş geldiniz")')).toBeVisible({ timeout: 10000 });
+    await this.page.getByRole('link', { name: 'Sign In' }).click();
+    await this.page.waitForURL('**/login');
+    await expect(this.page.locator('h1:has-text("Welcome Back"), h1:has-text("С возвращением"), h1:has-text("Hoş geldiniz")')).toBeVisible({ timeout: 10000 });
   }
 
   /** Common navigation helper */

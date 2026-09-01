@@ -1,10 +1,24 @@
 import { Module } from '@nestjs/common';
+import { AuthModule } from '../auth/auth.module';
+import { AdminModule } from '../admin/admin.module';
+import { WebhooksModule } from '../webhooks/webhooks.module';
 import { DirectoryController } from './directory.controller';
-import { DirectoryService } from './directory.service';
+import { DirectoryAdminController } from './presentation/directory-admin.controller';
+import { DirectoryListingService } from './application/directory-listing.service';
+import { ListingClaimService } from './application/listing-claim.service';
 import { DirectoryRepository } from './directory.repository';
+import { EmailOutboxRepository } from '../bookings/email-outbox.repository';
+import { BillingModule } from '../billing/billing.module';
 
 @Module({
-  controllers: [DirectoryController],
-  providers: [DirectoryService, DirectoryRepository],
+  imports: [AuthModule, AdminModule, WebhooksModule, BillingModule],
+  controllers: [DirectoryAdminController, DirectoryController],
+  providers: [
+    DirectoryListingService,
+    ListingClaimService,
+    DirectoryRepository,
+    EmailOutboxRepository,
+  ],
+  exports: [DirectoryListingService, ListingClaimService],
 })
 export class DirectoryModule {}

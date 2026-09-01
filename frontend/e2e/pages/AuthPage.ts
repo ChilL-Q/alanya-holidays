@@ -15,61 +15,59 @@ export class AuthPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    const dialog = page.locator('[role="dialog"]');
-    
-    this.emailInput = dialog.locator('input[type="email"]');
-    this.passwordInput = dialog.locator('input[type="password"]');
-    this.fullNameInput = dialog.getByPlaceholder(/John Doe|Name/i);
-    
-    this.loginSubmitButton = dialog.locator('button[type="submit"]', { hasText: /Log in|Войти/i });
-    this.signupSubmitButton = dialog.locator('button[type="submit"]', { hasText: /Create Account|Register|Sign up|Зарегистрироваться/i });
-    
-    this.switchToSignupButton = dialog.locator('button', { hasText: /Create Account|Register|Sign up|Зарегистрироваться/i }).filter({ hasNot: dialog.locator('[type="submit"]') });
-    this.switchToLoginButton = dialog.locator('button', { hasText: /Log in|Войти/i }).filter({ hasNot: dialog.locator('[type="submit"]') });
-    
-    this.errorMessage = dialog.locator('.bg-red-50.text-red-600, [role="alert"]').first();
-    this.otpInput = dialog.locator('#otp-input');
-    this.verifyButton = dialog.locator('button', { hasText: /Verify/i });
+    // Login page uses #login-email, #login-password, and submit button "Sign In"
+    this.emailInput = page.locator('#login-email, #register-email');
+    this.passwordInput = page.locator('#login-password, #register-password');
+    this.fullNameInput = page.locator('#register-name');
+
+    this.loginSubmitButton = page.getByRole('button', { name: /Sign In/i });
+    this.signupSubmitButton = page.getByRole('button', { name: /Create Account/i });
+
+    // On login page, "Register" tab link switches to register; on register page, "Sign In" tab link switches to login
+    this.switchToSignupButton = page.locator('a[href="/register"]').first();
+    this.switchToLoginButton = page.locator('a[href="/login"]').first();
+
+    this.errorMessage = page.locator('.bg-accent-100\\/70, .bg-red-50, [role="alert"]').first();
+    this.otpInput = page.locator('#otp-input');
+    this.verifyButton = page.getByRole('button', { name: /Verify/i });
   }
 
   /** Perform login flow */
   async login(email: string, password: string) {
     await this.emailInput.fill(email);
     await this.passwordInput.fill(password);
-    
-    // Wait for the auth response to ensure the action completed
-    const responsePromise = this.page.waitForResponse(resp => 
+
+    const responsePromise = this.page.waitForResponse(resp =>
       resp.url().includes('/auth/v1/token') && resp.request().method() === 'POST',
       { timeout: 15000 }
-    ).catch(() => null); // Ignore timeout if it happens (e.g. if click fails)
+    ).catch(() => null);
 
     await this.loginSubmitButton.click();
     await responsePromise;
-    
-    // Give some time for AuthContext state to update and closeModal to be called
+
     await this.page.waitForTimeout(1000);
   }
 
   /** Perform signup flow (first step) */
   async signup(email: string, password: string, fullName: string) {
-    // Check if we are in signup mode by checking if fullNameInput is visible
-    if (!await this.fullNameInput.isVisible()) {
-      await this.switchToSignupButton.click();
-      await expect(this.fullNameInput).toBeVisible();
+    // Navigate to register page if not already there
+    if (!this.page.url().includes('/register')) {
+      await this.page.getByRole('link', { name: /Register|Create one|Join Community/i }).first().click();
+      await this.page.waitForURL('**/register');
     }
-    
+
     await this.fullNameInput.fill(fullName);
     await this.emailInput.fill(email);
     await this.passwordInput.fill(password);
-    
-    const responsePromise = this.page.waitForResponse(resp => 
+
+    const responsePromise = this.page.waitForResponse(resp =>
       resp.url().includes('/auth/v1/signup') && resp.request().method() === 'POST',
       { timeout: 15000 }
     ).catch(() => null);
 
     await this.signupSubmitButton.click();
     await responsePromise;
-    
+
     await this.page.waitForTimeout(1000);
   }
 
@@ -77,15 +75,15 @@ export class AuthPage extends BasePage {
   async verifyOtp(code: string) {
     await expect(this.otpInput).toBeVisible({ timeout: 10000 });
     await this.otpInput.fill(code);
-    
-    const responsePromise = this.page.waitForResponse(resp => 
+
+    const responsePromise = this.page.waitForResponse(resp =>
       resp.url().includes('/auth/v1/verify') && resp.request().method() === 'POST',
       { timeout: 15000 }
     ).catch(() => null);
 
     await this.verifyButton.click();
     await responsePromise;
-    
+
     await this.page.waitForTimeout(1000);
   }
 
@@ -95,9 +93,9 @@ export class AuthPage extends BasePage {
     await expect(this.errorMessage).toContainText(message);
   }
 
-  /** Wait for login modal to be closed */
+  /** Wait for login page to be done (redirected away from /login) */
   async assertModalClosed() {
-    // Check for common modal headings to be gone
-    await expect(this.page.locator('h3:has-text("Welcome back"), h3:has-text("Confirm your email"), h3:has-text("Create an account")')).not.toBeVisible({ timeout: 10000 });
+    // After successful login, user is redirected away from /login
+    await expect(this.page).not.toHaveURL(/\/login/, { timeout: 10000 });
   }
 }

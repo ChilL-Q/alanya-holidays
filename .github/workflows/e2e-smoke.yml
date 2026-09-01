@@ -1,10 +1,16 @@
 name: E2E Smoke Tests
 
 on:
+  workflow_run:
+    workflows: ["CI Pipeline"]
+    branches: ["main"]
+    types:
+      - completed
   push:
-    branches: [ "main" ]
+    branches: ["feat/**", "fix/**"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
+  workflow_dispatch:
 
 # Cancel previous runs on the same branch when new commits are pushed
 concurrency:
@@ -17,6 +23,7 @@ permissions:
 jobs:
   e2e-smoke:
     name: E2E Critical Flows
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     container:
@@ -29,17 +36,29 @@ jobs:
       HOME: /root
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v6
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v6
-      with:
-        node-version: '24'
-        cache: 'npm'
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
 
-    - name: Install Dependencies
-      run: npm ci
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
 
-    - name: Run E2E Smoke Tests
-      run: npx playwright test e2e/auth.spec.ts e2e/booking.spec.ts e2e/checkout.spec.ts --project=chromium
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Browsers
+        working-directory: frontend
+        run: pnpm exec playwright install chromium webkit
+
+      - name: Run Legacy E2E Smoke Tests
+        working-directory: frontend
+        run: pnpm exec playwright test e2e/home.spec.ts e2e/navigation.spec.ts e2e/auth.spec.ts e2e/checkout.spec.ts e2e/enquiry.spec.ts --config=playwright.config.ts --project="Desktop Chrome"
+
+      - name: Run Production Readiness on All Configured Projects
+        working-directory: frontend
+        run: pnpm exec playwright test e2e/production-readiness.spec.ts --config=playwright.config.ts

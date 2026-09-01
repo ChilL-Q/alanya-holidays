@@ -5,37 +5,47 @@ import {
   Get,
   Query,
   Param,
-  Put,
   Patch,
   Delete,
   UseGuards,
-  Req,
 } from '@nestjs/common';
-import { BookingsService, CreateBookingDto } from './bookings.service';
+import { BookingsService } from './bookings.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { RequireRole } from '../auth/decorators/require-role.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { AuthUser } from '../auth/types/auth-user.interface';
+import { CreateBookingDto } from './dto/create-booking.dto';
+import { CheckConflictQueryDto } from './dto/check-conflict-query.dto';
+import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
+import { UpdatePayoutStatusDto } from './dto/update-payout-status.dto';
+import { UserBookingsQueryDto } from './dto/user-bookings-query.dto';
 
 @Controller('bookings')
 export class BookingsController {
   constructor(private readonly bookingsService: BookingsService) {}
 
   @Get('conflict')
-  async checkConflict(
-    @Query('itemId') itemId: string,
-    @Query('itemType') itemType: string,
-    @Query('checkIn') checkIn: string,
-    @Query('checkOut') checkOut: string,
-  ) {
+  async checkConflict(@Query() query: CheckConflictQueryDto) {
     return this.bookingsService.checkConflict(
-      itemId,
-      itemType,
-      checkIn,
-      checkOut,
+      query.itemId,
+      query.itemType,
+      query.checkIn,
+      query.checkOut,
     );
   }
 
   @Post()
-  async createBooking(@Body() createBookingDto: any) {
-    return this.bookingsService.createBooking(createBookingDto);
+  @UseGuards(AuthGuard)
+  async createBooking(
+    @Body() createBookingDto: CreateBookingDto,
+    @CurrentUser() user: AuthUser,
+  ) {
+    const bookingId = await this.bookingsService.createBooking(
+      createBookingDto,
+      user.id,
+    );
+    return { id: bookingId, data: bookingId };
   }
 
   // ============================================
@@ -44,14 +54,25 @@ export class BookingsController {
 
   @Get('my-bookings')
   @UseGuards(AuthGuard)
-  async getUserBookings(@Req() req: any) {
-    return this.bookingsService.getUserBookings(req.user.id);
+  async getUserBookings(
+    @CurrentUser() user: AuthUser,
+    @Query() query: UserBookingsQueryDto,
+  ) {
+    return this.bookingsService.getUserBookings(
+      user.id,
+      query.limit,
+      query.offset,
+    );
   }
 
   @Get('admin')
-  @UseGuards(AuthGuard)
-  async getAdminBookings(@Query('status') status: string, @Req() req: any) {
-    return this.bookingsService.getAdminBookings(status, req.user.id);
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRole('admin')
+  async getAdminBookings(
+    @Query('status') status: string,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.bookingsService.getAdminBookings(status, user.id);
   }
 
   @Get('host/:hostId')
@@ -60,13 +81,13 @@ export class BookingsController {
     @Param('hostId') hostId: string,
     @Query('dateFrom') dateFrom: string,
     @Query('dateTo') dateTo: string,
-    @Req() req: any,
+    @CurrentUser() user: AuthUser,
   ) {
     return this.bookingsService.getBookingsForHost(
       hostId,
       dateFrom,
       dateTo,
-      req.user.id,
+      user.id,
     );
   }
 
@@ -78,34 +99,35 @@ export class BookingsController {
   @UseGuards(AuthGuard)
   async updateBookingStatus(
     @Param('id') id: string,
-    @Body() body: { status: string; reason?: string },
-    @Req() req: any,
+    @Body() body: UpdateBookingStatusDto,
+    @CurrentUser() user: AuthUser,
   ) {
     return this.bookingsService.updateBookingStatus(
       id,
       body.status,
       body.reason,
-      req.user.id,
+      user.id,
     );
   }
 
   @Delete(':id')
   @UseGuards(AuthGuard)
-  async cancelBooking(@Param('id') id: string, @Req() req: any) {
-    return this.bookingsService.cancelBooking(id, req.user.id);
+  async cancelBooking(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.bookingsService.cancelBooking(id, user.id);
   }
 
   @Patch(':id/payout-status')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRole('admin')
   async updatePayoutStatus(
     @Param('id') id: string,
-    @Body('payoutStatus') payoutStatus: string,
-    @Req() req: any,
+    @Body() body: UpdatePayoutStatusDto,
+    @CurrentUser() user: AuthUser,
   ) {
     return this.bookingsService.updatePayoutStatus(
       id,
-      payoutStatus,
-      req.user.id,
+      body.payoutStatus,
+      user.id,
     );
   }
 }

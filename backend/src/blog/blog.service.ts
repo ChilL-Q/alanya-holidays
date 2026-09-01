@@ -1,81 +1,142 @@
 import {
   Injectable,
+  Logger,
   UnauthorizedException,
+  ForbiddenException,
   NotFoundException,
   BadRequestException,
+  ConflictException,
+  Optional,
 } from '@nestjs/common';
 import { BlogRepository } from './blog.repository';
+import { UserRolesRepository } from '../common/auth/user-roles.repository';
+import { ModerationAuditService } from '../admin/moderation-audit.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { EmailOutboxRepository } from '../bookings/email-outbox.repository';
+import { slugify, generateUniqueSlug } from '../utils/slugify';
 import sanitizeHtml from 'sanitize-html';
+import {
+  BlogComment,
+  BlogPost,
+  BlogPostSummary,
+  BlogPostsListResult,
+  BlogSubmission,
+  BlogTag,
+  InsertBlogCommentPayload,
+  SubmissionCreatedResponse,
+  SuccessResponse,
+  UpdateBlogPostPayload,
+  UpdateBlogSubmissionPayload,
+} from './types/blog.types';
+import {
+  CreateBlogCommentDto,
+  CreateBlogPostDto,
+  CreateBlogSubmissionDto,
+  GetBlogCommentsQueryDto,
+  GetBlogQueryDto,
+  GetBlogSubmissionsQueryDto,
+  UpdateBlogPostDto,
+  UpdateBlogSubmissionDto,
+} from './dto';
 
-const slugify = (text: string) =>
-  text
-    .toString()
-    .toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^\w\-]+/g, '')
-    .replace(/\-\-+/g, '-')
-    .replace(/^-+/, '')
-    .replace(/-+$/, '');
-
-const generateExcerpt = (content: string | null, maxLength = 200) => {
+const generateExcerpt = (
+  content: string | null,
+  maxLength = 200,
+): string | null => {
   if (!content) return null;
   const stripped = content.replace(/<[^>]*>/g, '').trim();
   if (stripped.length <= maxLength) return stripped;
   return stripped.slice(0, maxLength).trimEnd() + '\u2026';
 };
 
+const sanitizeExcerpt = (excerpt: string): string =>
+  sanitizeHtml(excerpt, { allowedTags: [], allowedAttributes: {} }).trim();
+
 @Injectable()
 export class BlogService {
-  constructor(private readonly blogRepository: BlogRepository) {}
+  private readonly logger = new Logger(BlogService.name);
 
-  private async checkAdmin(userId: string) {
-    const role = await this.blogRepository.getUserRole(userId);
+  constructor(
+    private readonly blogRepository: BlogRepository,
+    private readonly userRolesRepo: UserRolesRepository,
+    private readonly notificationsService: NotificationsService,
+    private readonly emailOutbox: EmailOutboxRepository,
+    @Optional()
+    private readonly moderationAuditService?: ModerationAuditService,
+  ) {}
+
+  private async checkAdmin(userId: string): Promise<void> {
+    const role = await this.userRolesRepo.getRole(userId);
     if (role !== 'admin') throw new UnauthorizedException('Admin only');
   }
 
-  private async resolveSlug(baseSlug: string) {
-    const existingSlugs = await this.blogRepository.getSlugs(baseSlug);
-    if (!existingSlugs.includes(baseSlug)) return baseSlug;
-    let counter = 1;
-    let newSlug = `${baseSlug}-${counter}`;
-    while (existingSlugs.includes(newSlug)) {
-      counter++;
-      newSlug = `${baseSlug}-${counter}`;
-    }
-    return newSlug;
+  private async resolveSlug(baseSlug: string): Promise<string> {
+    const seed = slugify(baseSlug) || 'post';
+    const existingSlugs = await this.blogRepository.getSlugs(seed);
+    return generateUniqueSlug(seed, existingSlugs);
   }
 
-  async getBlogPosts(filters: any, requestUserId?: string) {
+  async getBlogPosts(
+    filters: GetBlogQueryDto,
+    requestUserId?: string,
+  ): Promise<BlogPostsListResult> {
     let role = 'anon';
     if (requestUserId) {
-      const userRole = await this.blogRepository.getUserRole(requestUserId);
+      const userRole = await this.userRolesRepo.getRole(requestUserId);
       if (userRole) role = userRole;
     }
 
-    const limit = filters.limit ? parseInt(filters.limit) : 10;
-    const offset = filters.offset ? parseInt(filters.offset) : 0;
+    const limit = filters.limit ? Number(filters.limit) : 10;
+    const page = filters.page ? Number(filters.page) : 1;
+    const offset =
+      filters.offset !== undefined
+        ? Number(filters.offset)
+        : (page - 1) * limit;
 
-    const { data, count } = await this.blogRepository.getBlogPosts(filters, limit, offset, role, requestUserId);
+    const { data, count } = await this.blogRepository.getBlogPosts(
+      filters,
+      limit,
+      offset,
+      role,
+      requestUserId,
+    );
 
-    const flattened = (data || []).map((post: any) => ({
+    const flattened: BlogPost[] = (data || []).map((post) => ({
       ...post,
-      tags: (post.tags || []).map((t: any) => t?.tag).filter(Boolean),
+      tags: (post.tags || [])
+        .map((t) => t?.tag)
+        .filter((tag): tag is BlogTag => Boolean(tag)),
     }));
 
     return { data: flattened, total: count || 0 };
   }
 
-  async getFeaturedBlogPosts(limit = 3) {
+  async getFeaturedBlogPosts(limit = 3): Promise<BlogPostSummary[]> {
     return this.blogRepository.getFeaturedBlogPosts(limit);
   }
 
-  async getBlogPost(slug: string, incrementViews = true) {
+  async getBlogPost(
+    slug: string,
+    incrementViews = true,
+    userId?: string,
+  ): Promise<BlogPost> {
     const data = await this.blogRepository.getBlogPostBySlug(slug);
     if (!data) throw new NotFoundException('Blog post not found');
 
-    const result = {
+    if (data.status !== 'published') {
+      const role = userId
+        ? await this.userRolesRepo.getRole(userId)
+        : undefined;
+      if (role !== 'admin' && data.author_id !== userId) {
+        throw new NotFoundException('Blog post not found');
+      }
+    }
+
+    const result: BlogPost = {
       ...data,
-      tags: (data.tags || []).map((t: any) => t?.tag).filter(Boolean),
+      tags: (data.tags || [])
+        .map((t) => t?.tag)
+        .filter((tag): tag is BlogTag => Boolean(tag)),
     };
 
     if (incrementViews && result.status === 'published') {
@@ -84,35 +145,55 @@ export class BlogService {
     return result;
   }
 
-  async getRelatedPosts(postId: string, category: string, limit = 3) {
+  async getRelatedPosts(
+    postId: string,
+    category: string,
+    limit = 3,
+  ): Promise<BlogPostSummary[]> {
     return this.blogRepository.getRelatedPosts(postId, category, limit);
   }
 
-  async createBlogPost(data: any, userId: string) {
-    const role = await this.blogRepository.getUserRole(userId);
+  async createBlogPost(
+    data: CreateBlogPostDto,
+    userId: string,
+  ): Promise<BlogPost> {
+    const role = await this.userRolesRepo.getRole(userId);
+    if (role !== 'admin' && data.status && data.status !== 'draft') {
+      throw new ForbiddenException(
+        'Only admins can publish or archive blog posts directly',
+      );
+    }
+    if (role !== 'admin' && data.is_featured) {
+      throw new ForbiddenException('Only admins can feature blog posts');
+    }
 
     const baseSlug = data.slug || slugify(data.title);
     const uniqueSlug = await this.resolveSlug(baseSlug);
-    const excerpt = data.excerpt || generateExcerpt(data.content || null);
+    const sanitizedContent = sanitizeHtml(data.content);
+    const excerpt = data.excerpt
+      ? sanitizeExcerpt(data.excerpt)
+      : generateExcerpt(sanitizedContent);
     const publishedAt =
       data.status === 'published' ? new Date().toISOString() : null;
 
     const post = await this.blogRepository.insertBlogPost({
       title: data.title,
       slug: uniqueSlug,
-      content: data.content,
+      content: sanitizedContent,
       excerpt,
       video_url: data.video_url || null,
-      cover_image_url: data.cover_image_url || null,
+      cover_image_url: data.cover_image_url || data.cover_image || null,
       author_id: userId,
       category: data.category || null,
-      status: data.status,
+      status: data.status || 'draft',
       is_featured: data.is_featured && role === 'admin' ? true : false,
+      content_type: data.content_type || 'blog',
       published_at: publishedAt,
     });
 
-    if (data.tag_ids && data.tag_ids.length > 0) {
-      const tagRows = data.tag_ids.map((tagId: string) => ({
+    const tagIds = data.tag_ids || data.tags;
+    if (tagIds && tagIds.length > 0) {
+      const tagRows = tagIds.map((tagId: string) => ({
         post_id: post.id,
         tag_id: tagId,
       }));
@@ -121,28 +202,48 @@ export class BlogService {
     return post;
   }
 
-  async updateBlogPost(id: string, updates: any, userId: string) {
-    const role = await this.blogRepository.getUserRole(userId);
-    const existing = await this.blogRepository.getBlogPostById(id);
-    
-    if (!existing) throw new NotFoundException('Blog post not found');
-    if (existing.author_id !== userId && role !== 'admin')
-      throw new UnauthorizedException('Not authorized');
+  async updateBlogPost(
+    id: string,
+    updates: UpdateBlogPostDto,
+    userId: string,
+  ): Promise<BlogPost> {
+    const { role, existing } = await this.checkPostOwnership(id, userId);
+    if (
+      role !== 'admin' &&
+      updates.status !== undefined &&
+      updates.status !== existing.status
+    ) {
+      throw new ForbiddenException(
+        'Only admins can change blog publication status',
+      );
+    }
+    if (role !== 'admin' && updates.is_featured !== undefined) {
+      throw new ForbiddenException('Only admins can feature blog posts');
+    }
 
-    const safe: any = {};
+    const safe: UpdateBlogPostPayload = {};
     if (updates.title !== undefined) {
       safe.title = updates.title;
       if (!updates.slug)
         safe.slug = await this.resolveSlug(slugify(updates.title));
     }
-    if (updates.content !== undefined) safe.content = updates.content;
-    if (updates.excerpt !== undefined) safe.excerpt = updates.excerpt;
-    else if (updates.content !== undefined)
-      safe.excerpt = generateExcerpt(updates.content);
+    if (updates.slug !== undefined) safe.slug = updates.slug;
+    if (updates.content !== undefined) {
+      safe.content = sanitizeHtml(updates.content);
+    }
+    if (updates.excerpt !== undefined) {
+      safe.excerpt = sanitizeExcerpt(updates.excerpt);
+    } else if (safe.content !== undefined) {
+      safe.excerpt = generateExcerpt(safe.content);
+    }
     if (updates.video_url !== undefined)
       safe.video_url = updates.video_url || null;
-    if (updates.cover_image_url !== undefined)
-      safe.cover_image_url = updates.cover_image_url || null;
+    if (
+      updates.cover_image_url !== undefined ||
+      updates.cover_image !== undefined
+    )
+      safe.cover_image_url =
+        updates.cover_image_url || updates.cover_image || null;
     if (updates.category !== undefined)
       safe.category = updates.category || null;
     if (updates.status !== undefined) {
@@ -154,13 +255,18 @@ export class BlogService {
     if (updates.is_featured !== undefined && role === 'admin') {
       safe.is_featured = updates.is_featured;
     }
+    if (updates.content_type !== undefined) {
+      safe.content_type = updates.content_type;
+    }
 
     const post = await this.blogRepository.updateBlogPost(id, safe);
 
-    if (updates.tag_ids !== undefined) {
+    const tagIds =
+      updates.tag_ids !== undefined ? updates.tag_ids : updates.tags;
+    if (tagIds !== undefined) {
       await this.blogRepository.deleteBlogPostTags(id);
-      if (updates.tag_ids.length > 0) {
-        const tagRows = updates.tag_ids.map((tagId: string) => ({
+      if (tagIds.length > 0) {
+        const tagRows = tagIds.map((tagId: string) => ({
           post_id: id,
           tag_id: tagId,
         }));
@@ -170,41 +276,142 @@ export class BlogService {
     return post;
   }
 
-  async deleteBlogPost(id: string, userId: string) {
+  async deleteBlogPost(id: string, userId: string): Promise<SuccessResponse> {
     await this.checkAdmin(userId);
     await this.blogRepository.deleteBlogPost(id);
     return { success: true };
   }
 
   // Tags
-  async getBlogTags() {
+  async getBlogTags(): Promise<BlogTag[]> {
     return this.blogRepository.getBlogTags();
   }
 
-  async createBlogTag(name: string, userId: string) {
+  async createBlogTag(name: string, userId: string): Promise<BlogTag> {
     await this.checkAdmin(userId);
     return this.blogRepository.insertBlogTag({ name, slug: slugify(name) });
   }
 
-  async deleteBlogTag(id: string, userId: string) {
+  async deleteBlogTag(id: string, userId: string): Promise<SuccessResponse> {
     await this.checkAdmin(userId);
     await this.blogRepository.deleteBlogTag(id);
     return { success: true };
   }
 
-  async addTagToPost(postId: string, tagId: string, userId: string) {
+  async addTagToPost(
+    postId: string,
+    tagId: string,
+    userId: string,
+  ): Promise<SuccessResponse> {
+    await this.checkPostOwnership(postId, userId);
     await this.blogRepository.insertSingleBlogPostTag(postId, tagId);
     return { success: true };
   }
 
-  async removeTagFromPost(postId: string, tagId: string, userId: string) {
+  async removeTagFromPost(
+    postId: string,
+    tagId: string,
+    userId: string,
+  ): Promise<SuccessResponse> {
+    await this.checkPostOwnership(postId, userId);
     await this.blogRepository.deleteSingleBlogPostTag(postId, tagId);
     return { success: true };
   }
 
+  private async checkPostOwnership(
+    postId: string,
+    userId: string,
+  ): Promise<{
+    role: string | undefined;
+    existing: { author_id: string; status: string; slug: string };
+  }> {
+    const role = await this.userRolesRepo.getRole(userId);
+    const existing = await this.blogRepository.getBlogPostById(postId);
+    if (!existing) throw new NotFoundException('Blog post not found');
+    if (existing.author_id !== userId && role !== 'admin')
+      throw new UnauthorizedException('Not authorized');
+    return { role, existing };
+  }
+
+  // ── Blog Comments ────────────────────────────────────────────
+
+  async getBlogComments(
+    postId: string,
+    query: GetBlogCommentsQueryDto,
+    userId?: string,
+  ): Promise<BlogComment[]> {
+    return this.blogRepository.getBlogComments(
+      postId,
+      query.limit ?? 20,
+      query.offset ?? 0,
+      userId,
+    );
+  }
+
+  async createBlogComment(
+    postId: string,
+    dto: CreateBlogCommentDto,
+    userId: string,
+  ): Promise<BlogComment> {
+    const payload: InsertBlogCommentPayload = {
+      post_id: postId,
+      user_id: userId,
+      body: dto.body,
+      parent_id: dto.parentId || null,
+    };
+    return this.blogRepository.insertBlogComment(payload);
+  }
+
+  async updateBlogComment(
+    id: string,
+    body: string,
+    userId: string,
+  ): Promise<BlogComment> {
+    const existing = await this.blogRepository.getBlogCommentById(id);
+    if (!existing) throw new NotFoundException('Comment not found');
+
+    const role = await this.userRolesRepo.getRole(userId);
+    if (existing.user_id !== userId && role !== 'admin')
+      throw new UnauthorizedException('Not authorized');
+
+    return this.blogRepository.updateBlogComment(id, body);
+  }
+
+  async deleteBlogComment(
+    id: string,
+    userId: string,
+  ): Promise<SuccessResponse> {
+    const existing = await this.blogRepository.getBlogCommentById(id);
+    if (!existing) throw new NotFoundException('Comment not found');
+
+    const role = await this.userRolesRepo.getRole(userId);
+    if (existing.user_id !== userId && role !== 'admin')
+      throw new UnauthorizedException('Not authorized');
+
+    await this.blogRepository.deleteBlogComment(id);
+    return { success: true };
+  }
+
+  async toggleBlogCommentLike(
+    id: string,
+    userId: string,
+  ): Promise<{ liked: boolean }> {
+    const existing = await this.blogRepository.getBlogCommentById(id);
+    if (!existing) throw new NotFoundException('Comment not found');
+
+    const liked = await this.blogRepository.toggleBlogCommentLike(id, userId);
+    return { liked };
+  }
+
   // Submissions
-  async createBlogSubmission(data: any, userId: string) {
-    const withinLimit = await this.blogRepository.checkBlogSubmissionLimit(userId, 5);
+  async createBlogSubmission(
+    data: CreateBlogSubmissionDto,
+    userId: string,
+  ): Promise<SubmissionCreatedResponse> {
+    const withinLimit = await this.blogRepository.checkBlogSubmissionLimit(
+      userId,
+      5,
+    );
     if (withinLimit === false)
       throw new BadRequestException('Daily submission limit reached');
 
@@ -214,37 +421,156 @@ export class BlogService {
       user_id: userId,
       title: data.title,
       content: sanitizedContent,
+      author_name: data.author_name,
+      author_email: data.author_email,
+      category: data.category,
       video_url: data.video_url || null,
       media_urls: data.media_urls || [],
+      tag_ids: data.tags || [],
       status: 'pending_review',
       payment_details: data.payment_details || null,
+      content_type: data.content_type || 'blog',
     });
 
     return { submissionId: submission.id };
   }
 
-  async getBlogSubmissions(filters: any, userId: string) {
+  async getBlogSubmissions(
+    filters: GetBlogSubmissionsQueryDto,
+    userId: string,
+  ): Promise<BlogSubmission[]> {
     await this.checkAdmin(userId);
-    return this.blogRepository.getBlogSubmissions(filters);
+    return this.blogRepository.getBlogSubmissions(
+      filters,
+      filters.limit ?? 20,
+      filters.offset ?? 0,
+    );
   }
 
-  async getUserBlogSubmissions(userId: string) {
-    return this.blogRepository.getUserBlogSubmissions(userId);
+  async getUserBlogSubmissions(
+    query: GetBlogSubmissionsQueryDto,
+    userId: string,
+  ): Promise<BlogSubmission[]> {
+    return this.blogRepository.getUserBlogSubmissions(
+      userId,
+      query.limit ?? 20,
+      query.offset ?? 0,
+    );
   }
 
-  async approveBlogSubmission(submissionId: string, userId: string) {
+  async getUserBlogPosts(
+    query: GetBlogQueryDto,
+    userId: string,
+  ): Promise<BlogPostsListResult> {
+    return this.getBlogPosts({ ...query, authorId: userId }, userId);
+  }
+
+  private async checkSubmissionOwnership(
+    submissionId: string,
+    userId: string,
+  ): Promise<{ submission: BlogSubmission; role: string | undefined }> {
+    const submission =
+      await this.blogRepository.getBlogSubmissionById(submissionId);
+    if (!submission) throw new NotFoundException('Submission not found');
+    const role = await this.userRolesRepo.getRole(userId);
+    if (submission.user_id !== userId && role !== 'admin') {
+      // Deliberately hide another user's submission existence.
+      throw new NotFoundException('Submission not found');
+    }
+    return { submission, role };
+  }
+
+  async updateUserBlogSubmission(
+    submissionId: string,
+    updates: UpdateBlogSubmissionDto,
+    userId: string,
+  ): Promise<BlogSubmission> {
+    const { submission, role } = await this.checkSubmissionOwnership(
+      submissionId,
+      userId,
+    );
+    if (!['pending_review', 'rejected'].includes(submission.status)) {
+      throw new ForbiddenException(
+        'Approved submissions can no longer be edited',
+      );
+    }
+
+    const safe: UpdateBlogSubmissionPayload = {};
+    if (updates.title !== undefined) safe.title = updates.title.trim();
+    if (updates.content !== undefined)
+      safe.content = sanitizeHtml(updates.content);
+    if (updates.author_name !== undefined)
+      safe.author_name = updates.author_name.trim();
+    if (updates.author_email !== undefined)
+      safe.author_email = updates.author_email;
+    if (updates.category !== undefined) safe.category = updates.category.trim();
+    if (updates.video_url !== undefined)
+      safe.video_url = updates.video_url || null;
+    if (updates.media_urls !== undefined) safe.media_urls = updates.media_urls;
+    if (updates.tags !== undefined) safe.tag_ids = updates.tags;
+
+    const updated = await this.blogRepository.updateBlogSubmission(
+      submissionId,
+      safe,
+      role === 'admin' ? submission.user_id : userId,
+    );
+    if (!updated) {
+      throw new ConflictException(
+        'Submission status changed; reload and try again',
+      );
+    }
+    return updated;
+  }
+
+  async resubmitUserBlogSubmission(
+    submissionId: string,
+    userId: string,
+  ): Promise<BlogSubmission> {
+    const { submission } = await this.checkSubmissionOwnership(
+      submissionId,
+      userId,
+    );
+    if (submission.status !== 'rejected') {
+      throw new BadRequestException(
+        'Only rejected submissions can be resubmitted',
+      );
+    }
+
+    const updatedRows = await this.blogRepository.updateBlogSubmissionStatus(
+      submissionId,
+      'pending_review',
+      'rejected',
+      { rejection_reason: null },
+    );
+    if (!updatedRows || updatedRows.length === 0) {
+      throw new BadRequestException(
+        'Submission status changed; reload and try again',
+      );
+    }
+    return { ...submission, status: 'pending_review', rejection_reason: null };
+  }
+
+  async approveBlogSubmission(
+    submissionId: string,
+    userId: string,
+  ): Promise<BlogPost> {
     await this.checkAdmin(userId);
-    const submission = await this.blogRepository.getBlogSubmissionById(submissionId);
+    const submission =
+      await this.blogRepository.getBlogSubmissionById(submissionId);
     if (!submission || submission.status !== 'pending_review')
       throw new BadRequestException('Invalid submission');
 
-    const updatedSubRows = await this.blogRepository.updateBlogSubmissionStatus(submissionId, 'approved', 'pending_review');
+    const updatedSubRows = await this.blogRepository.updateBlogSubmissionStatus(
+      submissionId,
+      'approved',
+      'pending_review',
+    );
 
     if (!updatedSubRows || updatedSubRows.length === 0)
       throw new BadRequestException('Already processed');
 
     const coverImageUrl = submission.media_urls?.[0] || null;
-    let post;
+    let post: BlogPost | undefined;
     let uniqueSlug = '';
 
     try {
@@ -254,22 +580,45 @@ export class BlogService {
         slug: uniqueSlug,
         content: submission.content,
         excerpt: generateExcerpt(submission.content),
+        category: submission.category || null,
         video_url: submission.video_url,
         cover_image_url: coverImageUrl,
         author_id: submission.user_id,
         status: 'published',
         is_featured: false,
+        content_type: submission.content_type || 'blog',
         published_at: new Date().toISOString(),
       });
+
+      if (submission.tag_ids && submission.tag_ids.length > 0) {
+        await this.blogRepository.insertBlogPostTags(
+          submission.tag_ids.map((tagId) => ({
+            post_id: post!.id,
+            tag_id: tagId,
+          })),
+        );
+      }
     } catch (err) {
-      await this.blogRepository.updateBlogSubmissionStatus(submissionId, 'pending_review', 'approved');
+      if (post?.id) {
+        await this.blogRepository.deleteBlogPost(post.id);
+      }
+      await this.blogRepository.updateBlogSubmissionStatus(
+        submissionId,
+        'pending_review',
+        'approved',
+      );
       throw err;
     }
 
-    const authorProfile = await this.blogRepository.getProfileForNotification(submission.user_id);
-    
-    await this.blogRepository.insertNotification({
-      user_id: submission.user_id,
+    if (!post) {
+      throw new BadRequestException('Failed to publish submission');
+    }
+
+    const authorProfile = await this.blogRepository.getProfileForNotification(
+      submission.user_id,
+    );
+
+    await this.notificationsService.notifyUser(submission.user_id, {
       title: 'Blog Post Published!',
       message: `Your submission "${submission.title}" has been approved and published.`,
       type: 'success',
@@ -277,14 +626,30 @@ export class BlogService {
     });
 
     if (authorProfile?.email) {
-      this.blogRepository.invokeEmailFunction({
-        to: authorProfile.email,
-        type: 'blog_submission_approved',
-        data: {
-          postTitle: submission.title,
-          postUrl: `https://alanyaholidays.com/blog/${uniqueSlug}`,
-          authorName: authorProfile.full_name || 'Author',
-        },
+      this.emailOutbox
+        .enqueue({
+          to: authorProfile.email,
+          type: 'blog_submission_approved',
+          data: {
+            postTitle: submission.title,
+            postUrl: `https://alanyaholidays.com/blog/${uniqueSlug}`,
+            authorName: authorProfile.full_name || 'Author',
+          },
+        })
+        .catch((err: unknown) =>
+          this.logger.warn(
+            `Failed to enqueue blog approval email for submission ${submissionId}: ${err instanceof Error ? err.message : String(err)}`,
+          ),
+        );
+    }
+
+    if (this.moderationAuditService) {
+      await this.moderationAuditService.logAction({
+        entity_type: 'blog_submission',
+        entity_id: submissionId,
+        action: 'approve',
+        admin_id: userId,
+        metadata: { post_id: post.id, title: submission.title },
       });
     }
 
@@ -295,35 +660,59 @@ export class BlogService {
     submissionId: string,
     reason: string,
     userId: string,
-  ) {
+  ): Promise<SuccessResponse> {
     await this.checkAdmin(userId);
     if (!reason || reason.trim().length < 10)
       throw new BadRequestException('Reason must be at least 10 chars');
 
-    const submission = await this.blogRepository.getBlogSubmissionById(submissionId);
+    const submission =
+      await this.blogRepository.getBlogSubmissionById(submissionId);
     if (!submission || submission.status !== 'pending_review')
       throw new BadRequestException('Invalid submission');
 
-    await this.blogRepository.updateBlogSubmissionStatus(submissionId, 'rejected', 'pending_review', { rejection_reason: reason });
+    await this.blogRepository.updateBlogSubmissionStatus(
+      submissionId,
+      'rejected',
+      'pending_review',
+      { rejection_reason: reason },
+    );
 
-    const authorProfile = await this.blogRepository.getProfileForNotification(submission.user_id);
-    
-    await this.blogRepository.insertNotification({
-      user_id: submission.user_id,
+    const authorProfile = await this.blogRepository.getProfileForNotification(
+      submission.user_id,
+    );
+
+    await this.notificationsService.notifyUser(submission.user_id, {
       title: 'Blog Post Rejected',
       message: `Your submission "${submission.title}" was rejected. Reason: ${reason}`,
       type: 'error',
     });
 
     if (authorProfile?.email) {
-      this.blogRepository.invokeEmailFunction({
-        to: authorProfile.email,
-        type: 'blog_submission_rejected',
-        data: {
-          postTitle: submission.title,
-          reason,
-          authorName: authorProfile.full_name || 'Author',
-        },
+      this.emailOutbox
+        .enqueue({
+          to: authorProfile.email,
+          type: 'blog_submission_rejected',
+          data: {
+            postTitle: submission.title,
+            reason,
+            authorName: authorProfile.full_name || 'Author',
+          },
+        })
+        .catch((err: unknown) =>
+          this.logger.warn(
+            `Failed to enqueue blog rejection email for submission ${submissionId}: ${err instanceof Error ? err.message : String(err)}`,
+          ),
+        );
+    }
+
+    if (this.moderationAuditService) {
+      await this.moderationAuditService.logAction({
+        entity_type: 'blog_submission',
+        entity_id: submissionId,
+        action: 'reject',
+        admin_id: userId,
+        reason,
+        metadata: { title: submission.title },
       });
     }
 

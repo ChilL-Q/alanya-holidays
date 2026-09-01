@@ -1,0 +1,269 @@
+name: CD Production Deployment
+
+on:
+  workflow_run:
+    workflows: ["E2E Smoke Tests"]
+    branches: ["main"]
+    types:
+      - completed
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to Production VPS
+    if: ${{ (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'workflow_run') || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Execute Remote Deployment via SSH
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        if: ${{ env.VPS_HOST != '' && env.VPS_SSH_KEY != '' }}
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ env.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT || 22 }}
+          script: |
+            set -e
+            TARGET_DIR=""
+            for dir in /opt/alanya-holidays ~/alanya-holidays /var/www/alanya-holidays; do
+              if [ -d "$dir/.git" ]; then
+                TARGET_DIR="$dir"
+                break
+              fi
+            done
+            if [ -z "$TARGET_DIR" ]; then
+              TARGET_DIR="/opt/alanya-holidays"
+              if [ ! -d "$TARGET_DIR/.git" ]; then
+                mkdir -p "$TARGET_DIR"
+                if [ -d "$TARGET_DIR" ] && [ "$(ls -A "$TARGET_DIR")" ]; then
+                  cd "$TARGET_DIR"
+                  git init
+                  git remote add origin https://github.com/Nazarovruslan01/alanya-holidays.git || true
+                  git fetch origin main
+                  git checkout -B main origin/main
+                else
+                  git clone https://github.com/Nazarovruslan01/alanya-holidays.git "$TARGET_DIR"
+                fi
+              fi
+            fi
+            cd "$TARGET_DIR"
+
+            verify_schema_readiness() {
+              if docker compose --env-file .env.production -f docker-compose.prod.yml exec -T backend node -e '
+                const supabaseUrl = process.env.SUPABASE_URL;
+                const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+                const maxAttempts = 3;
+                const timeoutMs = 5000;
+                const retryDelayMs = 1000;
+                if (!supabaseUrl || !serviceRoleKey) {
+                  console.error("Required Supabase environment is unavailable inside the backend container.");
+                  process.exit(1);
+                }
+                const endpoint = supabaseUrl.replace(/\/+$/, "") +
+                  "/rest/v1/business_account_applications?select=*&limit=0";
+                const delay = (milliseconds) =>
+                  new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+                async function probeSchema() {
+                  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+                    const controller = new AbortController();
+                    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+                    try {
+                      const response = await fetch(endpoint, {
+                        headers: {
+                          apikey: serviceRoleKey,
+                          Authorization: "Bearer " + serviceRoleKey,
+                        },
+                        signal: controller.signal,
+                      });
+                      if (response.ok) {
+                        console.log("✓ Required production schema is ready.");
+                        return true;
+                      }
+                      const isTransient = response.status === 408 ||
+                        response.status === 429 || response.status >= 500;
+                      if (!isTransient) {
+                        console.error("Required production schema is not ready (HTTP " + response.status + ").");
+                        return false;
+                      }
+                      if (attempt === maxAttempts) {
+                        console.error("Schema readiness remained unavailable after bounded retries.");
+                        return false;
+                      }
+                      console.error("Schema readiness returned a transient HTTP error; retrying.");
+                    } catch {
+                      if (attempt === maxAttempts) {
+                        console.error("Schema readiness request failed after bounded retries.");
+                        return false;
+                      }
+                      console.error("Schema readiness request failed transiently; retrying.");
+                    } finally {
+                      clearTimeout(timeout);
+                    }
+                    await delay(retryDelayMs);
+                  }
+                  return false;
+                }
+
+                probeSchema()
+                  .then((ready) => {
+                    if (!ready) process.exit(1);
+                  })
+                  .catch(() => {
+                    console.error("Required production schema readiness probe failed.");
+                    process.exit(1);
+                  });
+              '; then
+                return 0
+              fi
+              return 1
+            }
+
+            if ! verify_schema_readiness; then
+              echo "Pre-deployment schema readiness failed; aborting before stack mutation."
+              exit 1
+            fi
+
+            PREVIOUS_COMMIT="$(git rev-parse HEAD 2>/dev/null || true)"
+            git fetch origin main
+            TARGET_COMMIT="$(git rev-parse origin/main)"
+            git reset --hard "$TARGET_COMMIT"
+
+            [ -f .env.production ] || touch .env.production
+
+            CERT_PATH="./certbot-data/conf/live/alanyaholidays.com/fullchain.pem"
+            IS_LETS_ENCRYPT=0
+            if [ -f "$CERT_PATH" ] && openssl x509 -in "$CERT_PATH" -noout -issuer 2>/dev/null | grep -qi "Let's Encrypt"; then
+              IS_LETS_ENCRYPT=1
+            fi
+
+            # Ensure fallback dummy certificate exists if missing so Nginx can start
+            if [ ! -f "$CERT_PATH" ]; then
+              mkdir -p "./certbot-data/conf/live/alanyaholidays.com"
+              mkdir -p "./certbot-data/www"
+              docker run --rm -v "$(pwd)/certbot-data/conf:/etc/letsencrypt" \
+                alpine sh -c "
+                  apk add --no-cache openssl && \
+                  mkdir -p /etc/letsencrypt/live/alanyaholidays.com && \
+                  openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
+                    -keyout '/etc/letsencrypt/live/alanyaholidays.com/privkey.pem' \
+                    -out '/etc/letsencrypt/live/alanyaholidays.com/fullchain.pem' \
+                    -subj '/CN=alanyaholidays.com' && \
+                  chmod -R 755 /etc/letsencrypt
+                " || true
+            fi
+
+            deploy_stack() {
+              if ! docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build --remove-orphans; then
+                echo "❌ Docker compose deployment failed. Inspecting container logs..."
+                docker compose -f docker-compose.prod.yml logs --tail=100 backend || true
+                docker compose -f docker-compose.prod.yml logs --tail=50 nginx || true
+                docker compose -f docker-compose.prod.yml logs --tail=50 frontend || true
+                exit 1
+              fi
+              # git reset may replace the bind-mounted config inode. Recreate
+              # Nginx so Docker binds the file from the deployed commit.
+              if ! docker compose --env-file .env.production -f docker-compose.prod.yml up -d --force-recreate --no-deps nginx; then
+                echo "❌ Nginx recreation failed after the stack update."
+                docker compose -f docker-compose.prod.yml logs --tail=50 nginx || true
+                exit 1
+              fi
+            }
+
+            verify_health() {
+              ATTEMPT=1
+              until [ "$ATTEMPT" -gt 18 ]; do
+                if docker compose -f docker-compose.prod.yml exec -T nginx wget -q -O /dev/null http://127.0.0.1:80/health; then
+                  return 0
+                fi
+                echo "Health check attempt ${ATTEMPT}/18 failed; retrying in 5s..."
+                ATTEMPT=$((ATTEMPT + 1))
+                sleep 5
+              done
+              return 1
+            }
+
+            verify_csp() {
+              if docker compose -f docker-compose.prod.yml exec -T nginx sh -c \
+                'wget -q --no-check-certificate -S -O /dev/null https://127.0.0.1/ 2>&1 |
+                  grep -i "^[[:space:]]*Content-Security-Policy:" |
+                  grep -Fq "https://plausible.io"'; then
+                echo "✓ Live Content-Security-Policy includes Plausible."
+                return 0
+              fi
+              echo "Live Content-Security-Policy is missing the required Plausible source."
+              return 1
+            }
+
+            verify_post_deploy() {
+              verify_health || return 1
+              verify_csp || return 1
+            }
+
+            deploy_stack
+
+            # Obtain real Let's Encrypt certificate if not currently valid Let's Encrypt cert
+            if [ "$IS_LETS_ENCRYPT" -eq 0 ]; then
+              echo "Requesting trusted Let's Encrypt certificate for alanyaholidays.com..."
+              if docker run --rm \
+                -v "$(pwd)/certbot-data/conf:/etc/letsencrypt" \
+                -v "$(pwd)/certbot-data/www:/var/www/certbot" \
+                certbot/certbot certonly --webroot -w /var/www/certbot \
+                  -d alanyaholidays.com -d www.alanyaholidays.com \
+                  --email admin@alanyaholidays.com --rsa-key-size 4096 --agree-tos --non-interactive --keep-until-expiring; then
+                echo "✓ Let's Encrypt certificate successfully obtained."
+              else
+                echo "⚠️ WARNING: Let's Encrypt certificate acquisition failed. Verifying fallback certificate..."
+                if [ ! -f "$CERT_PATH" ]; then
+                  echo "Regenerating self-signed fallback certificate so Nginx remains operational..."
+                  docker run --rm -v "$(pwd)/certbot-data/conf:/etc/letsencrypt" \
+                    alpine sh -c "
+                      apk add --no-cache openssl && \
+                      mkdir -p /etc/letsencrypt/live/alanyaholidays.com && \
+                      openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
+                        -keyout '/etc/letsencrypt/live/alanyaholidays.com/privkey.pem' \
+                        -out '/etc/letsencrypt/live/alanyaholidays.com/fullchain.pem' \
+                        -subj '/CN=alanyaholidays.com' && \
+                      chmod -R 755 /etc/letsencrypt
+                    "
+                fi
+              fi
+            fi
+
+            # Defensive Nginx syntax test before reload
+            if docker compose -f docker-compose.prod.yml exec -T nginx nginx -t; then
+              docker compose -f docker-compose.prod.yml exec -T nginx nginx -s reload
+            else
+              echo "CRITICAL: Nginx configuration test failed; aborting reload."
+              exit 1
+            fi
+
+            if ! verify_post_deploy; then
+              echo "Post-deployment verification failed. Initiating automated rollback..."
+              if [ -n "$PREVIOUS_COMMIT" ] && [ "$PREVIOUS_COMMIT" != "$TARGET_COMMIT" ]; then
+                echo "Rolling back to previous commit $PREVIOUS_COMMIT..."
+                git reset --hard "$PREVIOUS_COMMIT"
+                deploy_stack
+                docker compose -f docker-compose.prod.yml exec -T nginx nginx -t && \
+                  docker compose -f docker-compose.prod.yml exec -T nginx nginx -s reload || true
+                if verify_health; then
+                  echo "✓ Rollback successful. System restored to $PREVIOUS_COMMIT."
+                else
+                  echo "CRITICAL: Rollback failed to achieve healthy status!"
+                fi
+              fi
+              exit 1
+            fi
+
+            docker image prune -f

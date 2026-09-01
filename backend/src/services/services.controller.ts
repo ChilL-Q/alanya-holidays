@@ -9,10 +9,23 @@ import {
   Param,
   Query,
   UseGuards,
-  Req,
 } from '@nestjs/common';
 import { ServicesService } from './services.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { RequireRole } from '../auth/decorators/require-role.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { AuthUser } from '../auth/types/auth-user.interface';
+import { ServiceListResponse } from './types/services.types';
+import {
+  CreateServiceDto,
+  UpdateServiceDto,
+  UpdateServiceModelDto,
+  UpdateServiceStatusDto,
+  SaveServiceDraftDto,
+} from './dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { AdminServicesQueryDto } from './dto/admin-services-query.dto';
 
 @Controller('services')
 export class ServicesController {
@@ -23,12 +36,12 @@ export class ServicesController {
   // ============================================
 
   @Get('types')
-  getServiceTypes() {
+  getServiceTypes(): string[] {
     return this.servicesService.getServiceTypes();
   }
 
   @Get('brands/:type')
-  async getServiceBrands(@Param('type') type: string) {
+  async getServiceBrands(@Param('type') type: string): Promise<string[]> {
     return this.servicesService.getServiceBrands(type);
   }
 
@@ -36,7 +49,7 @@ export class ServicesController {
   async getServiceModels(
     @Param('type') type: string,
     @Param('brand') brand: string,
-  ) {
+  ): Promise<Record<string, unknown>[]> {
     return this.servicesService.getServiceModels(type, brand);
   }
 
@@ -45,7 +58,7 @@ export class ServicesController {
     @Param('type') type: string,
     @Param('brand') brand: string,
     @Param('model') model: string,
-  ) {
+  ): Promise<Record<string, unknown>> {
     return this.servicesService.getServiceModel(type, brand, model);
   }
 
@@ -53,10 +66,10 @@ export class ServicesController {
   @UseGuards(AuthGuard)
   async updateServiceModel(
     @Param('id') id: string,
-    @Body() updates: any,
-    @Req() req: any,
-  ) {
-    return this.servicesService.updateServiceModel(id, updates, req.user.id);
+    @Body() updates: UpdateServiceModelDto | Record<string, unknown>,
+    @CurrentUser() user: AuthUser,
+  ): Promise<{ success: boolean }> {
+    return this.servicesService.updateServiceModel(id, updates, user.id);
   }
 
   @Get('by-model/:type/:brand/:model')
@@ -64,7 +77,7 @@ export class ServicesController {
     @Param('type') type: string,
     @Param('brand') brand: string,
     @Param('model') model: string,
-  ) {
+  ): Promise<Record<string, unknown>[]> {
     return this.servicesService.getServicesByModel(type, brand, model);
   }
 
@@ -76,50 +89,74 @@ export class ServicesController {
   @UseGuards(AuthGuard)
   async requestServiceUpdate(
     @Param('serviceId') serviceId: string,
-    @Body() changes: any,
-    @Req() req: any,
-  ) {
+    @Body() body: Record<string, unknown>,
+    @CurrentUser() user: AuthUser,
+  ): Promise<{ success: boolean }> {
+    const changes =
+      body &&
+      typeof body === 'object' &&
+      'changes' in body &&
+      body.changes &&
+      typeof body.changes === 'object'
+        ? (body.changes as Record<string, unknown>)
+        : body;
+
     return this.servicesService.requestServiceUpdate(
       serviceId,
       changes,
-      req.user.id,
+      user.id,
     );
   }
 
   @Get('edits/admin/pending')
-  @UseGuards(AuthGuard)
-  async getPendingServiceEdits() {
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRole('admin')
+  async getPendingServiceEdits(): Promise<Record<string, unknown>[]> {
     return this.servicesService.getPendingServiceEdits();
   }
 
   @Get('edits/my-pending')
   @UseGuards(AuthGuard)
-  async getMyPendingEdits(@Req() req: any) {
-    return this.servicesService.getMyPendingEdits(req.user.id);
+  async getMyPendingEdits(
+    @CurrentUser() user: AuthUser,
+  ): Promise<Record<string, unknown>[]> {
+    return this.servicesService.getMyPendingEdits(user.id);
   }
 
   @Get('edits/service/:serviceId')
   @UseGuards(AuthGuard)
-  async getServiceEditsByService(@Param('serviceId') serviceId: string) {
-    return this.servicesService.getServiceEditsByService(serviceId);
+  async getServiceEditsByService(
+    @Param('serviceId') serviceId: string,
+    @CurrentUser() user: AuthUser,
+  ): Promise<Record<string, unknown>[]> {
+    return this.servicesService.getServiceEditsByService(serviceId, user.id);
   }
 
   @Get('edits/:editId')
   @UseGuards(AuthGuard)
-  async getServiceEdit(@Param('editId') editId: string) {
-    return this.servicesService.getServiceEdit(editId);
+  async getServiceEdit(
+    @Param('editId') editId: string,
+    @CurrentUser() user: AuthUser,
+  ): Promise<Record<string, unknown>> {
+    return this.servicesService.getServiceEdit(editId, user.id);
   }
 
   @Delete('edits/:editId')
   @UseGuards(AuthGuard)
-  async deleteServiceEdit(@Param('editId') editId: string, @Req() req: any) {
-    return this.servicesService.deleteServiceEdit(editId, req.user.id);
+  async deleteServiceEdit(
+    @Param('editId') editId: string,
+    @CurrentUser() user: AuthUser,
+  ): Promise<{ success: boolean }> {
+    return this.servicesService.deleteServiceEdit(editId, user.id);
   }
 
   @Post('edits/:editId/approve')
   @UseGuards(AuthGuard)
-  async approveServiceEdit(@Param('editId') editId: string, @Req() req: any) {
-    return this.servicesService.approveServiceEdit(editId, req.user.id);
+  async approveServiceEdit(
+    @Param('editId') editId: string,
+    @CurrentUser() user: AuthUser,
+  ): Promise<{ success: boolean }> {
+    return this.servicesService.approveServiceEdit(editId, user.id);
   }
 
   @Post('edits/:editId/reject')
@@ -127,65 +164,86 @@ export class ServicesController {
   async rejectServiceEdit(
     @Param('editId') editId: string,
     @Body('reason') reason: string,
-    @Req() req: any,
-  ) {
-    return this.servicesService.rejectServiceEdit(editId, reason, req.user.id);
+    @CurrentUser() user: AuthUser,
+  ): Promise<{ success: boolean }> {
+    return this.servicesService.rejectServiceEdit(editId, reason, user.id);
   }
 
   // ============================================
-  // Services CRUD (Existing)
+  // Services CRUD
   // ============================================
 
   @Post()
   @UseGuards(AuthGuard)
-  async createService(@Body() data: any, @Req() request: any) {
-    return this.servicesService.createService(data, request.user.id);
+  async createService(
+    @Body() data: CreateServiceDto | Record<string, unknown>,
+    @CurrentUser() user: AuthUser,
+  ): Promise<Record<string, unknown>> {
+    return this.servicesService.createService(data, user.id);
+  }
+
+  @Post('draft')
+  @UseGuards(AuthGuard)
+  async saveServiceDraft(
+    @Body() data: SaveServiceDraftDto,
+    @CurrentUser() user: AuthUser,
+  ): Promise<{ id: string }> {
+    return this.servicesService.saveServiceDraft(data, user.id);
+  }
+
+  @Post(':id/publish')
+  @UseGuards(AuthGuard)
+  async publishServiceDraft(
+    @Param('id') id: string,
+    @Body() updates: Record<string, unknown>,
+    @CurrentUser() user: AuthUser,
+  ): Promise<{ success: boolean }> {
+    return this.servicesService.publishServiceDraft(id, updates, user.id);
   }
 
   @Get()
   async getServices(
-    @Query('type') type: string,
-    @Query('page') page: string,
-    @Query('limit') limit: string,
-  ) {
-    return this.servicesService.getServices(
-      type,
-      page ? parseInt(page) : 1,
-      limit ? parseInt(limit) : 20,
-    );
+    @Query('type') type?: string,
+    @Query() pagination?: PaginationDto,
+  ): Promise<ServiceListResponse> {
+    const page = pagination?.page ?? 1;
+    const limit = pagination?.limit ?? 20;
+    return this.servicesService.getServices(type, page, limit);
   }
 
   @Get('provider/:providerId')
-  async getServicesByProvider(@Param('providerId') providerId: string) {
+  async getServicesByProvider(
+    @Param('providerId') providerId: string,
+  ): Promise<Record<string, unknown>[]> {
     return this.servicesService.getServicesByProvider(providerId);
   }
 
   @Get('admin')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRole('admin')
   async getAdminServices(
-    @Query('statusFilter') statusFilter: string,
-    @Query('typesFilter') typesFilter: string,
-    @Query('page') page: string,
-    @Query('limit') limit: string,
-  ) {
-    let parsedTypes;
-    if (typesFilter) {
+    @Query() query: AdminServicesQueryDto,
+  ): Promise<{ data: Record<string, unknown>[]; count: number }> {
+    let parsedTypes: string[] | undefined;
+    if (query.typesFilter) {
       try {
-        parsedTypes = JSON.parse(typesFilter);
-      } catch (e) {
-        parsedTypes = [typesFilter];
+        parsedTypes = JSON.parse(query.typesFilter) as string[];
+      } catch {
+        parsedTypes = [query.typesFilter];
       }
+    } else if (query.category) {
+      parsedTypes = [query.category];
     }
     return this.servicesService.getAdminServices(
-      statusFilter,
+      query.statusFilter,
       parsedTypes,
-      page ? parseInt(page) : 1,
-      limit ? parseInt(limit) : 50,
+      query.page,
+      query.limit ?? 50,
     );
   }
 
   @Get(':id')
-  async getService(@Param('id') id: string) {
+  async getService(@Param('id') id: string): Promise<Record<string, unknown>> {
     return this.servicesService.getService(id);
   }
 
@@ -193,24 +251,25 @@ export class ServicesController {
   @UseGuards(AuthGuard)
   async updateService(
     @Param('id') id: string,
-    @Body() updates: any,
-    @Req() request: any,
-  ) {
-    return this.servicesService.updateService(id, updates, request.user.id);
+    @Body() updates: UpdateServiceDto | Record<string, unknown>,
+    @CurrentUser() user: AuthUser,
+  ): Promise<{ success: boolean }> {
+    return this.servicesService.updateService(id, updates, user.id);
   }
 
   @Patch(':id/status')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRole('admin')
   async updateServiceStatus(
     @Param('id') id: string,
-    @Body() data: { status: string; reason?: string },
-    @Req() request: any,
-  ) {
+    @Body() data: UpdateServiceStatusDto,
+    @CurrentUser() user: AuthUser,
+  ): Promise<{ success: boolean }> {
     return this.servicesService.updateServiceStatus(
       id,
       data.status,
       data.reason,
-      request.user.id,
+      user.id,
     );
   }
 
@@ -219,8 +278,8 @@ export class ServicesController {
   async deleteService(
     @Param('id') id: string,
     @Query('reason') reason: string,
-    @Req() request: any,
-  ) {
-    return this.servicesService.deleteService(id, reason, request.user.id);
+    @CurrentUser() user: AuthUser,
+  ): Promise<{ success: boolean }> {
+    return this.servicesService.deleteService(id, reason, user.id);
   }
 }

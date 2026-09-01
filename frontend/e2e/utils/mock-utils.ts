@@ -33,9 +33,9 @@ export const mockSessionResponse = {
 // Supabase project ref extracted from VITE_SUPABASE_URL
 // Must match the key the Supabase client constructs: `sb-{project_ref}-auth-token`
 function getSupabaseStorageKey(): string {
-  const url = process.env.VITE_SUPABASE_URL || '';
+  const url = process.env.VITE_SUPABASE_URL || 'https://mdmizeyiyebvhkujjyjg.supabase.co';
   const match = url.match(/https:\/\/([^.]+)\.supabase/);
-  const projectRef = match ? match[1] : 'mock-supabase-url';
+  const projectRef = match ? match[1] : 'mdmizeyiyebvhkujjyjg';
   return `sb-${projectRef}-auth-token`;
 }
 const SUPABASE_STORAGE_KEY = getSupabaseStorageKey();
@@ -51,14 +51,16 @@ export async function seedAuthSession(page: Page, options?: { role?: string }) {
       ...session.user,
       user_metadata: { ...session.user.user_metadata, role: userRole },
     };
-    localStorage.setItem(storageKey, JSON.stringify({
+    const sessionData = JSON.stringify({
       access_token: session.access_token,
       token_type: session.token_type,
       expires_in: session.expires_in,
       refresh_token: session.refresh_token,
       user,
       expires_at: Math.floor(Date.now() / 1000) + 3600,
-    }));
+    });
+    localStorage.setItem(storageKey, sessionData);
+    localStorage.setItem('sb-mdmizeyiyebvhkujjyjg-auth-token', sessionData);
   }, { storageKey: SUPABASE_STORAGE_KEY, session: mockSessionResponse, userRole: role });
 }
 
@@ -258,31 +260,31 @@ export async function mockBlogData(page: Page) {
     tags: [],
   };
 
-  await page.route('**/rest/v1/blog_posts*', async (route) => {
-    const accept = route.request().headers()['accept'] || '';
-    const isSingle = accept.includes('pgrst.object');
+  await page.route('**/api/blog/**', async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    const path = url.pathname;
+    let body: unknown;
+
+    if (request.method() === 'POST' && path.endsWith('/blog/submissions')) {
+      body = { submissionId: 'sub-1' };
+    } else if (path.endsWith('/blog/tags')) {
+      body = [{ id: '11111111-1111-4111-8111-111111111111', name: 'Essential', slug: 'essential' }];
+    } else if (path.endsWith('/blog/posts')) {
+      body = { data: [mockPost], total: 1 };
+    } else if (/\/blog\/post\/[^/]+$/.test(path)) {
+      body = mockPost;
+    } else if (/\/blog\/posts\/[^/]+\/comments$/.test(path)) {
+      body = [];
+    } else {
+      body = [];
+    }
+
     await route.fulfill({
-      status: 200,
-      body: JSON.stringify(isSingle ? mockPost : [mockPost]),
+      status: request.method() === 'POST' ? 201 : 200,
+      body: JSON.stringify(body),
       headers: { 'Content-Type': 'application/json' },
     });
-  });
-
-  await page.route('**/rest/v1/blog_submissions*', async (route) => {
-    const method = route.request().method();
-    if (method === 'POST') {
-      await route.fulfill({
-        status: 201,
-        body: JSON.stringify([{ id: 'sub-1' }]),
-        headers: { 'Content-Type': 'application/json' },
-      });
-    } else {
-      await route.fulfill({
-        status: 200,
-        body: JSON.stringify([]),
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
   });
 }
 
@@ -362,7 +364,7 @@ export async function mockAIProxy(page: Page) {
 /** Seed cart into localStorage before any JS runs */
 export async function seedCartAndWait(page: Page, cart: any[]) {
   await page.addInitScript((cartData) => {
-    localStorage.setItem('cart', JSON.stringify(cartData));
+    localStorage.setItem('alanya_cart', JSON.stringify(cartData));
   }, cart);
 }
 
@@ -399,5 +401,14 @@ export async function mockAllSupabaseRequests(page: Page) {
   // Catch-all for Supabase realtime
   await page.route('**/realtime/**', async (route) => {
     await route.abort('connectionrefused');
+  });
+
+  // Catch-all for NestJS backend /api endpoints (prevents ECONNREFUSED when backend is not running in E2E)
+  await page.route('**/api/**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      body: JSON.stringify([]),
+      headers: { 'Content-Type': 'application/json' },
+    });
   });
 }

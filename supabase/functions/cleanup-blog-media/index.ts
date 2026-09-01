@@ -3,20 +3,18 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 
 // @ts-ignore: jsr: specifiers are resolved by Deno, not tsc
 import "jsr:@supabase/functions-js@^2/edge-runtime.d.ts"
+import { getCorsHeaders } from "../_shared/cors.ts"
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const CRON_SECRET = Deno.env.get('CRON_SECRET')!
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': Deno.env.get('SITE_URL') || 'https://alanyaholidays.com',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret',
-}
-
 const ORPHANED_DAYS = 7
 const BLOG_MEDIA_BUCKET = 'blog-media'
 
 Deno.serve(async (req: Request) => {
+  const corsHeaders = getCorsHeaders(req)
+
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -67,7 +65,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // List files inside each userId folder
-    type StorageObject = { name: string; created_at: string; [key: string]: any }
+    type StorageObject = { name: string; created_at: string | null; [key: string]: any }
     const objects: (StorageObject & { folderName: string })[] = []
 
     for (const folder of allFolders) {
@@ -115,10 +113,18 @@ Deno.serve(async (req: Request) => {
     // Note: auto-reject of expired blog submissions is handled by cancel-expired-bookings cron
 
     // Get submissions to determine which files to keep or delete aggressively
-    const { data: rawSubmissions } = await supabase
+    const { data: rawSubmissions, error: subError } = await supabase
       .from('blog_submissions')
       .select('status, payment_expires_at, media_urls')
       .in('status', ['pending_payment', 'pending_review'])
+
+    if (subError) {
+      console.error('Error fetching blog submissions:', subError)
+      return new Response(
+        JSON.stringify({ success: false, error: 'Database query failed for blog submissions' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      )
+    }
 
     const activeUrls = new Set<string>()
     const abandonedUrls = new Set<string>()
@@ -142,10 +148,18 @@ Deno.serve(async (req: Request) => {
     }
 
     // Get published blog posts
-    const { data: publishedPosts } = await supabase
+    const { data: publishedPosts, error: postError } = await supabase
       .from('blog_posts')
       .select('cover_image_url')
       .eq('status', 'published')
+
+    if (postError) {
+      console.error('Error fetching blog posts:', postError)
+      return new Response(
+        JSON.stringify({ success: false, error: 'Database query failed for blog posts' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      )
+    }
 
     // Add cover images to activeUrls
     for (const post of (publishedPosts || [])) {
@@ -174,7 +188,7 @@ Deno.serve(async (req: Request) => {
       }
 
       // 3. Delete if general orphan older than cutoff (7 days)
-      const fileCreatedAt = new Date(obj.created_at)
+      const fileCreatedAt = new Date(obj.created_at || 0)
       if (fileCreatedAt < cutoffDate) {
         orphanedFiles.push(filePath)
       }

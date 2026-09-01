@@ -1,3 +1,4 @@
+-- ⚠️ DANGER: HISTORICAL ARCHIVE ONLY. DO NOT EXECUTE IN PRODUCTION OR CI ENVIRONMENTS.
 -- FIX INFINITE RECURSION IN RLS (Repair Script)
 
 -- 1. Create a secure function to check admin status

@@ -3,29 +3,11 @@
 
 // @ts-ignore: jsr: specifiers are resolved by Deno, not tsc
 import "jsr:@supabase/functions-js@^2/edge-runtime.d.ts"
-
-const SITE_URL = Deno.env.get("SITE_URL") || "https://alanyaholidays.com";
-const ALLOWED_ORIGINS = new Set([
-    SITE_URL,
-    "https://alanyaholidays.com",
-    "http://localhost:3000",
-    "http://localhost:5173",
-    "http://localhost:3003",
-]);
+import { getCorsHeaders } from "../_shared/cors.ts"
 
 // In-memory cache — lives as long as the function instance is warm
 let ratesCache: { rates: Record<string, number>; fetchedAt: number } | null = null;
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
-
-function getCorsHeaders(req: Request) {
-    const origin = req.headers.get("origin") || "";
-    const allowedOrigin = ALLOWED_ORIGINS.has(origin) ? origin : SITE_URL;
-    return {
-        "Access-Control-Allow-Origin": allowedOrigin,
-        "Access-Control-Allow-Methods": "GET, OPTIONS",
-        "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-    };
-}
 
 Deno.serve(async (req: Request) => {
     const cors = getCorsHeaders(req);
