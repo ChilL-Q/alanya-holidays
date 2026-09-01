@@ -140,6 +140,31 @@ describe("products.service (Clean Architecture)", () => {
 
       await expect(productsService.getProductDetails(999)).rejects.toThrow("Not found");
     });
+
+    it.each(["draft", "inactive"])(
+      "does not expose a %s product through the public detail mapper",
+      async (status) => {
+        vi.spyOn(apiClient, "get").mockResolvedValueOnce({
+          product: {
+            id: 101,
+            name: "Unpublished product",
+            description: "Not public",
+            price: 35,
+            currency: "EUR",
+            stock: 15,
+            status,
+          },
+          variants: [],
+          skus: [],
+        });
+
+        await expect(productsService.getProductDetails(101)).resolves.toEqual({
+          product: null,
+          variants: [],
+          skus: [],
+        });
+      }
+    );
   });
 
   describe("createProductOrder", () => {

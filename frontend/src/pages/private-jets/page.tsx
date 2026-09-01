@@ -8,6 +8,7 @@ import { conciergeService, jetTypes, type PrivateJet } from "@/api-services/conc
 import { formatAmenity } from "@/utils/format-amenity";
 import ErrorState from "@/components/base/ErrorState";
 import EmptyState from "@/components/base/EmptyState";
+import OfferProvenanceNotice from "@/components/feature/OfferProvenanceNotice";
 import { useTranslation } from "react-i18next";
 import "@/i18n";
 
@@ -217,7 +218,7 @@ export default function PrivateJetsPage() {
         <section className="w-full px-4 md:px-8 lg:px-12 py-4 bg-background-50">
           <div className="max-w-7xl mx-auto">
             {!isLoading && !fetchError && (
-              <p className="text-sm text-foreground-500">{filteredJets.length} {filteredJets.length === 1 ? "aircraft" : "aircraft"} available</p>
+              <div><p className="text-sm text-foreground-500">{filteredJets.length} aircraft listings</p><OfferProvenanceNotice /></div>
             )}
           </div>
         </section>

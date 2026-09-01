@@ -35,11 +35,19 @@ async function fetchGoogleRating(name: string, location: string): Promise<{ rati
         
         if (searchData.status === 'OK' && searchData.results && searchData.results.length > 0) {
             const place = searchData.results[0];
-            const rating = place.rating || 0;
-            const count = place.user_ratings_total || 0;
+            const rating = place.rating;
+            const count = place.user_ratings_total;
             
             // We only return it if it actually has ratings, otherwise it might just be a rough map pin with no reviews
-            if (count > 0) {
+            if (
+              typeof rating === 'number' &&
+              Number.isFinite(rating) &&
+              rating >= 0 &&
+              rating <= 5 &&
+              typeof count === 'number' &&
+              Number.isInteger(count) &&
+              count > 0
+            ) {
                 return { rating, count };
             }
             return null;
@@ -59,7 +67,7 @@ async function syncReviews() {
   // 1. Fetch all currently stored directory listings
   const { data: listings, error } = await supabase
     .from('directory_listings')
-    .select('id, name, location, reviews_average, reviews_count');
+    .select('id, name, location, google_rating, google_review_count');
 
   if (error || !listings) {
     console.error('Error fetching listings from Supabase:', error);
@@ -78,14 +86,14 @@ async function syncReviews() {
       
       if (googleData) {
           // If the rating or review count has changed, update the DB
-          if (googleData.rating !== listing.reviews_average || googleData.count !== listing.reviews_count) {
-              console.log(`  -> Updating: Rating ${listing.reviews_average} => ${googleData.rating}, Count ${listing.reviews_count} => ${googleData.count}`);
+          if (googleData.rating !== listing.google_rating || googleData.count !== listing.google_review_count) {
+              console.log(`  -> Updating Google data: Rating ${listing.google_rating} => ${googleData.rating}, Count ${listing.google_review_count} => ${googleData.count}`);
               
               const { error: updateError } = await supabase
                   .from('directory_listings')
                   .update({ 
-                      reviews_average: googleData.rating, 
-                      reviews_count: googleData.count,
+                      google_rating: googleData.rating,
+                      google_review_count: googleData.count,
                       updated_at: new Date().toISOString()
                   })
                   .eq('id', listing.id);

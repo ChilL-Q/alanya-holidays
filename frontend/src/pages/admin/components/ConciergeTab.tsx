@@ -169,27 +169,39 @@ export default function ConciergeTab({
   }, [enquiries]);
 
   const handleStatusChange = async (id: number, newStatus: string) => {
+    setError(null);
     setEnquiries((prev) =>
       prev.map((e) => (e.id === id ? { ...e, status: newStatus } : e))
     );
 
-    const success = await adminService.updateEnquiryStatus(id, newStatus);
-    if (!success) {
-      fetchEnquiries();
+    try {
+      const success = await adminService.updateEnquiryStatus(id, newStatus);
+      if (success) return;
+      await fetchEnquiries(true);
+      setError("Enquiry update failed. Please try again.");
+    } catch {
+      await fetchEnquiries(true);
+      setError("Enquiry update failed. Please try again.");
     }
   };
 
   const handleAssign = async (id: number, assignedTo: string) => {
+    setError(null);
     setEnquiries((prev) =>
       prev.map((e) => (e.id === id ? { ...e, assigned_to: assignedTo } : e))
     );
 
-    const success = await adminService.assignEnquiry(
-      id,
-      assignedTo === "unassigned" ? null : assignedTo
-    );
-    if (!success) {
-      fetchEnquiries();
+    try {
+      const success = await adminService.assignEnquiry(
+        id,
+        assignedTo === "unassigned" ? null : assignedTo
+      );
+      if (success) return;
+      await fetchEnquiries(true);
+      setError("Enquiry assignment failed. Please try again.");
+    } catch {
+      await fetchEnquiries(true);
+      setError("Enquiry assignment failed. Please try again.");
     }
   };
 
@@ -343,7 +355,7 @@ export default function ConciergeTab({
 
       {/* Error Message */}
       {error && (
-        <div className="p-4 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-2xl text-rose-800 dark:text-rose-200 text-sm flex items-center justify-between">
+        <div role="alert" className="p-4 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-2xl text-rose-800 dark:text-rose-200 text-sm flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <i className="ri-error-warning-line text-lg text-rose-600" />
             <span>{error}</span>

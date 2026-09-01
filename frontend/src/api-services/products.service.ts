@@ -192,8 +192,12 @@ class ProductsService {
         ? await apiClient.get<ProductDetailResponse>(`/products/items/${productId}`, options)
         : await apiClient.get<ProductDetailResponse>(`/products/items/${productId}`);
       if (response) {
+        const product = response.product || null;
+        if (product?.status && product.status !== "active") {
+          return { product: null, variants: [], skus: [] };
+        }
         return {
-          product: response.product || null,
+          product,
           variants: Array.isArray(response.variants) ? response.variants : [],
           skus: Array.isArray(response.skus) ? response.skus : [],
         };

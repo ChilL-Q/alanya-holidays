@@ -26,7 +26,13 @@ describe('AdminContentLibraryTab', () => {
       { id: 'event-1', title: 'Harbour Meetup', event_date: '2026-09-01T18:00:00Z' },
     ]);
     vi.spyOn(adminContentService, 'listListings').mockResolvedValue([
-      { id: 'listing-1', name: 'Castle Cafe', category_id: 'restaurants', creation_source: 'import' },
+      {
+        id: 'listing-1',
+        name: 'Castle Cafe',
+        category_id: 'restaurants',
+        creation_source: 'import',
+        gallery: ['https://example.com/castle-1.jpg', 'https://example.com/castle-2.jpg'],
+      },
     ]);
     vi.spyOn(adminContentService, 'listProducts').mockResolvedValue({
       items: [{ id: 1, name: 'Copper Lamp', description: 'Handmade', category_id: 7, product_categories: { id: 7, name: 'Decor' }, price: 10, stock: 2, currency: 'EUR', status: 'active', media: [] }],
@@ -148,7 +154,13 @@ describe('AdminContentLibraryTab', () => {
     await waitFor(() =>
       expect(adminContentService.updateListing).toHaveBeenCalledWith(
         'listing-1',
-        expect.objectContaining({ creation_source: 'admin' }),
+        expect.objectContaining({
+          creation_source: 'admin',
+          gallery: [
+            'https://example.com/castle-1.jpg',
+            'https://example.com/castle-2.jpg',
+          ],
+        }),
       ),
     );
   });

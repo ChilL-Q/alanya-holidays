@@ -4,7 +4,7 @@ import {
   billingService,
   type SubscriptionPlan,
 } from "@/api-services/billing.service";
-import { WHATSAPP_NUMBER } from "@/components/feature/WhatsAppFloatingButton";
+import { WHATSAPP_NUMBER } from "@/config/whatsapp";
 
 export interface UpgradeModalProps {
   isOpen: boolean;

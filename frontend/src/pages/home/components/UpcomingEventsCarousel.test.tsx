@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import UpcomingEventsCarousel from "./UpcomingEventsCarousel";
 import { eventsService, type ForumEvent } from "@/api-services/events.service";
+import i18n from "@/i18n";
 
 const currentEvent: ForumEvent = {
   id: "current-event",
@@ -25,17 +26,19 @@ const currentEvent: ForumEvent = {
 describe("UpcomingEventsCarousel Component", () => {
   const originalScrollBy = Element.prototype.scrollBy;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    await i18n.changeLanguage("en");
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-06-08T12:00:00+03:00"));
     Element.prototype.scrollBy = vi.fn();
     vi.restoreAllMocks();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     Element.prototype.scrollBy = originalScrollBy;
     vi.restoreAllMocks();
     vi.useRealTimers();
+    await i18n.changeLanguage("en");
   });
 
   it("renders events from the current seven-day window instead of a fixed historical week", () => {
@@ -73,6 +76,26 @@ describe("UpcomingEventsCarousel Component", () => {
       "href",
       "/events"
     );
+  });
+
+  it("localizes the no-events entry point in Russian", async () => {
+    await i18n.changeLanguage("ru");
+    vi.setSystemTime(new Date("2026-08-31T12:00:00+03:00"));
+    vi.spyOn(eventsService, "getEventsSync").mockReturnValue([]);
+    vi.spyOn(eventsService, "getEvents").mockImplementation(
+      () => new Promise<ForumEvent[]>(() => {})
+    );
+
+    render(
+      <MemoryRouter>
+        <UpcomingEventsCarousel />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText("События этой недели")).toBeInTheDocument();
+    expect(screen.getByText("На этой неделе мероприятий нет")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Все мероприятия" })).toHaveAttribute("href", "/events");
+    expect(screen.queryByText("No events scheduled this week")).not.toBeInTheDocument();
   });
 
   it("renders This Week's Events heading with count badge", () => {

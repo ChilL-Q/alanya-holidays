@@ -58,6 +58,12 @@ describe("admin.service", () => {
       const success = await adminService.updateEnquiryStatus(1, "responded");
       expect(success).toBe(false);
     });
+
+    it("should preserve an explicit unsuccessful API result", async () => {
+      vi.spyOn(apiClient, "patch").mockResolvedValueOnce({ success: false });
+
+      await expect(adminService.updateEnquiryStatus(1, "responded")).resolves.toBe(false);
+    });
   });
 
   describe("assignEnquiry", () => {
@@ -177,6 +183,12 @@ describe("admin.service", () => {
       const success = await adminService.deleteListing("list-123");
       expect(apiClient.delete).toHaveBeenCalledWith("/directory/list-123");
       expect(success).toBe(true);
+    });
+
+    it("does not convert an unsuccessful listing delete into success", async () => {
+      vi.spyOn(apiClient, "delete").mockResolvedValueOnce({ success: false });
+
+      await expect(adminService.deleteListing("list-123")).resolves.toBe(false);
     });
   });
 
@@ -507,6 +519,12 @@ describe("admin.service", () => {
       expect(ok).toBe(true);
     });
 
+    it("does not convert an unsuccessful booking response into success", async () => {
+      vi.spyOn(apiClient, "patch").mockResolvedValueOnce({ success: false });
+
+      await expect(adminService.updateBookingStatus("b1", "confirmed")).resolves.toBe(false);
+    });
+
     it("updatePayoutStatus should PATCH /bookings/admin/:id/payout-status", async () => {
       vi.spyOn(apiClient, "patch").mockResolvedValueOnce({ success: true });
 
@@ -564,6 +582,12 @@ describe("admin.service", () => {
       expect(apiClient.patch).toHaveBeenNthCalledWith(2, "/reviews/r9/reject");
       expect(apiClient.delete).toHaveBeenCalledWith("/reviews/r9");
     });
+
+    it("does not convert an unsuccessful review response into success", async () => {
+      vi.spyOn(apiClient, "patch").mockResolvedValueOnce({ success: false });
+
+      await expect(adminService.approveReview("r9")).resolves.toBe(false);
+    });
   });
 
   describe("users administration", () => {
@@ -583,6 +607,13 @@ describe("admin.service", () => {
       expect(result.pagination.total).toBe(1);
     });
 
+    it("propagates user directory load failures instead of reporting an empty directory", async () => {
+      const failure = new Error("Admin users request denied");
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(failure);
+
+      await expect(adminService.getUsers({ page: 1, limit: 20 })).rejects.toBe(failure);
+    });
+
     it("updateUserProfile should PATCH /users/admin/:id/status", async () => {
       vi.spyOn(apiClient, "patch").mockResolvedValueOnce({ success: true });
 
@@ -591,7 +622,11 @@ describe("admin.service", () => {
       expect(apiClient.patch).toHaveBeenCalledWith("/users/admin/u1/status", { role: "host" });
       expect(ok).toBe(true);
     });
+
+    it("does not convert an unsuccessful user update response into success", async () => {
+      vi.spyOn(apiClient, "patch").mockResolvedValueOnce({ success: false });
+
+      await expect(adminService.updateUserProfile("u1", { role: "host" })).resolves.toBe(false);
+    });
   });
 });
-
-

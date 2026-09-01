@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { adminService, type AdminBookingItem } from "@/api-services/admin.service";
 import BookingsAdminTab from "./BookingsAdminTab";
@@ -28,5 +28,16 @@ describe("BookingsAdminTab", () => {
     expect(await screen.findByText("Alanya Test Villa")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /refund/i })).not.toBeInTheDocument();
+  });
+
+  it("shows an actionable error when a booking mutation is unsuccessful", async () => {
+    vi.spyOn(adminService, "updateBookingStatus").mockResolvedValueOnce(false);
+    render(<BookingsAdminTab />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Booking update failed. Please try again.",
+    );
   });
 });

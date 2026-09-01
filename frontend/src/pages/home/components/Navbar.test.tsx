@@ -151,6 +151,19 @@ describe("Navbar Component (Milestone 5 — R4)", () => {
     expect(brandImage?.parentElement).not.toHaveClass("bg-white");
   });
 
+  it("shows only the brand mark on narrow mobile widths", () => {
+    render(
+      <MemoryRouter>
+        <Navbar />
+      </MemoryRouter>
+    );
+
+    const brandText = screen.getByText("Alanya Holidays");
+    expect(brandText).toHaveClass("hidden", "sm:block");
+    expect(brandText).not.toHaveClass("block");
+    expect(screen.getByRole("link", { name: "Alanya Holidays" }).querySelector("img")).toBeInTheDocument();
+  });
+
   it("renders authenticated user avatar and opens dropdown with Settings & Favorites", async () => {
     mockAuthState = {
       user: {
@@ -244,6 +257,47 @@ describe("Navbar Component (Milestone 5 — R4)", () => {
       "true",
     );
     expect(document.getElementById("mobile-navigation")).toBeInTheDocument();
+  });
+
+  it("keeps desktop navigation at xl while tablets use the hamburger", () => {
+    render(
+      <MemoryRouter>
+        <Navbar />
+      </MemoryRouter>
+    );
+
+    const desktopDiscover = screen.getAllByRole("button", { name: /Discover/i })[0];
+    const desktopNavigation = desktopDiscover.parentElement?.parentElement?.parentElement;
+    expect(desktopNavigation).toHaveClass("hidden", "xl:flex");
+    expect(desktopNavigation).not.toHaveClass("md:flex");
+
+    const menuButton = screen.getByRole("button", { name: /Open menu/i });
+    expect(menuButton.parentElement).toHaveClass("xl:hidden");
+    expect(menuButton.parentElement).not.toHaveClass("md:hidden");
+  });
+
+  it("locks body scroll and constrains the mobile menu to the dynamic viewport", () => {
+    document.body.style.overflow = "visible";
+
+    render(
+      <MemoryRouter>
+        <Navbar />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Open menu/i }));
+
+    expect(document.body.style.overflow).toBe("hidden");
+    expect(document.getElementById("mobile-navigation")).toHaveClass(
+      "overflow-y-auto",
+      "overscroll-contain",
+      "max-h-[calc(100dvh-4rem)]",
+    );
+
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(document.getElementById("mobile-navigation")).not.toBeInTheDocument();
+    expect(document.body.style.overflow).toBe("visible");
+    document.body.style.overflow = "";
   });
 
   it("localizes the Home link in the mobile menu", async () => {

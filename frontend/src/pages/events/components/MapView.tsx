@@ -15,17 +15,17 @@ interface MapViewProps {
 const MAP_CONTAINER_STYLE = { width: "100%", height: "100%" };
 const GOOGLE_MAP_LIBRARIES: ["places"] = ["places"];
 
-function getMapFallbackMessage(missingKey: boolean, loadError: unknown, markerCount: number) {
+function getMapFallbackKey(missingKey: boolean, loadError: unknown, markerCount: number) {
   if (missingKey) {
-    return "Set VITE_GOOGLE_MAPS_API_KEY to enable the interactive map with event markers.";
+    return "events.mapMissingKey";
   }
 
   if (loadError) {
-    return "Google Maps could not be loaded right now. The event locations list is still available below.";
+    return "events.mapLoadError";
   }
 
   if (markerCount === 0) {
-    return "No mapped coordinates are available for the currently filtered events yet.";
+    return "events.mapNoCoordinates";
   }
 
   return null;
@@ -80,7 +80,7 @@ export default function MapView({ events, rsvpdEvents, onRsvp, onCancelRsvp }: M
 
   const unmappedLocationCount = locationGroups.length - mappedLocations.length;
   const activeMapLocation = mappedLocations.find((location) => location.location === activeLocation) ?? null;
-  const fallbackMessage = getMapFallbackMessage(!hasGoogleMapsApiKey, loadError, mappedLocations.length);
+  const fallbackKey = getMapFallbackKey(!hasGoogleMapsApiKey, loadError, mappedLocations.length);
 
   useEffect(() => {
     if (!isLoaded || !mapRef.current) return;
@@ -157,7 +157,7 @@ export default function MapView({ events, rsvpdEvents, onRsvp, onCancelRsvp }: M
               onClick={() => (isRsvpd ? onCancelRsvp(event.id) : onRsvp(event.id))}
               disabled={isFull}
               aria-pressed={isRsvpd}
-              aria-label={isRsvpd ? `Cancel RSVP for ${event.title}` : `RSVP for ${event.title}`}
+              aria-label={t(isRsvpd ? "events.cancelRsvpFor" : "events.rsvpFor", { title: event.title })}
               className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-medium transition-all cursor-pointer whitespace-nowrap ${
                 isRsvpd
                   ? "bg-accent-100 text-accent-700 hover:bg-accent-200"
@@ -169,12 +169,12 @@ export default function MapView({ events, rsvpdEvents, onRsvp, onCancelRsvp }: M
               {isRsvpd ? (
                 <>
                   <i className="ri-check-line text-xs"></i>
-                  Going
+                  {t("events.going")}
                 </>
               ) : isFull ? (
-                "Full"
+                t("events.full")
               ) : (
-                "RSVP"
+                t("events.rsvp")
               )}
             </button>
             <span className="text-[11px] text-foreground-400 flex items-center gap-1">
@@ -213,7 +213,7 @@ export default function MapView({ events, rsvpdEvents, onRsvp, onCancelRsvp }: M
                 <MarkerF
                   key={location.location}
                   position={{ lat: location.coord.lat, lng: location.coord.lng }}
-                  title={`${location.label} · ${location.events.length} ${location.events.length === 1 ? "event" : "events"}`}
+                  title={`${location.label} · ${t("events.eventCount", { count: location.events.length })}`}
                   label={{
                     text: String(location.events.length),
                     color: "#ffffff",
@@ -233,7 +233,7 @@ export default function MapView({ events, rsvpdEvents, onRsvp, onCancelRsvp }: M
                       {activeMapLocation.label}
                     </h4>
                     <p className="text-xs text-foreground-500 mb-3">
-                      {activeMapLocation.events.length} {activeMapLocation.events.length === 1 ? "event" : "events"} · {activeMapLocation.totalAttendees} going
+                      {t("events.eventCount", { count: activeMapLocation.events.length })} · {t("events.goingCount", { count: activeMapLocation.totalAttendees })}
                     </p>
                     <div className="space-y-2 max-h-56 overflow-y-auto">
                       {activeMapLocation.events.map((event) => {
@@ -246,14 +246,14 @@ export default function MapView({ events, rsvpdEvents, onRsvp, onCancelRsvp }: M
                               type="button"
                               onClick={() => (isRsvpd ? onCancelRsvp(event.id) : onRsvp(event.id))}
                               aria-pressed={isRsvpd}
-                              aria-label={isRsvpd ? `Cancel RSVP for ${event.title}` : `RSVP for ${event.title}`}
+                              aria-label={t(isRsvpd ? "events.cancelRsvpFor" : "events.rsvpFor", { title: event.title })}
                               className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium ${
                                 isRsvpd
                                   ? "bg-accent-100 text-accent-700"
                                   : "bg-primary-500 text-white"
                               }`}
                             >
-                              {isRsvpd ? "Going" : "RSVP"}
+                              {isRsvpd ? t("events.going") : t("events.rsvp")}
                             </button>
                           </div>
                         );
@@ -271,11 +271,11 @@ export default function MapView({ events, rsvpdEvents, onRsvp, onCancelRsvp }: M
               <div>
                 <h3 className="font-heading text-lg text-foreground-900 mb-1">{t("events.interactiveMap")}</h3>
                 <p className="text-sm text-foreground-500 max-w-xl">
-                  {fallbackMessage}
+                  {fallbackKey ? t(fallbackKey) : null}
                 </p>
                 {unmappedLocationCount > 0 && (
                   <p className="text-xs text-foreground-400 mt-2">
-                    {unmappedLocationCount} filtered {unmappedLocationCount === 1 ? "location does" : "locations do"} not have saved coordinates yet.
+                    {t("events.mapUnmappedSummary", { count: unmappedLocationCount })}
                   </p>
                 )}
               </div>
@@ -287,7 +287,12 @@ export default function MapView({ events, rsvpdEvents, onRsvp, onCancelRsvp }: M
       {unmappedLocationCount > 0 && (
         <div className="mb-6 rounded-xl border border-background-200 bg-background-50 px-4 py-3 text-sm text-foreground-600">
           <span className="font-medium text-foreground-900">{t("events.mapCoverageNote")}:</span>{" "}
-          {unmappedLocationCount} {unmappedLocationCount === 1 ? "location is" : "locations are"} shown in the list below but not yet pinned on the map because coordinates are missing.
+          {t(
+            unmappedLocationCount === 1
+              ? "events.mapCoverageDescriptionSingle"
+              : "events.mapCoverageDescription",
+            { count: unmappedLocationCount },
+          )}
         </div>
       )}
 
@@ -310,7 +315,9 @@ export default function MapView({ events, rsvpdEvents, onRsvp, onCancelRsvp }: M
                 className="w-full px-4 py-3 flex items-center gap-3 text-left cursor-pointer hover:bg-background-50 transition-colors"
                 aria-expanded={isActive}
                 aria-controls={`location-events-${location}`}
-                aria-label={`${isActive ? "Collapse" : "Expand"} events for ${coord?.label ?? location}`}
+                aria-label={t(isActive ? "events.collapseLocation" : "events.expandLocation", {
+                  location: coord?.label ?? location,
+                })}
               >
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${coord ? "bg-accent-100" : "bg-background-100"}`}>
                   <i className={`${coord ? "ri-map-pin-line text-accent-600" : "ri-route-line text-foreground-400"} text-lg`}></i>
@@ -320,13 +327,13 @@ export default function MapView({ events, rsvpdEvents, onRsvp, onCancelRsvp }: M
                     {coord?.label ?? location}
                   </h4>
                   <p className="text-xs text-foreground-500">
-                    {locationEvents.length} {locationEvents.length === 1 ? "event" : "events"} &middot; {totalAttendees} going
+                    {t("events.eventCount", { count: locationEvents.length })} &middot; {t("events.goingCount", { count: totalAttendees })}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   {!coord && (
                     <span className="text-[10px] bg-background-100 text-foreground-500 font-medium px-2 py-0.5 rounded-full">
-                      No pin
+                      {t("events.noPin")}
                     </span>
                   )}
                   <span className="text-xs bg-accent-100 text-accent-700 font-medium px-2 py-0.5 rounded-full">

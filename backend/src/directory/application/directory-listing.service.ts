@@ -843,6 +843,7 @@ export class DirectoryListingService {
     const listing = await this.directoryRepository.updateListingStatus(id, {
       status: 'approved',
     });
+    if (!listing) throw new NotFoundException('Listing not found');
     await this.redisService.delByPattern('directory:*');
 
     if (listing?.owner_user_id) {
@@ -873,6 +874,7 @@ export class DirectoryListingService {
       status: 'rejected',
       rejection_reason: reason,
     });
+    if (!listing) throw new NotFoundException('Listing not found');
     await this.redisService.delByPattern('directory:*');
 
     if (listing?.owner_user_id) {

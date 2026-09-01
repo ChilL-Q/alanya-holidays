@@ -3,6 +3,8 @@ import { useSearchParams } from "react-router-dom";
 import { eventsService, type ForumEvent } from "@/api-services/events.service";
 import { useToast } from "@/hooks/useToast";
 import { logger } from "@/lib/logger";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export type EventsViewMode = "list" | "map";
 
@@ -36,6 +38,7 @@ function saveSavedEvents(saved: Set<string>) {
 }
 
 export function useEventsPage() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [events, setEvents] = useState<ForumEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -69,11 +72,11 @@ export function useEventsPage() {
       });
       setRsvpdEvents(myRsvps);
     } catch {
-      setFetchError("Failed to load community events. Please try again.");
+      setFetchError(t("events.loadErrorMessage"));
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     loadEvents();

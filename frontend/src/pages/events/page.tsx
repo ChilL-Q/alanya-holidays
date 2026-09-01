@@ -13,6 +13,7 @@ import HostEventModal from "./components/HostEventModal";
 import { useEventsPage } from "./useEventsPage";
 import { useTranslation } from "react-i18next";
 import "@/i18n";
+import { eventCategoryLabel } from "./eventCategoryLabels";
 
 export default function EventsPage() {
   const { t, i18n } = useTranslation();
@@ -91,8 +92,7 @@ export default function EventsPage() {
           {hasActiveFilters && (
             <div className="flex flex-wrap items-center gap-2 mb-4">
               <p className="text-sm text-foreground-500">
-                <span className="font-semibold text-foreground-900">{filteredEvents.length}</span>{" "}
-                {filteredEvents.length === 1 ? "event" : "events"} found
+                {t("events.resultsFound", { count: filteredEvents.length })}
               </p>
               {searchQuery.trim() && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-accent-100 text-accent-700 rounded-full text-xs font-medium">
@@ -100,7 +100,7 @@ export default function EventsPage() {
                   <button
                     onClick={() => setSearchQuery("")}
                     className="cursor-pointer hover:text-accent-900 transition-colors"
-                    aria-label="Clear search"
+                    aria-label={t("events.clearSearch")}
                   >
                     <i className="ri-close-line text-xs"></i>
                   </button>
@@ -108,11 +108,11 @@ export default function EventsPage() {
               )}
               {showSavedOnly && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-primary-100 text-primary-700 rounded-full text-xs font-medium">
-                  Saved ({savedEvents.size})
+                  {t("events.saved")} ({savedEvents.size})
                   <button
                     onClick={() => setShowSavedOnly(false)}
                     className="cursor-pointer hover:text-primary-900 transition-colors"
-                    aria-label="Clear saved filter"
+                    aria-label={t("events.clearSavedFilter")}
                   >
                     <i className="ri-close-line text-xs"></i>
                   </button>
@@ -120,10 +120,11 @@ export default function EventsPage() {
               )}
               <button
                 onClick={clearAllFilters}
+                aria-label={t("events.clearAllFilters")}
                 className="inline-flex items-center gap-1 text-xs text-foreground-500 hover:text-foreground-700 transition-colors cursor-pointer"
               >
                 <i className="ri-close-circle-line"></i>
-                Clear all filters
+                {t("events.clearAllFilters")}
               </button>
             </div>
           )}
@@ -132,7 +133,7 @@ export default function EventsPage() {
             <div>
               {fetchError ? (
                 <ErrorState
-                  title="Unable to load events"
+                  title={t("events.loadError")}
                   message={fetchError}
                   onRetry={loadEvents}
                 />
@@ -162,21 +163,29 @@ export default function EventsPage() {
                     <i className="ri-search-line text-foreground-400 text-2xl"></i>
                   </div>
                   <h3 className="font-heading text-lg text-foreground-900 mb-2">
-                    {searchQuery.trim() ? `No events match "${searchQuery.trim()}"` : showSavedOnly ? "No saved events" : "No events found"}
+                    {searchQuery.trim()
+                      ? t("events.noMatch", { query: searchQuery.trim() })
+                      : showSavedOnly
+                        ? t("events.noSaved")
+                        : hasActiveFilters
+                          ? t("events.noEvents")
+                          : t("events.noPublishedUpcoming")}
                   </h3>
                   <p className="text-foreground-500 text-sm mb-6">
                     {searchQuery.trim()
-                      ? "Try searching with different keywords or clear the search to see all events."
+                      ? t("events.searchHint")
                       : showSavedOnly
-                        ? "You haven't saved any events yet. Browse and bookmark the ones you like!"
-                        : "No events match your current filters. Try adjusting or clearing them."}
+                        ? t("events.savedHint")
+                        : hasActiveFilters
+                          ? t("events.filterHint")
+                          : t("events.noPublishedUpcomingHint")}
                   </p>
                   <button
                     onClick={clearAllFilters}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-background-100 text-foreground-700 rounded-full text-sm font-medium hover:bg-background-200 transition-colors cursor-pointer"
                   >
                     <i className="ri-refresh-line"></i>
-                    Reset Filters
+                    {t("public.resetFilters")}
                   </button>
                 </div>
               )}
@@ -248,7 +257,7 @@ export default function EventsPage() {
                         day: "numeric",
                       }) })
                     : activeCategory
-                      ? activeCategory
+                      ? eventCategoryLabel(t, activeCategory)
                       : showFeatured
                         ? t("events.featuredEvents")
                         : showSavedOnly
@@ -302,14 +311,18 @@ export default function EventsPage() {
                         ? t("events.noMatch", { query: searchQuery.trim() })
                         : showSavedOnly
                           ? t("events.noSaved")
-                          : t("events.noEvents")}
+                          : hasActiveFilters
+                            ? t("events.noEvents")
+                            : t("events.noPublishedUpcoming")}
                     </h3>
                     <p className="text-foreground-500 text-sm mb-6">
                       {searchQuery.trim()
                         ? t("events.searchHint")
                         : showSavedOnly
                           ? t("events.savedHint")
-                          : t("events.filterHint")}
+                          : hasActiveFilters
+                            ? t("events.filterHint")
+                            : t("events.noPublishedUpcomingHint")}
                     </p>
                     <button
                       onClick={clearAllFilters}

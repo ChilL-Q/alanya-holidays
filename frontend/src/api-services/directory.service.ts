@@ -17,13 +17,13 @@ export type TaxonomyCategory = BusinessCategory;
 export interface BusinessReview {
   id: string;
   businessId: string;
-  reviewerName: string;
-  reviewerAvatar: string;
+  reviewerName: string | null;
+  reviewerAvatar: string | null;
   rating: number;
-  date: string;
-  title: string;
+  date: string | null;
+  title: string | null;
   content: string;
-  visitType: string;
+  visitType: string | null;
 }
 
 export const businessCategories: BusinessCategory[] = [
@@ -123,16 +123,16 @@ export interface BackendReview {
   id: string;
   listing_id: string;
   user_id?: string;
-  rating: number;
-  comment: string;
-  created_at?: string;
+  rating?: number | null;
+  comment?: string | null;
+  created_at?: string | null;
   status?: string;
   title?: string;
   visit_type?: string;
   visitType?: string;
   user?: {
-    full_name?: string;
-    avatar_url?: string;
+    full_name?: string | null;
+    avatar_url?: string | null;
   } | null;
   [key: string]: unknown;
 }
@@ -272,6 +272,8 @@ export function mapBackendListingToBusiness(
     phone: item.phone || "",
     email: item.email || "",
     website: item.website || "",
+    googleRating: item.google_rating ?? null,
+    googleReviewCount: item.google_review_count ?? null,
     rating: item.reviews_average ?? 0,
     reviewCount: item.reviews_count ?? 0,
     image:
@@ -296,21 +298,40 @@ export function mapBackendListingToBusiness(
 export function mapBackendReviewToBusinessReview(
   item: BackendReview,
   listingId: string
-): BusinessReview {
+): BusinessReview | null {
+  if (
+    typeof item.rating !== "number" ||
+    !Number.isFinite(item.rating) ||
+    !Number.isInteger(item.rating) ||
+    item.rating < 1 ||
+    item.rating > 5
+  ) {
+    return null;
+  }
+
+  const optionalText = (value: unknown): string | null => {
+    if (typeof value !== "string") return null;
+    const normalized = value.trim();
+    return normalized || null;
+  };
+
+  const createdAt = optionalText(item.created_at);
+  const parsedCreatedAt = createdAt ? new Date(createdAt) : null;
+  const date =
+    parsedCreatedAt && !Number.isNaN(parsedCreatedAt.getTime())
+      ? parsedCreatedAt.toISOString().slice(0, 10)
+      : null;
+
   return {
     id: item.id,
     businessId: item.listing_id || listingId,
-    reviewerName: item.user?.full_name || "Verified Traveler",
-    reviewerAvatar:
-      item.user?.avatar_url ||
-      "/images/placeholder-business.svg",
-    rating: item.rating || 5,
-    date: item.created_at
-      ? item.created_at.split("T")[0]
-      : new Date().toISOString().split("T")[0],
-    title: item.title || (item.rating >= 4 ? "Great Experience" : "Review"),
-    content: item.comment || "",
-    visitType: item.visitType || item.visit_type || "Traveler",
+    reviewerName: optionalText(item.user?.full_name),
+    reviewerAvatar: optionalText(item.user?.avatar_url),
+    rating: item.rating,
+    date,
+    title: optionalText(item.title),
+    content: optionalText(item.comment) || "",
+    visitType: optionalText(item.visitType) || optionalText(item.visit_type),
   };
 }
 
@@ -502,11 +523,17 @@ export class DirectoryService {
       });
 
       if (response && "data" in response && Array.isArray(response.data)) {
-        return response.data.map((r) => mapBackendReviewToBusinessReview(r, listingId));
+        return response.data.flatMap((review) => {
+          const mapped = mapBackendReviewToBusinessReview(review, listingId);
+          return mapped ? [mapped] : [];
+        });
       }
 
       if (Array.isArray(response)) {
-        return response.map((r) => mapBackendReviewToBusinessReview(r, listingId));
+        return response.flatMap((review) => {
+          const mapped = mapBackendReviewToBusinessReview(review, listingId);
+          return mapped ? [mapped] : [];
+        });
       }
 
       return [];
@@ -532,7 +559,16 @@ export class DirectoryService {
     });
 
     if (response && response.id) {
-      return mapBackendReviewToBusinessReview(response, listingId);
+      const mapped = mapBackendReviewToBusinessReview(response, listingId);
+      if (mapped) return mapped;
+
+      throw new ApiError(
+        "Invalid review response",
+        502,
+        "Bad Gateway",
+        undefined,
+        `/reviews/listing/${listingId}`
+      );
     }
 
     throw new ApiError("Failed to submit review", 500, "Internal Server Error");

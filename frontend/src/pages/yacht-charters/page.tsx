@@ -9,6 +9,7 @@ import { formatAmenity } from "@/utils/format-amenity";
 import { createInquiryState } from "@/lib/inquiry-confirmation";
 import ErrorState from "@/components/base/ErrorState";
 import EmptyState from "@/components/base/EmptyState";
+import OfferProvenanceNotice from "@/components/feature/OfferProvenanceNotice";
 import { useTranslation } from "react-i18next";
 import "@/i18n";
 
@@ -23,9 +24,8 @@ const typeIconMap: Record<string, string> = {
 export default function YachtChartersPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const initialYachts = conciergeService.getYachtsSync();
-  const [yachts, setYachts] = useState<Yacht[]>(initialYachts);
-  const [isLoading, setIsLoading] = useState(initialYachts.length === 0);
+  const [yachts, setYachts] = useState<Yacht[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [activeType, setActiveType] = useState("all");
   const [sortBy, setSortBy] = useState<"rating" | "price-low" | "price-high" | "capacity">("rating");
@@ -36,9 +36,7 @@ export default function YachtChartersPage() {
   const [charterDuration, setCharterDuration] = useState<"half-day" | "full-day" | "multi-day" | null>(null);
 
   const loadYachts = useCallback(async () => {
-    if (initialYachts.length === 0) {
-      setIsLoading(true);
-    }
+    setIsLoading(true);
     setFetchError(null);
     try {
       const data = await conciergeService.getYachts();
@@ -48,7 +46,7 @@ export default function YachtChartersPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [initialYachts.length, t]);
+  }, [t]);
 
   useEffect(() => {
     loadYachts();
@@ -307,9 +305,12 @@ export default function YachtChartersPage() {
         <section className="w-full px-4 md:px-8 lg:px-12 py-4 bg-background-50">
           <div className="max-w-7xl mx-auto">
             {!isLoading && !fetchError && (
-              <p className="text-sm text-foreground-500">
-                {filteredYachts.length} {filteredYachts.length === 1 ? "yacht" : "yachts"} available for charter
-              </p>
+              <div>
+                <p className="text-sm text-foreground-500">
+                  {filteredYachts.length} {filteredYachts.length === 1 ? "yacht listing" : "yacht listings"}
+                </p>
+                <OfferProvenanceNotice />
+              </div>
             )}
           </div>
         </section>

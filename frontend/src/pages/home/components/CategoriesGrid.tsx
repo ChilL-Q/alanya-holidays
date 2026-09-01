@@ -3,6 +3,16 @@ import { Link } from "react-router-dom";
 import { forumService, type Category } from "@/api-services/forum.service";
 import { logger } from "@/lib/logger";
 import { useTranslation } from "react-i18next";
+import ErrorState from "@/components/base/ErrorState";
+
+const CATEGORY_LABEL_KEYS: Record<string, string> = {
+  "travel-vacation": "home.footer.travelVacation",
+  "beaches-nature": "home.footer.beachesNature",
+  "food-nightlife": "home.footer.foodNightlife",
+  "things-to-do": "home.footer.thingsToDo",
+  "expats-nomads": "home.footer.expatsNomads",
+  "real-estate": "home.footer.realEstate",
+};
 
 const categoryImageFallback = "/images/categories/placeholder.jpg";
 
@@ -15,6 +25,15 @@ function handleCategoryImageError(event: SyntheticEvent<HTMLImageElement>) {
 export default function CategoriesGrid() {
   const { t } = useTranslation();
   const [categoriesList, setCategoriesList] = useState<Category[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadCategories = () => {
+    setError(null);
+    return forumService.getCategories().then((data) => setCategoriesList(data || [])).catch((err: unknown) => {
+      logger.warn("Failed to load forum categories:", err);
+      setError(err instanceof Error ? err.message : t("home.categoriesUnavailable"));
+    });
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -27,12 +46,13 @@ export default function CategoriesGrid() {
       })
       .catch((err) => {
         logger.warn("Failed to load forum categories:", err);
+        if (isMounted) setError(err instanceof Error ? err.message : t("home.categoriesUnavailable"));
       });
 
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [t]);
   return (
     <section id="categories" className="py-16 md:py-24 bg-background-50">
       <div className="w-full px-4 md:px-8 lg:px-12">
@@ -52,11 +72,16 @@ export default function CategoriesGrid() {
           </p>
         </div>
 
-        {/* Categories Grid */}
+        {error ? (
+          <ErrorState title={t("home.categoriesUnavailable")} message={error} onRetry={loadCategories} />
+        ) : (
+        /* Categories Grid */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 md:gap-6">
           {categoriesList.map((category, index) => {
             // Alternate card styles based on index
             const styleType = index % 3;
+            const localizedNameKey = CATEGORY_LABEL_KEYS[category.slug || category.id];
+            const localizedName = localizedNameKey ? t(localizedNameKey) : category.name;
 
             if (styleType === 0) {
               // Dark card with icon
@@ -68,7 +93,7 @@ export default function CategoriesGrid() {
                 >
                   <img
                     src={category.image}
-                    alt={category.name}
+                    alt={localizedName}
                     onError={handleCategoryImageError}
                     className="absolute inset-0 h-full w-full object-cover opacity-100 transition-transform duration-500 group-hover:scale-105"
                   />
@@ -78,10 +103,10 @@ export default function CategoriesGrid() {
                       <i className={`${category.icon} text-white text-lg`}></i>
                     </div>
                     <h3 className="font-heading text-lg text-white mb-2 leading-tight">
-                      {category.name}
+                      {localizedName}
                     </h3>
                     <p className="text-white/50 text-xs">
-                      {category.threadCount.toLocaleString()} discussions
+                      {t("home.discussionsCount", { count: category.threadCount.toLocaleString() })}
                     </p>
                   </div>
                   <div className="absolute bottom-0 right-0 w-24 h-24 opacity-10">
@@ -101,7 +126,7 @@ export default function CategoriesGrid() {
                 >
                   <img
                     src={category.image}
-                    alt={category.name}
+                    alt={localizedName}
                     onError={handleCategoryImageError}
                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
@@ -109,15 +134,15 @@ export default function CategoriesGrid() {
                   {/* Category Tag */}
                   <span className="absolute top-3 left-3 flex items-center gap-1 px-3 py-1 bg-black/50 text-white text-xs rounded-full backdrop-blur-sm">
                     <i className={`${category.icon}`}></i>
-                    {category.subcategories.length} topics
+                    {t("home.topicsCount", { count: category.subcategories.length })}
                   </span>
                   {/* Content */}
                   <div className="absolute bottom-0 left-0 right-0 p-4">
                     <h3 className="font-heading text-lg text-white mb-1 leading-tight">
-                      {category.name}
+                      {localizedName}
                     </h3>
                     <p className="text-white/70 text-xs">
-                      {category.threadCount.toLocaleString()} discussions
+                      {t("home.discussionsCount", { count: category.threadCount.toLocaleString() })}
                     </p>
                   </div>
                 </Link>
@@ -133,16 +158,16 @@ export default function CategoriesGrid() {
               >
                 <div className="p-4 flex-1">
                   <h3 className="font-heading text-lg text-foreground-900 mb-2 leading-tight group-hover:text-primary-500 transition-colors">
-                    {category.name}
+                    {localizedName}
                   </h3>
                   <p className="text-foreground-500 text-xs">
-                    {category.subcategories.length} topics
+                    {t("home.topicsCount", { count: category.subcategories.length })}
                   </p>
                 </div>
                 <div className="h-20 overflow-hidden">
                   <img
                     src={category.image}
-                    alt={category.name}
+                    alt={localizedName}
                     onError={handleCategoryImageError}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
@@ -151,6 +176,7 @@ export default function CategoriesGrid() {
             );
           })}
         </div>
+        )}
       </div>
     </section>
   );

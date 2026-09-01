@@ -518,6 +518,84 @@ describe('ForumRepository', () => {
       await repository.updateReportResolved('rep-1');
     });
 
+    it('hydrates report targets and marks hard-deleted targets as missing', async () => {
+      mockClient.from.mockImplementation((table: string) => {
+        if (table === 'forum_reports') {
+          return createQueryChain({
+            data: [
+              {
+                id: 'rep-live',
+                target_type: 'post',
+                target_id: 'post-live',
+                resolved: false,
+              },
+              {
+                id: 'rep-orphan',
+                target_type: 'post',
+                target_id: 'post-deleted',
+                resolved: true,
+              },
+              {
+                id: 'rep-comment',
+                target_type: 'comment',
+                target_id: 'comment-live',
+                resolved: false,
+              },
+            ],
+          });
+        }
+        if (table === 'forum_posts') {
+          return createQueryChain({
+            data: [
+              {
+                id: 'post-live',
+                title: 'Still here',
+                content: 'Visible moderation target',
+                is_removed: false,
+              },
+            ],
+          });
+        }
+        if (table === 'forum_comments') {
+          return createQueryChain({
+            data: [
+              {
+                id: 'comment-live',
+                post_id: 'post-live',
+                body: 'Reported reply',
+                author_id: 'comment-author',
+                is_removed: false,
+              },
+            ],
+          });
+        }
+        return createQueryChain({ data: [] });
+      });
+
+      const reports = await repository.getReports({ includeResolved: true });
+
+      expect(reports).toEqual([
+        expect.objectContaining({
+          id: 'rep-live',
+          target_missing: false,
+          target_post: expect.objectContaining({ id: 'post-live' }),
+        }),
+        expect.objectContaining({
+          id: 'rep-orphan',
+          target_missing: true,
+          target_post: null,
+        }),
+        expect.objectContaining({
+          id: 'rep-comment',
+          target_missing: false,
+          target_comment: expect.objectContaining({
+            id: 'comment-live',
+            user_id: 'comment-author',
+          }),
+        }),
+      ]);
+    });
+
     it('should calculate aggregated stats from multiple queries', async () => {
       let profileQueryCount = 0;
       mockClient.from.mockImplementation((table: string) => {

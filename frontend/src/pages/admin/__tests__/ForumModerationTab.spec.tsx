@@ -180,4 +180,44 @@ describe("ForumModerationTab", () => {
       await screen.findByText(/Failed to load forum moderation data\. Please try again\./i)
     ).toBeInTheDocument();
   });
+
+  it("preserves an orphaned resolved report and disables invalid target actions", async () => {
+    vi.spyOn(adminService, "getForumReports").mockResolvedValueOnce([
+      {
+        id: "rep-orphan",
+        reporter_id: "u-100",
+        target_type: "post",
+        target_id: "post-deleted",
+        reason: "spam",
+        resolved: true,
+        target_missing: true,
+        target_post: null,
+        created_at: "2026-08-23T10:00:00Z",
+      },
+    ]);
+
+    render(<ForumModerationTab />);
+
+    const preview = await screen.findByRole("button", { name: /preview/i });
+    expect(screen.getByText(/deleted post/i)).toBeInTheDocument();
+    const row = preview.closest("tr");
+    expect(row?.querySelector("button[disabled]")).toBeTruthy();
+
+    fireEvent.click(preview);
+    expect(await screen.findByText(/permanently deleted/i)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /remove post/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /hard delete/i })).not.toBeInTheDocument();
+  });
+
+  it("shows an actionable error and keeps the modal open when hard delete fails", async () => {
+    vi.spyOn(adminService, "deleteForumPost").mockResolvedValueOnce(false);
+    render(<ForumModerationTab />);
+
+    fireEvent.click((await screen.findAllByRole("button", { name: /preview/i }))[0]);
+    fireEvent.click(await screen.findByRole("button", { name: /hard delete/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /confirm delete/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/failed to load forum moderation data/i);
+    expect(screen.getByText(/report inspection/i)).toBeInTheDocument();
+  });
 });

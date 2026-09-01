@@ -7,12 +7,12 @@ interface ForumReportsListProps {
   reports: ForumReportAdminItem[];
   loading?: boolean;
   onPreview: (report: ForumReportAdminItem) => void;
-  onResolve: (reportId: string) => Promise<void>;
+  onResolve: (reportId: string) => Promise<boolean | void>;
   onToggleRemove: (
     targetType: "post" | "comment",
     targetId: string,
     willBeRemoved: boolean
-  ) => Promise<void>;
+  ) => Promise<boolean | void>;
   statusFilter: "all" | "pending" | "resolved";
   onStatusFilterChange: (status: "all" | "pending" | "resolved") => void;
   targetTypeFilter: "all" | "post" | "comment";
@@ -196,9 +196,12 @@ export default function ForumReportsList({
             <tbody className="divide-y divide-secondary-100 dark:divide-slate-800">
               {filteredReports.map((report) => {
                 const isPost = report.target_type === "post";
-                const excerpt = isPost
-                  ? report.target_post?.title || report.target_post?.content || `Post #${report.target_id}`
-                  : report.target_comment?.body || `Comment #${report.target_id}`;
+                const targetMissing = report.target_missing === true;
+                const excerpt = targetMissing
+                  ? `Deleted ${isPost ? "post" : "comment"} #${report.target_id}`
+                  : isPost
+                    ? report.target_post?.title || report.target_post?.content || `Post #${report.target_id}`
+                    : report.target_comment?.body || `Comment #${report.target_id}`;
 
                 const isRemoved = isPost
                   ? report.target_post?.is_removed === true
@@ -275,6 +278,7 @@ export default function ForumReportsList({
                         )}
                         <button
                           type="button"
+                          disabled={targetMissing}
                           onClick={() =>
                             onToggleRemove(
                               report.target_type as "post" | "comment",
@@ -282,12 +286,18 @@ export default function ForumReportsList({
                               !isRemoved
                             )
                           }
-                          className={`p-1 rounded-lg text-xs transition-colors cursor-pointer ${
+                          className={`p-1 rounded-lg text-xs transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 ${
                             isRemoved
                               ? "text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
                               : "text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
                           }`}
-                          title={isRemoved ? t("admin.restoreContent") : t("admin.removeContent")}
+                          title={
+                            targetMissing
+                              ? `Deleted ${report.target_type} cannot be moderated`
+                              : isRemoved
+                                ? t("admin.restoreContent")
+                                : t("admin.removeContent")
+                          }
                         >
                           <i className={isRemoved ? "ri-restart-line text-sm" : "ri-eye-off-line text-sm"} />
                         </button>

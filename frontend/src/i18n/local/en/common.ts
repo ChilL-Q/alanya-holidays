@@ -68,6 +68,9 @@ export default {
   "nav.merchantDashboard": "Dashboard",
   "nav.adminDashboard": "Admin Dashboard",
   "nav.signOut": "Sign Out",
+  "floating.whatsappLabel": "Chat on WhatsApp",
+  "floating.whatsappTooltip": "Chat with us on WhatsApp",
+  "floating.whatsappMessage": "Hi Alanya Holidays! I have a question about your experiences.",
 
   // Auth
   "auth.welcomeBack": "Welcome Back",

@@ -10,15 +10,15 @@ import { formatAmenity } from "@/utils/format-amenity";
 import { createInquiryState } from "@/lib/inquiry-confirmation";
 import ErrorState from "@/components/base/ErrorState";
 import EmptyState from "@/components/base/EmptyState";
+import OfferProvenanceNotice from "@/components/feature/OfferProvenanceNotice";
 import { useTranslation } from "react-i18next";
 import "@/i18n";
 
 export default function VillaStaysPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const initialVillas = propertiesService.getVillasSync();
-  const [allVillas, setAllVillas] = useState<Villa[]>(initialVillas);
-  const [isLoading, setIsLoading] = useState(initialVillas.length === 0);
+  const [allVillas, setAllVillas] = useState<Villa[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [activeLocation, setActiveLocation] = useState("all");
   const [sortBy, setSortBy] = useState<"rating" | "price-low" | "price-high" | "guests">("rating");
@@ -28,44 +28,41 @@ export default function VillaStaysPage() {
   const [formError, setFormError] = useState("");
 
   const loadVillas = useCallback(async () => {
-    if (initialVillas.length === 0) {
-      setIsLoading(true);
-    }
+    setIsLoading(true);
     setFetchError(null);
     try {
       const res = await propertiesService.getProperties({ type: "villa" });
       const data: PropertyItem[] = res.data;
-      if (Array.isArray(data) && data.length > 0) {
+      if (Array.isArray(data)) {
         const mapped: Villa[] = data.map((p) => ({
           id: p.id,
           name: p.title || p.name || "Villa",
           location: p.location || "Alanya Center",
-          bedrooms: p.bedrooms || 3,
-          bathrooms: p.bathrooms || 2,
-          maxGuests: p.maxGuests || p.max_guests || 6,
-          pricePerNight: p.pricePerNight || p.price_per_night || 300,
+          bedrooms: p.bedrooms ?? 0,
+          bathrooms: p.bathrooms ?? 0,
+          maxGuests: p.maxGuests ?? p.max_guests ?? 0,
+          pricePerNight: p.pricePerNight ?? p.price_per_night ?? 0,
           currency: p.currency || "EUR",
-          hasPool: p.hasPool ?? p.has_pool ?? true,
+          hasPool: p.hasPool ?? p.has_pool ?? false,
           hasSeaView: p.hasSeaView ?? p.has_sea_view ?? false,
           image: p.image || p.image_url || (Array.isArray(p.images) && p.images[0]) || "https://images.unsplash.com/photo-1580587771525-78b9dba3b914",
           description: p.description || "",
-          amenities: p.amenities || ["Air Conditioning", "WiFi", "Pool"],
-          rating: p.rating || 4.8,
-          reviewCount: p.reviewCount || p.review_count || 10,
+          amenities: p.amenities || [],
+          rating: p.rating ?? 0,
+          reviewCount: p.reviewCount ?? p.review_count ?? 0,
           featured: !!p.featured,
-          minStay: p.minStay || p.min_stay || 2,
-          distanceToBeach: p.distanceToBeach || p.distance_to_beach || "500m",
+          minStay: p.minStay ?? p.min_stay ?? 0,
+          distanceToBeach: p.distanceToBeach || p.distance_to_beach || "",
         }));
         setAllVillas(mapped);
-      } else {
-        setAllVillas(initialVillas);
       }
     } catch {
-      setAllVillas(initialVillas);
+      setAllVillas([]);
+      setFetchError("Live villa listings could not be loaded.");
     } finally {
       setIsLoading(false);
     }
-  }, [initialVillas]);
+  }, []);
 
   useEffect(() => {
     loadVillas();
@@ -209,7 +206,10 @@ export default function VillaStaysPage() {
         <section className="w-full px-4 md:px-8 lg:px-12 py-4 bg-background-50">
           <div className="max-w-7xl mx-auto">
             {!isLoading && !fetchError && (
-              <p className="text-sm text-foreground-500">{filteredVillas.length} {filteredVillas.length === 1 ? "villa" : "villas"} available</p>
+              <div>
+                <p className="text-sm text-foreground-500">{filteredVillas.length} {filteredVillas.length === 1 ? "villa listing" : "villa listings"}</p>
+                <OfferProvenanceNotice />
+              </div>
             )}
           </div>
         </section>
@@ -271,11 +271,13 @@ export default function VillaStaysPage() {
                     <div className="p-5">
                       <div className="flex items-start justify-between gap-3 mb-2">
                         <h3 className="font-heading text-base text-foreground-900 leading-tight group-hover:text-primary-500 transition-colors">{villa.name}</h3>
-                        <div className="flex items-center gap-1 shrink-0">
+                        {villa.rating > 0 && villa.reviewCount > 0 && (
+                        <div className="flex items-center gap-1 shrink-0" aria-label={`${villa.rating} from ${villa.reviewCount} reviews`}>
                           <i className="ri-star-fill text-yellow-400 text-sm"></i>
                           <span className="text-sm font-semibold text-foreground-900">{villa.rating}</span>
                           <span className="text-xs text-foreground-500">({villa.reviewCount})</span>
                         </div>
+                        )}
                       </div>
                       <p className="text-sm text-foreground-500 leading-relaxed mb-4 line-clamp-2">{villa.description}</p>
                       <div className="flex items-center gap-4 mb-4 text-xs text-foreground-500">
@@ -291,8 +293,12 @@ export default function VillaStaysPage() {
                       </div>
                       <div className="flex items-center justify-between pt-4 border-t border-background-200/70">
                         <div>
-                          <span className="text-lg font-bold text-foreground-900">€{villa.pricePerNight}</span>
-                    <span className="text-sm text-foreground-500"> / {t("services.perNight")}</span>
+                          {villa.pricePerNight > 0 ? (
+                            <><span className="text-lg font-bold text-foreground-900">€{villa.pricePerNight}</span>
+                            <span className="text-sm text-foreground-500"> / {t("services.perNight")}</span></>
+                          ) : (
+                            <span className="text-sm font-medium text-foreground-700">{t("services.form.exactPricing")}</span>
+                          )}
                         </div>
                         <button onClick={(e) => { e.stopPropagation(); setSelectedVilla(villa); }} className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer">
                           <i className="ri-hotel-line text-sm"></i>{t("services.viewDetails")}
@@ -329,11 +335,13 @@ export default function VillaStaysPage() {
                     </span>
                     <h2 className="font-heading text-2xl text-foreground-900">{selectedVilla.name}</h2>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0 mt-1">
+                  {selectedVilla.rating > 0 && selectedVilla.reviewCount > 0 && (
+                  <div className="flex items-center gap-1 shrink-0 mt-1" aria-label={`${selectedVilla.rating} from ${selectedVilla.reviewCount} reviews`}>
                     <i className="ri-star-fill text-yellow-400 text-base"></i>
                     <span className="text-base font-semibold text-foreground-900">{selectedVilla.rating}</span>
                     <span className="text-sm text-foreground-500">({selectedVilla.reviewCount} {t("services.service.reviews")})</span>
                   </div>
+                  )}
                 </div>
                 <p className="text-sm text-foreground-600 leading-relaxed mb-6">{selectedVilla.description}</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
@@ -361,8 +369,12 @@ export default function VillaStaysPage() {
                 <div className="bg-primary-50 rounded-xl p-5 mb-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-foreground-500 mb-0.5">{t("services.perNight")}</p>
-                      <p className="text-2xl font-bold text-foreground-900">€{selectedVilla.pricePerNight.toLocaleString()}</p>
+                      {selectedVilla.pricePerNight > 0 ? (
+                        <><p className="text-xs text-foreground-500 mb-0.5">{t("services.perNight")}</p>
+                        <p className="text-2xl font-bold text-foreground-900">€{selectedVilla.pricePerNight.toLocaleString()}</p></>
+                      ) : (
+                        <p className="text-sm font-medium text-foreground-700">{t("services.form.exactPricing")}</p>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 text-xs text-foreground-500">
                       <i className="ri-calendar-check-line"></i>

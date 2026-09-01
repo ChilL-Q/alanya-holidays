@@ -1,8 +1,9 @@
-import { render, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { forumService, type CategoryThread } from "@/api-services/forum.service";
 import TrendingThreads from "./TrendingThreads";
+import i18n from "@/i18n";
 
 function makeThread(overrides: Partial<CategoryThread>): CategoryThread {
   return {
@@ -23,8 +24,9 @@ function makeThread(overrides: Partial<CategoryThread>): CategoryThread {
 }
 
 describe("TrendingThreads", () => {
-  afterEach(() => {
+  afterEach(async () => {
     vi.restoreAllMocks();
+    await i18n.changeLanguage("en");
   });
 
   it("uses post cover, then category image, then placeholder", async () => {
@@ -68,5 +70,22 @@ describe("TrendingThreads", () => {
       "src",
       "/images/placeholder-business.svg",
     );
+  });
+
+  it("localizes the section chrome in Russian while preserving thread content", async () => {
+    await i18n.changeLanguage("ru");
+    vi.spyOn(forumService, "getTrendingThreads").mockResolvedValue([
+      makeThread({ title: "Alanya discussion" }),
+    ]);
+
+    render(
+      <MemoryRouter>
+        <TrendingThreads />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByRole("heading", { name: "Горячие обсуждения" })).toBeInTheDocument();
+    expect(screen.getByText("Сейчас в тренде")).toBeInTheDocument();
+    expect(screen.getByText("Alanya discussion")).toBeInTheDocument();
   });
 });

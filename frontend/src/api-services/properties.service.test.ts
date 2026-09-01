@@ -88,12 +88,17 @@ describe("properties.service", () => {
       expect(mapped.title).toBe("Alanya Property");
       expect(mapped.pricePerNight).toBe(0);
       expect(mapped.currency).toBe("EUR");
-      expect(mapped.maxGuests).toBe(2);
+      expect(mapped.bedrooms).toBe(0);
+      expect(mapped.bathrooms).toBe(0);
+      expect(mapped.maxGuests).toBe(0);
       expect(mapped.hasPool).toBe(false);
       expect(mapped.hasSeaView).toBe(false);
       expect(mapped.images).toEqual([]);
       expect(mapped.amenities).toEqual([]);
-      expect(mapped.rating).toBe(5.0);
+      expect(mapped.rating).toBe(0);
+      expect(mapped.reviewCount).toBe(0);
+      expect(mapped.minStay).toBe(0);
+      expect(mapped.status).toBeUndefined();
     });
   });
 

@@ -53,8 +53,10 @@ describe("directory.service", () => {
         phone: "+90 555 123 4567",
         email: "info@kale.com",
         website: "https://kale.com",
-        reviews_average: 4.9,
-        reviews_count: 120,
+        reviews_average: 4.3,
+        reviews_count: 7,
+        google_rating: 4.9,
+        google_review_count: 120,
         gallery: ["https://example.com/kale.jpg"],
         is_featured: true,
         can_claim: true,
@@ -67,8 +69,10 @@ describe("directory.service", () => {
       expect(result.category).toBe("restaurants");
       expect(result.subcategory).toBe("Turkish Cuisine");
       expect(result.description).toBe("Top restaurant in Alanya");
-      expect(result.rating).toBe(4.9);
-      expect(result.reviewCount).toBe(120);
+      expect(result.googleRating).toBe(4.9);
+      expect(result.googleReviewCount).toBe(120);
+      expect(result.rating).toBe(4.3);
+      expect(result.reviewCount).toBe(7);
       expect(result.image).toBe("https://example.com/kale.jpg");
       expect(result.tags).toEqual([]);
       expect(result.featured).toBe(true);
@@ -89,6 +93,8 @@ describe("directory.service", () => {
       expect(result.priceRange).toBe("$$");
       expect(result.rating).toBe(0);
       expect(result.reviewCount).toBe(0);
+      expect(result.googleRating).toBeNull();
+      expect(result.googleReviewCount).toBeNull();
       expect(result.openingHours).toBe("09:00 - 18:00");
       expect(result.image).toContain("ui-avatars.com");
     });
@@ -107,13 +113,58 @@ describe("directory.service", () => {
       };
 
       const result = mapBackendReviewToBusinessReview(backendReview, "biz-001");
-      expect(result.id).toBe("rev-uuid-1");
-      expect(result.businessId).toBe("biz-001");
-      expect(result.rating).toBe(5);
-      expect(result.content).toBe("Excellent dinner and views!");
-      expect(result.reviewerName).toBe("Sarah Connor");
-      expect(result.reviewerAvatar).toBe("https://example.com/sarah.jpg");
-      expect(result.date).toBe("2026-07-20");
+      expect(result).not.toBeNull();
+      expect(result!.id).toBe("rev-uuid-1");
+      expect(result!.businessId).toBe("biz-001");
+      expect(result!.rating).toBe(5);
+      expect(result!.content).toBe("Excellent dinner and views!");
+      expect(result!.reviewerName).toBe("Sarah Connor");
+      expect(result!.reviewerAvatar).toBe("https://example.com/sarah.jpg");
+      expect(result!.date).toBe("2026-07-20");
+      expect(result!.title).toBeNull();
+      expect(result!.visitType).toBeNull();
+    });
+
+    it.each([
+      ["zero", 0],
+      ["null", null],
+      ["missing", undefined],
+      ["negative", -1],
+      ["over five", 6],
+      ["fractional", 4.5],
+      ["NaN", Number.NaN],
+      ["infinite", Number.POSITIVE_INFINITY],
+    ])("rejects a %s review rating instead of fabricating five stars", (_label, rating) => {
+      const review = {
+        id: `invalid-${_label}`,
+        listing_id: "biz-001",
+        rating,
+        comment: "Malformed rating must not be published.",
+      } as unknown as BackendReview;
+
+      expect(mapBackendReviewToBusinessReview(review, "biz-001")).toBeNull();
+    });
+
+    it("preserves a valid review without inventing author or provenance fields", () => {
+      const review = {
+        id: "review-without-author",
+        listing_id: "biz-001",
+        rating: 4,
+        comment: "Valid community feedback.",
+        user: null,
+      } as BackendReview;
+
+      const result = mapBackendReviewToBusinessReview(review, "biz-001");
+
+      expect(result).toMatchObject({
+        rating: 4,
+        reviewerName: null,
+        reviewerAvatar: null,
+        date: null,
+        title: null,
+        visitType: null,
+      });
+      expect(JSON.stringify(result)).not.toContain("Verified Traveler");
     });
   });
 
@@ -326,6 +377,31 @@ describe("directory.service", () => {
       expect(reviews[0].content).toBe("Loved the food!");
     });
 
+    it("filters malformed ratings without fabricating five-star community reviews", async () => {
+      vi.spyOn(apiClient, "get").mockResolvedValueOnce({
+        data: [
+          {
+            id: "valid-review",
+            listing_id: "biz-001",
+            rating: 4,
+            comment: "Legitimate review",
+            user: { full_name: "Known Author" },
+          },
+          { id: "zero-review", listing_id: "biz-001", rating: 0, comment: "Invalid" },
+          { id: "null-review", listing_id: "biz-001", rating: null, comment: "Invalid" },
+          { id: "missing-review", listing_id: "biz-001", comment: "Invalid" },
+          { id: "high-review", listing_id: "biz-001", rating: 6, comment: "Invalid" },
+        ],
+        count: 5,
+      });
+
+      const reviews = await directoryService.getListingReviews("biz-001");
+
+      expect(reviews).toHaveLength(1);
+      expect(reviews[0]).toMatchObject({ rating: 4, reviewerName: "Known Author" });
+      expect(JSON.stringify(reviews)).not.toContain("Verified Traveler");
+    });
+
     it("should return empty array on 404 ApiError", async () => {
       vi.spyOn(apiClient, "get").mockRejectedValueOnce(
         new ApiError("Not Found", 404, "Not Found")
@@ -371,6 +447,22 @@ describe("directory.service", () => {
       );
 
       await expect(directoryService.submitReview("biz-001", 4, "Good ambience")).rejects.toThrow(ApiError);
+    });
+
+    it("rejects a malformed submitted-review response instead of fabricating five stars", async () => {
+      vi.spyOn(apiClient, "post").mockResolvedValueOnce({
+        id: "malformed-new-review",
+        listing_id: "biz-001",
+        rating: null,
+        comment: "Server response without a valid rating",
+      });
+
+      await expect(
+        directoryService.submitReview("biz-001", 4, "Good ambience")
+      ).rejects.toMatchObject({
+        name: "ApiError",
+        status: 502,
+      });
     });
   });
 

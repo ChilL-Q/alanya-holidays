@@ -7,6 +7,7 @@ import RelatedExperiences from "@/components/feature/RelatedExperiences";
 import { conciergeService, tourDurations, type HelicopterTour } from "@/api-services/concierge.service";
 import ErrorState from "@/components/base/ErrorState";
 import EmptyState from "@/components/base/EmptyState";
+import OfferProvenanceNotice from "@/components/feature/OfferProvenanceNotice";
 import { useTranslation } from "react-i18next";
 import "@/i18n";
 
@@ -160,7 +161,7 @@ export default function HelicopterToursPage() {
         <section className="w-full px-4 md:px-8 lg:px-12 py-4 bg-background-50">
           <div className="max-w-7xl mx-auto">
             {!isLoading && !fetchError && (
-              <p className="text-sm text-foreground-500">{t(filteredTours.length === 1 ? "services.availableOne" : "services.availableMany", { count: filteredTours.length, item: t(filteredTours.length === 1 ? "services.tour" : "services.tours") })}</p>
+              <div><p className="text-sm text-foreground-500">{filteredTours.length} {filteredTours.length === 1 ? "tour listing" : "tour listings"}</p><OfferProvenanceNotice /></div>
             )}
           </div>
         </section>

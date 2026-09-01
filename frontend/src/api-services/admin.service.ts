@@ -159,6 +159,15 @@ interface AdminFetchOptions {
   throwOnError?: boolean;
 }
 
+function mutationSucceeded(response: unknown): boolean {
+  return !(
+    response &&
+    typeof response === "object" &&
+    "success" in response &&
+    (response as { success?: unknown }).success === false
+  );
+}
+
 class AdminService {
   /**
    * Fetches all concierge enquiries for admin dashboard and analytics.
@@ -190,8 +199,8 @@ class AdminService {
    */
   async updateEnquiryStatus(id: number, status: string): Promise<boolean> {
     try {
-      await apiClient.patch(`/admin/enquiries/${id}/status`, { status });
-      return true;
+      const response = await apiClient.patch(`/admin/enquiries/${id}/status`, { status });
+      return mutationSucceeded(response);
     } catch (err) {
       logger.error("Failed to update enquiry status:", err);
       return false;
@@ -203,8 +212,8 @@ class AdminService {
    */
   async assignEnquiry(id: number, assignedTo: string | null): Promise<boolean> {
     try {
-      await apiClient.patch(`/admin/enquiries/${id}/assign`, { assigned_to: assignedTo });
-      return true;
+      const response = await apiClient.patch(`/admin/enquiries/${id}/assign`, { assigned_to: assignedTo });
+      return mutationSucceeded(response);
     } catch (err) {
       logger.error("Failed to assign enquiry:", err);
       return false;
@@ -277,8 +286,8 @@ class AdminService {
    */
   async approveListing(id: string): Promise<boolean> {
     try {
-      await apiClient.post(`/directory/admin/${id}/approve`);
-      return true;
+      const response = await apiClient.post(`/directory/admin/${id}/approve`);
+      return mutationSucceeded(response);
     } catch (err) {
       logger.error("Failed to approve listing:", err);
       return false;
@@ -290,8 +299,8 @@ class AdminService {
    */
   async rejectListing(id: string, reason: string): Promise<boolean> {
     try {
-      await apiClient.post(`/directory/admin/${id}/reject`, { reason });
-      return true;
+      const response = await apiClient.post(`/directory/admin/${id}/reject`, { reason });
+      return mutationSucceeded(response);
     } catch (err) {
       logger.error("Failed to reject listing:", err);
       return false;
@@ -304,8 +313,8 @@ class AdminService {
   async deleteListing(id: string): Promise<boolean> {
     // Delegates to the canonical directory service (single DELETE /directory/:id path).
     try {
-      await directoryService.deleteListing(id);
-      return true;
+      const response = await directoryService.deleteListing(id);
+      return mutationSucceeded(response);
     } catch (err) {
       logger.error("Failed to delete listing:", err);
       return false;
@@ -346,8 +355,8 @@ class AdminService {
    */
   async approveClaim(claimId: string): Promise<boolean> {
     try {
-      await apiClient.post(`/directory/admin/claims/${claimId}/approve`);
-      return true;
+      const response = await apiClient.post(`/directory/admin/claims/${claimId}/approve`);
+      return mutationSucceeded(response);
     } catch (err) {
       logger.error("Failed to approve claim:", err);
       return false;
@@ -359,8 +368,8 @@ class AdminService {
    */
   async rejectClaim(claimId: string, reason: string): Promise<boolean> {
     try {
-      await apiClient.post(`/directory/admin/claims/${claimId}/reject`, { reason });
-      return true;
+      const response = await apiClient.post(`/directory/admin/claims/${claimId}/reject`, { reason });
+      return mutationSucceeded(response);
     } catch (err) {
       logger.error("Failed to reject claim:", err);
       return false;
@@ -453,8 +462,8 @@ class AdminService {
    */
   async approveContentSubmission(id: string): Promise<boolean> {
     try {
-      await apiClient.patch(`/blog/submissions/${id}/approve`);
-      return true;
+      const response = await apiClient.patch(`/blog/submissions/${id}/approve`);
+      return mutationSucceeded(response);
     } catch (err) {
       logger.error("Failed to approve content submission:", err);
       return false;
@@ -466,8 +475,8 @@ class AdminService {
    */
   async rejectContentSubmission(id: string, reason: string): Promise<boolean> {
     try {
-      await apiClient.patch(`/blog/submissions/${id}/reject`, { reason });
-      return true;
+      const response = await apiClient.patch(`/blog/submissions/${id}/reject`, { reason });
+      return mutationSucceeded(response);
     } catch (err) {
       logger.error("Failed to reject content submission:", err);
       return false;
@@ -598,8 +607,8 @@ class AdminService {
    */
   async featureListing(id: string): Promise<boolean> {
     try {
-      await apiClient.post<{ success: boolean; is_featured: boolean }>(`/directory/admin/${id}/feature`);
-      return true;
+      const response = await apiClient.post<{ success: boolean; is_featured: boolean }>(`/directory/admin/${id}/feature`);
+      return mutationSucceeded(response);
     } catch (err) {
       logger.error(`Failed to feature listing ${id}:`, err);
       return false;
@@ -611,8 +620,8 @@ class AdminService {
    */
   async unfeatureListing(id: string): Promise<boolean> {
     try {
-      await apiClient.post<{ success: boolean; is_featured: boolean }>(`/directory/admin/${id}/unfeature`);
-      return true;
+      const response = await apiClient.post<{ success: boolean; is_featured: boolean }>(`/directory/admin/${id}/unfeature`);
+      return mutationSucceeded(response);
     } catch (err) {
       logger.error(`Failed to unfeature listing ${id}:`, err);
       return false;
@@ -624,8 +633,8 @@ class AdminService {
    */
   async verifyListing(id: string): Promise<boolean> {
     try {
-      await apiClient.post<{ success: boolean; is_verified: boolean }>(`/directory/admin/${id}/verify`);
-      return true;
+      const response = await apiClient.post<{ success: boolean; is_verified: boolean }>(`/directory/admin/${id}/verify`);
+      return mutationSucceeded(response);
     } catch (err) {
       logger.error(`Failed to verify listing ${id}:`, err);
       return false;
@@ -637,8 +646,8 @@ class AdminService {
    */
   async unverifyListing(id: string): Promise<boolean> {
     try {
-      await apiClient.post<{ success: boolean; is_verified: boolean }>(`/directory/admin/${id}/unverify`);
-      return true;
+      const response = await apiClient.post<{ success: boolean; is_verified: boolean }>(`/directory/admin/${id}/unverify`);
+      return mutationSucceeded(response);
     } catch (err) {
       logger.error(`Failed to unverify listing ${id}:`, err);
       return false;
@@ -650,10 +659,10 @@ class AdminService {
    */
   async updateListingScore(id: string, score: number): Promise<boolean> {
     try {
-      await apiClient.post<{ success: boolean; base_score: number }>(`/directory/admin/${id}/score`, {
+      const response = await apiClient.post<{ success: boolean; base_score: number }>(`/directory/admin/${id}/score`, {
         score,
       });
-      return true;
+      return mutationSucceeded(response);
     } catch (err) {
       logger.error(`Failed to update score for listing ${id}:`, err);
       return false;
@@ -740,8 +749,8 @@ class AdminService {
    */
   async resolveForumReport(id: string): Promise<boolean> {
     try {
-      await apiClient.post<{ success: boolean }>(`/forum/reports/${id}/resolve`);
-      return true;
+      const response = await apiClient.post<{ success: boolean }>(`/forum/reports/${id}/resolve`);
+      return mutationSucceeded(response);
     } catch (err) {
       logger.error(`Failed to resolve forum report ${id}:`, err);
       return false;
@@ -767,8 +776,8 @@ class AdminService {
    */
   async setForumPostPinned(id: string, pinned: boolean): Promise<boolean> {
     try {
-      await apiClient.post<{ success: boolean }>(`/forum/posts/${id}/pin`, { pinned });
-      return true;
+      const response = await apiClient.post<{ success: boolean }>(`/forum/posts/${id}/pin`, { pinned });
+      return mutationSucceeded(response);
     } catch (err) {
       logger.error(`Failed to set forum post ${id} pinned:`, err);
       return false;
@@ -780,8 +789,8 @@ class AdminService {
    */
   async setForumPostRemoved(id: string, removed: boolean): Promise<boolean> {
     try {
-      await apiClient.post<{ success: boolean }>(`/forum/posts/${id}/remove`, { removed });
-      return true;
+      const response = await apiClient.post<{ success: boolean }>(`/forum/posts/${id}/remove`, { removed });
+      return mutationSucceeded(response);
     } catch (err) {
       logger.error(`Failed to set forum post ${id} removed:`, err);
       return false;
@@ -793,8 +802,8 @@ class AdminService {
    */
   async deleteForumPost(id: string): Promise<boolean> {
     try {
-      await apiClient.delete<{ success: boolean }>(`/forum/posts/${id}`);
-      return true;
+      const response = await apiClient.delete<{ success: boolean }>(`/forum/posts/${id}`);
+      return mutationSucceeded(response);
     } catch (err) {
       logger.error(`Failed to delete forum post ${id}:`, err);
       return false;
@@ -806,8 +815,8 @@ class AdminService {
    */
   async setForumCommentRemoved(id: string, removed: boolean): Promise<boolean> {
     try {
-      await apiClient.post<{ success: boolean }>(`/forum/comments/${id}/remove`, { removed });
-      return true;
+      const response = await apiClient.post<{ success: boolean }>(`/forum/comments/${id}/remove`, { removed });
+      return mutationSucceeded(response);
     } catch (err) {
       logger.error(`Failed to set forum comment ${id} removed:`, err);
       return false;
@@ -819,8 +828,8 @@ class AdminService {
    */
   async deleteForumComment(id: string): Promise<boolean> {
     try {
-      await apiClient.delete<{ success: boolean }>(`/forum/comments/${id}`);
-      return true;
+      const response = await apiClient.delete<{ success: boolean }>(`/forum/comments/${id}`);
+      return mutationSucceeded(response);
     } catch (err) {
       logger.error(`Failed to delete forum comment ${id}:`, err);
       return false;
@@ -913,8 +922,8 @@ class AdminService {
     reason?: string
   ): Promise<boolean> {
     try {
-      await apiClient.patch(`/bookings/admin/${id}/status`, { status, reason });
-      return true;
+      const response = await apiClient.patch(`/bookings/admin/${id}/status`, { status, reason });
+      return mutationSucceeded(response);
     } catch (err) {
       logger.error(`Failed to update booking ${id} status:`, err);
       return false;
@@ -926,8 +935,8 @@ class AdminService {
    */
   async updatePayoutStatus(id: string, payoutStatus: string): Promise<boolean> {
     try {
-      await apiClient.patch(`/bookings/admin/${id}/payout-status`, { payoutStatus });
-      return true;
+      const response = await apiClient.patch(`/bookings/admin/${id}/payout-status`, { payoutStatus });
+      return mutationSucceeded(response);
     } catch (err) {
       logger.error(`Failed to update payout status for booking ${id}:`, err);
       return false;
@@ -939,8 +948,8 @@ class AdminService {
    */
   async refundBooking(id: string): Promise<boolean> {
     try {
-      await apiClient.post(`/bookings/admin/${id}/refund`);
-      return true;
+      const response = await apiClient.post(`/bookings/admin/${id}/refund`);
+      return mutationSucceeded(response);
     } catch (err) {
       logger.error(`Failed to refund booking ${id}:`, err);
       return false;
@@ -985,8 +994,8 @@ class AdminService {
    */
   async approveReview(id: string): Promise<boolean> {
     try {
-      await apiClient.patch(`/reviews/${id}/approve`);
-      return true;
+      const response = await apiClient.patch(`/reviews/${id}/approve`);
+      return mutationSucceeded(response);
     } catch (err) {
       logger.error(`Failed to approve review ${id}:`, err);
       return false;
@@ -998,8 +1007,8 @@ class AdminService {
    */
   async rejectReview(id: string): Promise<boolean> {
     try {
-      await apiClient.patch(`/reviews/${id}/reject`);
-      return true;
+      const response = await apiClient.patch(`/reviews/${id}/reject`);
+      return mutationSucceeded(response);
     } catch (err) {
       logger.error(`Failed to reject review ${id}:`, err);
       return false;
@@ -1011,8 +1020,8 @@ class AdminService {
    */
   async deleteReview(id: string): Promise<boolean> {
     try {
-      await apiClient.delete(`/reviews/${id}`);
-      return true;
+      const response = await apiClient.delete(`/reviews/${id}`);
+      return mutationSucceeded(response);
     } catch (err) {
       logger.error(`Failed to delete review ${id}:`, err);
       return false;
@@ -1051,7 +1060,7 @@ class AdminService {
       return empty;
     } catch (err) {
       logger.error("Failed to fetch users:", err);
-      return empty;
+      throw err;
     }
   }
 
@@ -1063,8 +1072,8 @@ class AdminService {
     updates: { role?: string; full_name?: string; phone?: string; company_name?: string }
   ): Promise<boolean> {
     try {
-      await apiClient.patch(`/users/admin/${id}/status`, updates);
-      return true;
+      const response = await apiClient.patch(`/users/admin/${id}/status`, updates);
+      return mutationSucceeded(response);
     } catch (err) {
       logger.error(`Failed to update user ${id}:`, err);
       return false;
@@ -1116,6 +1125,7 @@ export interface ForumReportAdminItem {
   reason: "spam" | "harassment" | "inappropriate" | "misinformation" | "other" | string;
   resolved: boolean;
   created_at: string;
+  target_missing?: boolean;
   reporter?: {
     id?: string;
     full_name?: string | null;
@@ -1239,4 +1249,3 @@ export interface AdminPagination {
 }
 
 export const adminService = new AdminService();
-

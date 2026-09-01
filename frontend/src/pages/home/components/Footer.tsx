@@ -174,37 +174,9 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-          {/* Social */}
-          <div className="flex items-center gap-4">
-            <a
-              href="https://instagram.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-white/60 hover:text-white transition-colors"
-            >
-              <i className="ri-instagram-line text-lg"></i>
-            </a>
-            <a
-              href="https://facebook.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-white/60 hover:text-white transition-colors"
-            >
-              <i className="ri-facebook-line text-lg"></i>
-            </a>
-            <a
-              href="https://twitter.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-white/60 hover:text-white transition-colors"
-            >
-              <i className="ri-twitter-x-line text-lg"></i>
-            </a>
-          </div>
-
           {/* Copyright */}
           <p className="text-white/40 text-xs text-center">
-            © 2026 Alanya Holidays. All rights reserved.
+            © 2026 Alanya Holidays. {t("home.allRightsReserved")}
           </p>
 
           {/* Legal */}

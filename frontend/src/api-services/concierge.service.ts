@@ -1,14 +1,5 @@
 import { apiClient, ApiError } from "@/lib/api-client";
-import { yachts as domainYachts, yachtTypes, type Yacht, type CrewMember } from "@/domain/yachts";
-import { privateJets as curatedPrivateJets } from "@/mocks/private-jets";
-import { helicopterTours as curatedHelicopterTours } from "@/mocks/helicopter-tours";
-import { wineTastings as curatedWineTastings } from "@/mocks/wine-tastings";
-import { hammamSpaExperiences as curatedHammamSpaExperiences } from "@/mocks/hammam-spa";
-import { photographyExcursions as curatedPhotographyExcursions } from "@/mocks/photography-excursions";
-import { golfVacations as curatedGolfVacations } from "@/mocks/golf-vacations";
-import { personalChefs as curatedPersonalChefs } from "@/mocks/personal-chefs";
-import { personalDrivers as curatedPersonalDrivers } from "@/mocks/personal-drivers";
-import { personalShoppers as curatedPersonalShoppers } from "@/mocks/personal-shoppers";
+import { yachtTypes, type Yacht, type CrewMember } from "@/domain/yachts";
 
 export type { Yacht, CrewMember };
 export { yachtTypes };
@@ -606,15 +597,6 @@ export class ConciergeService {
     return [];
   }
 
-  private async getCategoryWithFallback<T>(category: string, fallback: readonly T[]): Promise<T[]> {
-    try {
-      const items = await this.getOfferingsByCategory<T>(category);
-      return items.length > 0 ? items : [...fallback];
-    } catch {
-      return [...fallback];
-    }
-  }
-
   /**
    * Submits a concierge enquiry request.
    */
@@ -683,60 +665,51 @@ export class ConciergeService {
   // ============================================
 
   getYachtsSync(): Yacht[] {
-    return domainYachts;
+    return [];
   }
 
   async getYachts(type?: string): Promise<Yacht[]> {
-    try {
-      const items = await this.getOfferingsByCategory<Yacht>("yacht");
-      const list = Array.isArray(items) && items.length > 0 ? items : domainYachts;
-      if (!type || type === "all") {
-        return list;
-      }
-      return list.filter((y) => (y.type || "").toLowerCase() === type.toLowerCase());
-    } catch {
-      const list = domainYachts;
-      if (!type || type === "all") {
-        return list;
-      }
-      return list.filter((y) => (y.type || "").toLowerCase() === type.toLowerCase());
+    const items = await this.getOfferingsByCategory<Yacht>("yacht");
+    if (!type || type === "all") {
+      return items;
     }
+    return items.filter((y) => (y.type || "").toLowerCase() === type.toLowerCase());
   }
 
   async getPrivateJets(): Promise<PrivateJet[]> {
-    return this.getCategoryWithFallback<PrivateJet>("private-jet", curatedPrivateJets);
+    return this.getOfferingsByCategory<PrivateJet>("private-jet");
   }
 
   async getHelicopterTours(): Promise<HelicopterTour[]> {
-    return this.getCategoryWithFallback<HelicopterTour>("helicopter", curatedHelicopterTours);
+    return this.getOfferingsByCategory<HelicopterTour>("helicopter");
   }
 
   async getWineTastings(): Promise<WineTasting[]> {
-    return this.getCategoryWithFallback<WineTasting>("wine-tasting", curatedWineTastings);
+    return this.getOfferingsByCategory<WineTasting>("wine-tasting");
   }
 
   async getHammamSpaExperiences(): Promise<HammamSpa[]> {
-    return this.getCategoryWithFallback<HammamSpa>("hammam-spa", curatedHammamSpaExperiences);
+    return this.getOfferingsByCategory<HammamSpa>("hammam-spa");
   }
 
   async getPhotographyExcursions(): Promise<PhotographyExcursion[]> {
-    return this.getCategoryWithFallback<PhotographyExcursion>("photography", curatedPhotographyExcursions);
+    return this.getOfferingsByCategory<PhotographyExcursion>("photography");
   }
 
   async getGolfVacations(): Promise<GolfVacation[]> {
-    return this.getCategoryWithFallback<GolfVacation>("golf", curatedGolfVacations);
+    return this.getOfferingsByCategory<GolfVacation>("golf");
   }
 
   async getPersonalChefs(): Promise<PersonalChef[]> {
-    return this.getCategoryWithFallback<PersonalChef>("personal-chef", curatedPersonalChefs);
+    return this.getOfferingsByCategory<PersonalChef>("personal-chef");
   }
 
   async getPersonalDrivers(): Promise<PersonalDriver[]> {
-    return this.getCategoryWithFallback<PersonalDriver>("personal-driver", curatedPersonalDrivers);
+    return this.getOfferingsByCategory<PersonalDriver>("personal-driver");
   }
 
   async getPersonalShoppers(): Promise<PersonalShopper[]> {
-    return this.getCategoryWithFallback<PersonalShopper>("personal-shopper", curatedPersonalShoppers);
+    return this.getOfferingsByCategory<PersonalShopper>("personal-shopper");
   }
 
   getLuxuryExperiences(): LuxuryExperienceItem[] {

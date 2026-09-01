@@ -4,6 +4,7 @@ import { generateGoogleCalendarUrl, downloadIcalFile } from "../calendarExport";
 import { copyEventLink, shareViaWhatsapp, shareViaTelegram } from "../shareUtils";
 import { useTranslation } from "react-i18next";
 import "@/i18n";
+import { eventCategoryLabel } from "../eventCategoryLabels";
 
 interface EventCardProps {
   event: ForumEvent;
@@ -153,7 +154,7 @@ export default function EventCard({ event, isRsvpd, isSaved, onRsvp, onCancelRsv
           {event.isFeatured && (
             <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-primary-500 text-background-50 text-xs rounded-full font-medium">
               <i className="ri-star-fill text-xs"></i>
-              Featured
+              {t("events.featured")}
             </span>
           )}
         </div>
@@ -161,7 +162,7 @@ export default function EventCard({ event, isRsvpd, isSaved, onRsvp, onCancelRsv
         {/* Category tag + Bookmark */}
         <div className="absolute top-3 right-3 flex items-center gap-2">
           <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-foreground-950/60 backdrop-blur-sm text-white text-xs rounded-full">
-            {event.category}
+            {eventCategoryLabel(t, event.category)}
           </span>
           <button
             type="button"
@@ -172,7 +173,7 @@ export default function EventCard({ event, isRsvpd, isSaved, onRsvp, onCancelRsv
                 : "bg-foreground-950/40 text-white/70 hover:bg-foreground-950/60 hover:text-white"
             }`}
             aria-pressed={isSaved}
-            aria-label={isSaved ? `Remove ${event.title} from saved events` : `Save ${event.title}`}
+            aria-label={isSaved ? t("events.removeTitleSaved", { title: event.title }) : t("events.saveTitle", { title: event.title })}
           >
             <i className={`${isSaved ? "ri-bookmark-fill" : "ri-bookmark-line"} text-sm`}></i>
           </button>
@@ -253,7 +254,7 @@ export default function EventCard({ event, isRsvpd, isSaved, onRsvp, onCancelRsv
                 : "text-foreground-400 hover:bg-background-100 hover:text-foreground-600"
             }`}
             aria-pressed={isSaved}
-            aria-label={isSaved ? `Remove ${event.title} from saved events` : `Save ${event.title}`}
+            aria-label={isSaved ? t("events.removeTitleSaved", { title: event.title }) : t("events.saveTitle", { title: event.title })}
             title={isSaved ? t("events.saved", "Saved") : t("events.save", "Save event")}
           >
             <i className={`${isSaved ? "ri-bookmark-fill" : "ri-bookmark-line"} text-sm`}></i>
@@ -262,7 +263,7 @@ export default function EventCard({ event, isRsvpd, isSaved, onRsvp, onCancelRsv
             type="button"
             onClick={handleGoogleCalendar}
             className="w-8 h-8 flex items-center justify-center rounded-full text-foreground-400 hover:bg-background-100 hover:text-foreground-600 transition-all cursor-pointer"
-            aria-label={`Add ${event.title} to Google Calendar`}
+            aria-label={t("events.addTitleToCalendar", { title: event.title })}
             title={t("events.addToCalendar", "Add to Google Calendar")}
           >
             <i className="ri-google-line text-sm"></i>
@@ -271,8 +272,8 @@ export default function EventCard({ event, isRsvpd, isSaved, onRsvp, onCancelRsv
             type="button"
             onClick={handleIcalDownload}
             className="w-8 h-8 flex items-center justify-center rounded-full text-foreground-400 hover:bg-background-100 hover:text-foreground-600 transition-all cursor-pointer"
-            aria-label={`Download ${event.title} as an iCal file`}
-            title="Download .ics file"
+            aria-label={t("events.downloadTitleIcal", { title: event.title })}
+            title={t("events.downloadIcalTitle")}
           >
             <i className="ri-calendar-2-line text-sm"></i>
           </button>
@@ -288,7 +289,7 @@ export default function EventCard({ event, isRsvpd, isSaved, onRsvp, onCancelRsv
             aria-haspopup="menu"
             aria-expanded={showShareMenu}
             aria-controls={`share-menu-${event.id}`}
-            aria-label={`Share ${event.title}`}
+            aria-label={t("events.shareTitle", { title: event.title })}
             title={t("events.share", "Share event")}
           >
             <i className="ri-share-forward-line text-sm"></i>
@@ -301,7 +302,7 @@ export default function EventCard({ event, isRsvpd, isSaved, onRsvp, onCancelRsv
               ref={shareMenuRef}
               className="absolute left-0 bottom-full mb-2 w-56 bg-background-50 border border-background-200 rounded-xl shadow-lg z-20 overflow-hidden"
               role="menu"
-              aria-label={`Share options for ${event.title}`}
+              aria-label={t("events.shareOptions", { title: event.title })}
             >
               {/* Copy link */}
               <button
@@ -351,7 +352,7 @@ export default function EventCard({ event, isRsvpd, isSaved, onRsvp, onCancelRsv
           onClick={handleRsvpClick}
           disabled={isFull && !isRsvpd}
           aria-pressed={isRsvpd}
-          aria-label={isRsvpd ? `Cancel RSVP for ${event.title}` : `RSVP for ${event.title}`}
+          aria-label={isRsvpd ? t("events.cancelRsvpFor", { title: event.title }) : t("events.rsvpFor", { title: event.title })}
           className={`w-full py-2.5 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer whitespace-nowrap ${
             isRsvpd
               ? "bg-accent-100 text-accent-700 hover:bg-accent-200 border border-accent-200"

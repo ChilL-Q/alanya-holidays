@@ -18,9 +18,9 @@ import "@/i18n";
 import { useAuth } from "@/context/AuthContext";
 
 const priceRangeLabel: Record<string, string> = {
-  "$": "Budget",
-  "$$": "Moderate",
-  "$$$": "Premium",
+  "$": "business.priceBudget",
+  "$$": "business.priceModerate",
+  "$$$": "business.pricePremium",
 };
 
 const businessGalleryImages: Record<string, string[]> = {
@@ -183,11 +183,11 @@ export default function BusinessDetailPage() {
       setBusiness(null);
       setReviews([]);
       setSimilarBusinesses([]);
-      setError(err instanceof Error ? err.message : "Failed to load business details");
+      setError(err instanceof Error ? err.message : t("business.loadErrorGeneric"));
     } finally {
       setIsLoading(false);
     }
-  }, [businessId]);
+  }, [businessId, t]);
 
   useEffect(() => {
     void loadData();
@@ -209,6 +209,10 @@ export default function BusinessDetailPage() {
   }, [reviews]);
 
   const displayedReviews = showAllReviews ? reviews : reviews.slice(0, 4);
+  const getPriceRangeLabel = (priceRange: string) => {
+    const translationKey = priceRangeLabel[priceRange];
+    return translationKey ? t(translationKey) : priceRange;
+  };
 
   if (isLoading) {
     return (
@@ -247,14 +251,14 @@ export default function BusinessDetailPage() {
             </div>
             <h2 className="font-heading text-2xl text-foreground-900 mb-2">{t("business.notFound")}</h2>
             <p className="text-sm text-foreground-500 max-w-md mx-auto mb-6">
-              This business listing might have been removed or the link is incorrect.
+              {t("business.notFoundDescription")}
             </p>
             <Link
               to="/explore"
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer"
             >
               <i className="ri-arrow-left-line"></i>
-              Browse All Businesses
+              {t("business.browseAllBusinesses")}
             </Link>
           </div>
         </div>
@@ -266,6 +270,13 @@ export default function BusinessDetailPage() {
   const categoryIcon = getCategoryIcon(business.category);
   const mapUrl = buildMapUrl(business);
   const galleryExtras = getGalleryForBusiness(business.id);
+  const hasGoogleRating =
+    typeof business.googleRating === "number" &&
+    Number.isFinite(business.googleRating) &&
+    business.googleRating > 0 &&
+    typeof business.googleReviewCount === "number" &&
+    Number.isInteger(business.googleReviewCount) &&
+    business.googleReviewCount > 0;
   const handleFavoriteToggle = () => {
     if (authLoading) return;
 
@@ -317,17 +328,23 @@ export default function BusinessDetailPage() {
                       {business.subcategory}
                     </span>
                     <span className="px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white text-xs font-medium whitespace-nowrap">
-                      {priceRangeLabel[business.priceRange] || business.priceRange}
+                      {getPriceRangeLabel(business.priceRange)}
                     </span>
                   </div>
                   <h1 className="font-heading text-3xl md:text-5xl text-white mb-2">{business.name}</h1>
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2">
-                      <StarRating rating={business.rating} size="lg" />
-                      <span className="text-white font-semibold text-lg">{business.rating}</span>
+                  {hasGoogleRating ? (
+                    <div className="flex items-center gap-3">
+                      <StarRating rating={business.googleRating!} size="lg" />
+                      <span className="text-white/80 text-sm">
+                        {t("public.googleRatingSummary", {
+                          rating: business.googleRating!.toFixed(1),
+                          count: business.googleReviewCount,
+                        })}
+                      </span>
                     </div>
-                    <span className="text-white/60 text-sm">({business.reviewCount} reviews)</span>
-                  </div>
+                  ) : (
+                    <p className="text-white/70 text-sm">{t("public.googleRatingUnavailable")}</p>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap">
@@ -335,7 +352,7 @@ export default function BusinessDetailPage() {
                     type="button"
                     onClick={handleFavoriteToggle}
                     disabled={authLoading}
-                    aria-label={favorited ? "Remove from favorites" : "Save to favorites"}
+                    aria-label={favorited ? t("public.removeFavorite") : t("public.saveFavorite")}
                     className={`w-11 h-11 flex items-center justify-center rounded-full border backdrop-blur-sm transition-all cursor-pointer disabled:opacity-60 disabled:cursor-wait ${
                       favorited
                         ? "bg-accent-500/20 border-accent-400/40 text-white"
@@ -350,7 +367,7 @@ export default function BusinessDetailPage() {
                     className="flex items-center gap-2 px-5 py-3 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer"
                   >
                     <i className="ri-phone-line"></i>
-                    Call Now
+                    {t("business.callNow")}
                   </a>
                   <a
                     href={business.website}
@@ -359,7 +376,7 @@ export default function BusinessDetailPage() {
                     className="flex items-center gap-2 px-5 py-3 rounded-full bg-white/20 backdrop-blur-sm text-white text-sm font-medium hover:bg-white/30 transition-colors whitespace-nowrap cursor-pointer border border-white/20"
                   >
                     <i className="ri-external-link-line"></i>
-                    Visit Website
+                    {t("business.visitWebsite")}
                   </a>
                   {business.can_claim === true && (
                     <button
@@ -369,7 +386,7 @@ export default function BusinessDetailPage() {
                       title={t("business.claimListing")}
                     >
                       <i className="ri-shield-user-fill"></i>
-                      Claim Listing
+                      {t("business.claimListingAction")}
                     </button>
                   )}
                 </div>
@@ -407,7 +424,7 @@ export default function BusinessDetailPage() {
                 <i className="ri-money-dollar-circle-line text-foreground-400 text-sm mt-0.5 shrink-0"></i>
                 <div className="min-w-0">
                   <p className="text-[11px] font-medium text-foreground-400 uppercase tracking-wide mb-0.5">{t("business.priceRange")}</p>
-                  <p className="text-sm text-foreground-900 font-medium leading-snug">{priceRangeLabel[business.priceRange] || business.priceRange}</p>
+                  <p className="text-sm text-foreground-900 font-medium leading-snug">{getPriceRangeLabel(business.priceRange)}</p>
                 </div>
               </div>
             </div>
@@ -431,7 +448,7 @@ export default function BusinessDetailPage() {
                 {/* Tags */}
                 <div>
                   <h3 className="font-heading text-sm uppercase tracking-wider text-foreground-400 mb-3">
-                    Highlights
+                    {t("business.highlights")}
                   </h3>
                   <div className="flex flex-wrap gap-2">
                     {business.tags.map((tag) => (
@@ -452,21 +469,21 @@ export default function BusinessDetailPage() {
                     <div className="rounded-xl overflow-hidden aspect-[4/3]">
                       <img
                         src={business.image}
-                        alt={`${business.name} - Photo 1`}
+                        alt={t("business.photoAlt", { name: business.name, number: 1 })}
                         className="w-full h-full object-cover object-top hover:scale-105 transition-transform duration-500"
                       />
                     </div>
                     <div className="rounded-xl overflow-hidden aspect-[4/3]">
                       <img
                         src={galleryExtras[0]}
-                        alt={`${business.name} - Photo 2`}
+                        alt={t("business.photoAlt", { name: business.name, number: 2 })}
                         className="w-full h-full object-cover object-top hover:scale-105 transition-transform duration-500"
                       />
                     </div>
                     <div className="rounded-xl overflow-hidden aspect-[4/3]">
                       <img
                         src={galleryExtras[1]}
-                        alt={`${business.name} - Photo 3`}
+                        alt={t("business.photoAlt", { name: business.name, number: 3 })}
                         className="w-full h-full object-cover object-top hover:scale-105 transition-transform duration-500"
                       />
                     </div>
@@ -476,40 +493,52 @@ export default function BusinessDetailPage() {
                 {/* Reviews */}
                 <div>
                   <div className="flex items-center justify-between mb-5">
-                    <h2 className="font-heading text-xl md:text-2xl text-foreground-900">{t("public.reviewsTitle")}</h2>
-                    <span className="text-sm text-foreground-500">{reviewStats.total} reviews</span>
+                    <h2 className="font-heading text-xl md:text-2xl text-foreground-900">
+                      {t("public.communityReviewsHeading")}
+                    </h2>
+                    <span className="text-sm text-foreground-500">
+                      {reviewStats.total === 0
+                        ? t("public.communityReviewsEmpty")
+                        : t("public.communityReviewsCount", { count: reviewStats.total })}
+                    </span>
                   </div>
 
                   {/* Review Summary */}
-                  <div className="bg-white rounded-2xl border border-background-200/70 p-5 md:p-6 mb-6">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-8">
-                      <div className="text-center">
-                        <div className="text-4xl md:text-5xl font-heading font-bold text-foreground-900 mb-1">
-                          {reviewStats.average.toFixed(1)}
+                  {reviews.length > 0 && (
+                    <div className="bg-white rounded-2xl border border-background-200/70 p-5 md:p-6 mb-6">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-8">
+                        <div className="text-center">
+                          <div className="text-4xl md:text-5xl font-heading font-bold text-foreground-900 mb-1">
+                            {reviewStats.average.toFixed(1)}
+                          </div>
+                          <StarRating rating={reviewStats.average} size="sm" />
+                          <p className="text-xs text-foreground-500 mt-1">
+                            {t("public.communityReviewsCount", { count: reviewStats.total })}
+                          </p>
                         </div>
-                        <StarRating rating={reviewStats.average} size="sm" />
-                        <p className="text-xs text-foreground-500 mt-1">{reviewStats.total} reviews</p>
-                      </div>
-                      <div className="flex-1 w-full space-y-1.5">
-                        {[5, 4, 3, 2, 1].map((star) => {
-                          const count = reviewStats.distribution[star - 1];
-                          const pct = reviewStats.total > 0 ? (count / reviewStats.total) * 100 : 0;
-                          return (
-                            <div key={star} className="flex items-center gap-2">
-                              <span className="text-xs text-foreground-500 w-8 whitespace-nowrap">{star} star</span>
-                              <div className="flex-1 h-2 bg-background-200 rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-yellow-400 rounded-full transition-all duration-500"
-                                  style={{ width: `${pct}%` }}
-                                ></div>
+                        <div className="flex-1 w-full space-y-1.5">
+                          {[5, 4, 3, 2, 1].map((star) => {
+                            const count = reviewStats.distribution[star - 1];
+                            const pct = (count / reviewStats.total) * 100;
+                            return (
+                              <div key={star} className="flex items-center gap-2">
+                                <span className="text-xs text-foreground-500 w-16 whitespace-nowrap">
+                                  {t("business.ratingLabel", { count: star })}
+                                </span>
+                                <div className="flex-1 h-2 bg-background-200 rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full bg-yellow-400 rounded-full transition-all duration-500"
+                                    style={{ width: `${pct}%` }}
+                                  ></div>
+                                </div>
+                                <span className="text-xs text-foreground-400 w-8 text-right">{count}</span>
                               </div>
-                              <span className="text-xs text-foreground-400 w-8 text-right">{count}</span>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Review List */}
                   {reviews.length > 0 ? (
@@ -522,7 +551,7 @@ export default function BusinessDetailPage() {
                           onClick={() => setShowAllReviews(true)}
                           className="w-full py-3 mt-2 rounded-xl border border-dashed border-foreground-300 text-sm text-foreground-600 font-medium hover:bg-background-100 hover:border-foreground-400 transition-all cursor-pointer"
                         >
-                          Show all {reviews.length} reviews
+                          {t("business.showAllReviews", { count: reviews.length })}
                           <i className="ri-arrow-down-s-line ml-1"></i>
                         </button>
                       )}
@@ -531,7 +560,7 @@ export default function BusinessDetailPage() {
                           onClick={() => setShowAllReviews(false)}
                           className="w-full py-3 mt-2 rounded-xl border border-dashed border-foreground-300 text-sm text-foreground-600 font-medium hover:bg-background-100 hover:border-foreground-400 transition-all cursor-pointer"
                         >
-                          Show fewer
+                          {t("business.showFewer")}
                           <i className="ri-arrow-up-s-line ml-1"></i>
                         </button>
                       )}
@@ -553,7 +582,7 @@ export default function BusinessDetailPage() {
                     className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl border-2 border-dashed border-foreground-200 text-foreground-600 font-medium hover:border-primary-300 hover:text-primary-500 hover:bg-primary-50/50 transition-all cursor-pointer"
                   >
                     <i className="ri-pencil-line"></i>
-                    Write a Review
+                    {t("business.writeReview")}
                   </button>
                 ) : (
                   <div className="bg-white rounded-2xl border border-background-200/70 p-5 md:p-6">
@@ -561,6 +590,7 @@ export default function BusinessDetailPage() {
                       <h2 className="font-heading text-xl text-foreground-900">{t("business.writeReview")}</h2>
                       <button
                         onClick={() => setReviewFormOpen(false)}
+                        aria-label={t("business.closeReviewForm")}
                         className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-background-100 text-foreground-400 hover:text-foreground-600 transition-colors cursor-pointer"
                       >
                         <i className="ri-close-line"></i>
@@ -574,14 +604,14 @@ export default function BusinessDetailPage() {
                         </div>
                         <h3 className="font-heading text-lg text-foreground-900 mb-2">{t("business.reviewSubmitted")}</h3>
                         <p className="text-sm text-foreground-500 max-w-sm mx-auto mb-5">
-                          Thank you for sharing your experience. Your review helps other travelers discover great businesses in Alanya.
+                          {t("business.reviewSuccessDescription")}
                         </p>
                         <button
                           onClick={() => { setReviewFormOpen(false); setReviewFormSuccess(false); setReviewRating(0); }}
                           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer"
                         >
                           <i className="ri-arrow-left-line"></i>
-                          Back to Business
+                          {t("business.backToBusiness")}
                         </button>
                       </div>
                     ) : (
@@ -598,7 +628,7 @@ export default function BusinessDetailPage() {
                             return;
                           }
                           if (reviewRating === 0) {
-                            setReviewFormError("Please select a rating.");
+                            setReviewFormError(t("business.selectRatingError"));
                             return;
                           }
                           setReviewFormSubmitting(true);
@@ -606,9 +636,9 @@ export default function BusinessDetailPage() {
                           try {
                             const formData = new FormData(form);
                             const content = (formData.get("content") as string) || "";
-                            const name = (formData.get("name") as string) || "Traveler";
+                            const name = ((formData.get("name") as string) || "").trim();
                             const title = (formData.get("title") as string) || "";
-                            const visitType = (formData.get("visit_type") as string) || "Traveler";
+                            const visitType = ((formData.get("visit_type") as string) || "").trim();
 
                             const newReview = await directoryService.submitReview(
                               business.id,
@@ -628,7 +658,7 @@ export default function BusinessDetailPage() {
 
                             setReviewFormSuccess(true);
                           } catch {
-                            setReviewFormError("Network error. Please check your connection and try again.");
+                            setReviewFormError(t("business.networkError"));
                           } finally {
                             setReviewFormSubmitting(false);
                           }
@@ -651,6 +681,7 @@ export default function BusinessDetailPage() {
                                 key={star}
                                 type="button"
                                 onClick={() => setReviewRating(star)}
+                                aria-label={t("business.rateStars", { count: star })}
                                 className="w-9 h-9 flex items-center justify-center cursor-pointer transition-colors"
                               >
                                 <i
@@ -660,7 +691,15 @@ export default function BusinessDetailPage() {
                             ))}
                             {reviewRating > 0 && (
                               <span className="ml-2 text-sm font-medium text-foreground-600">
-                                {reviewRating === 5 ? "Excellent!" : reviewRating === 4 ? "Very Good" : reviewRating === 3 ? "Good" : reviewRating === 2 ? "Fair" : "Poor"}
+                                {reviewRating === 5
+                                  ? t("business.ratingExcellent")
+                                  : reviewRating === 4
+                                    ? t("business.ratingVeryGood")
+                                    : reviewRating === 3
+                                      ? t("business.ratingGood")
+                                      : reviewRating === 2
+                                        ? t("business.ratingFair")
+                                        : t("business.ratingPoor")}
                               </span>
                             )}
                           </div>
@@ -761,12 +800,12 @@ export default function BusinessDetailPage() {
                             {reviewFormSubmitting ? (
                               <>
                                 <i className="ri-loader-4-line animate-spin"></i>
-                                Submitting...
+                                {t("business.submittingReview")}
                               </>
                             ) : (
                               <>
                                 <i className="ri-send-plane-line"></i>
-                                Submit Review
+                                {t("business.submitReview")}
                               </>
                             )}
                           </button>
@@ -775,7 +814,7 @@ export default function BusinessDetailPage() {
                             onClick={() => setReviewFormOpen(false)}
                             className="px-5 py-3 rounded-full text-sm text-foreground-500 font-medium hover:text-foreground-700 hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer"
                           >
-                            Cancel
+                            {t("business.cancel")}
                           </button>
                         </div>
                       </form>
@@ -838,7 +877,7 @@ export default function BusinessDetailPage() {
                       allowFullScreen
                       loading="lazy"
                       referrerPolicy="no-referrer-when-downgrade"
-                      title={`${business.name} Map Location`}
+                      title={t("business.mapLocationTitle", { name: business.name })}
                     ></iframe>
                   </div>
                   <a
@@ -848,7 +887,7 @@ export default function BusinessDetailPage() {
                     className="mt-3 flex items-center justify-center gap-2 w-full py-2.5 rounded-full border border-foreground-200 text-sm text-foreground-700 font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer"
                   >
                     <i className="ri-navigation-line"></i>
-                    Get Directions
+                    {t("business.getDirections")}
                   </a>
                 </div>
 
@@ -856,7 +895,7 @@ export default function BusinessDetailPage() {
                 {similarBusinesses.length > 0 && (
                   <div className="bg-white rounded-2xl border border-background-200/70 p-5">
                     <h3 className="font-heading text-base text-foreground-900 mb-4">
-                      Similar {businessCategories.find((c) => c.id === business.category)?.name || "Businesses"}
+                      {t("business.similarBusinesses")}
                     </h3>
                     <div className="space-y-3">
                       {similarBusinesses.map((similar) => (
@@ -879,7 +918,7 @@ export default function BusinessDetailPage() {
                               <span className="text-xs font-medium text-foreground-700">{similar.rating}</span>
                               <span className="text-xs text-foreground-400">({similar.reviewCount})</span>
                             </div>
-                            <p className="text-xs text-foreground-500 mt-0.5 truncate">{similar.subcategory} · {priceRangeLabel[similar.priceRange] || similar.priceRange}</p>
+                            <p className="text-xs text-foreground-500 mt-0.5 truncate">{similar.subcategory} · {getPriceRangeLabel(similar.priceRange)}</p>
                           </div>
                         </Link>
                       ))}
@@ -888,7 +927,7 @@ export default function BusinessDetailPage() {
                       to="/explore"
                       className="mt-4 flex items-center justify-center gap-1.5 w-full py-2.5 rounded-full border border-foreground-200 text-sm text-foreground-600 font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer"
                     >
-                      View All Businesses
+                      {t("business.viewAllBusinesses")}
                       <i className="ri-arrow-right-line text-sm"></i>
                     </Link>
                   </div>
@@ -907,10 +946,10 @@ export default function BusinessDetailPage() {
                 <span className="text-sm font-medium text-white/80">{t("business.discoverMore")}</span>
               </div>
               <h2 className="font-heading text-2xl md:text-3xl text-white mb-3">
-                Ready to Explore Alanya?
+                {t("business.readyToExplore")}
               </h2>
               <p className="text-white/60 text-sm md:text-base max-w-lg mx-auto mb-8">
-                Browse all restaurants, hotels, tours, and services. Plan your perfect Mediterranean getaway with the Alanya Holidays directory.
+                {t("business.exploreDescription")}
               </p>
               <div className="flex items-center justify-center gap-3 flex-wrap">
                 <Link
@@ -918,14 +957,14 @@ export default function BusinessDetailPage() {
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-primary-600 text-sm font-medium hover:bg-white/90 transition-colors whitespace-nowrap cursor-pointer"
                 >
                   <i className="ri-compass-3-line"></i>
-                  Explore Directory
+                  {t("business.exploreDirectory")}
                 </Link>
                 <Link
                   to="/travel-guides"
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-white/30 text-white text-sm font-medium hover:bg-white/10 transition-colors whitespace-nowrap cursor-pointer"
                 >
                   <i className="ri-book-open-line"></i>
-                  Travel Guides
+                  {t("business.travelGuides")}
                 </Link>
               </div>
             </div>
@@ -946,27 +985,35 @@ function ReviewCard({ review }: { review: BusinessReview }) {
   return (
     <div className="bg-white rounded-2xl border border-background-200/70 p-5 md:p-6">
       <div className="flex items-start gap-3 mb-3">
-        <img
-          src={review.reviewerAvatar}
-          alt={review.reviewerName}
-          className="w-10 h-10 rounded-full object-cover shrink-0"
-        />
+        {review.reviewerAvatar && (
+          <img
+            src={review.reviewerAvatar}
+            alt={review.reviewerName || ""}
+            className="w-10 h-10 rounded-full object-cover shrink-0"
+          />
+        )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <div>
-              <h4 className="text-sm font-semibold text-foreground-900">{review.reviewerName}</h4>
+              {review.reviewerName && (
+                <h4 className="text-sm font-semibold text-foreground-900">{review.reviewerName}</h4>
+              )}
               <div className="flex items-center gap-2 mt-0.5">
                 <StarRating rating={review.rating} size="sm" />
-                <span className="text-xs text-foreground-500">{review.date}</span>
+                {review.date && <span className="text-xs text-foreground-500">{review.date}</span>}
               </div>
             </div>
-            <span className="px-2 py-0.5 rounded-full bg-secondary-100 text-secondary-700 text-xs font-medium whitespace-nowrap">
-              {review.visitType}
-            </span>
+            {review.visitType && (
+              <span className="px-2 py-0.5 rounded-full bg-secondary-100 text-secondary-700 text-xs font-medium whitespace-nowrap">
+                {review.visitType}
+              </span>
+            )}
           </div>
         </div>
       </div>
-      <h5 className="text-sm font-semibold text-foreground-900 mb-2">{review.title}</h5>
+      {review.title && (
+        <h5 className="text-sm font-semibold text-foreground-900 mb-2">{review.title}</h5>
+      )}
       <p className="text-sm text-foreground-600 leading-relaxed">{review.content}</p>
     </div>
   );
