@@ -1,5 +1,21 @@
 import { expect, test } from '@playwright/test';
 
+const liveVilla = {
+  id: 'villa-e2e-live-1',
+  title: 'E2E Live Villa',
+  type: 'villa',
+  location: 'Alanya Center',
+  price_per_night: 240,
+  currency: 'EUR',
+  bedrooms: 2,
+  bathrooms: 2,
+  max_guests: 4,
+  images: ['/images/placeholder-business.svg'],
+  amenities: ['wifi'],
+  description: 'A live villa fixture for the enquiry flow.',
+  status: 'active',
+};
+
 test.describe('Villa enquiry flow', () => {
   test.setTimeout(90_000);
 
@@ -8,7 +24,7 @@ test.describe('Villa enquiry flow', () => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ data: [], total: 0 }),
+        body: JSON.stringify({ data: [liveVilla], total: 1 }),
       });
     });
   });
@@ -26,6 +42,7 @@ test.describe('Villa enquiry flow', () => {
 
     await page.goto('/villa-stays');
     await page.getByRole('button', { name: 'View Details' }).first().click();
+    await expect(page.getByRole('heading', { name: liveVilla.title, level: 2 })).toBeVisible();
 
     const submit = page.getByRole('button', { name: 'Request Availability' });
     await submit.click();
@@ -44,6 +61,8 @@ test.describe('Villa enquiry flow', () => {
       name: 'Launch Guest',
       email: 'guest@example.com',
       enquiry_type: 'Villa Stay',
+      service_type: liveVilla.title,
+      message: expect.stringContaining(`Item: ${liveVilla.title}`),
     });
   });
 });
